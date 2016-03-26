@@ -2,9 +2,8 @@ import React, {
     PropTypes,
     StyleSheet,
     View,
-    TouchableHighlight,
     Text,
-    TextInput } from 'react-native';
+    ToastAndroid } from 'react-native';
 
 import Api from '../services/Api';
 import LoginPage from './LoginPage';
@@ -23,6 +22,7 @@ class SignupPage extends React.Component {
     }
 
   _navigateToLogin() {
+      ToastAndroid.show('User was created', ToastAndroid.LONG);
       this.props.toRoute({
         name: "Login",
         component: LoginPage

@@ -41,8 +41,8 @@ class CredentialsForm extends React.Component {
             console.log(result);
             this.props.onSuccess(result);
         } catch (e) {
-            console.log('Exception while processing a form');
-            this.setState({error: e})
+            console.log('Exception while processing a form', e);
+            this.setState({error: e.message})
         } finally {
             this.setState({processing: false});
         }

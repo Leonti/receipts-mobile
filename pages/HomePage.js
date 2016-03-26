@@ -1,7 +1,9 @@
-import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, CameraRoll } from 'react-native';
+import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, CameraRoll, Image } from 'react-native';
 import LoginPage from './LoginPage';
 import ReceiptsPage from './ReceiptsPage';
 var ImagePickerManager = require('NativeModules').ImagePickerManager;
+
+import Api from '../services/Api';
 
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
@@ -15,6 +17,26 @@ class HomePage extends React.Component {
         this.receiptsPage = this.receiptsPage.bind(this);
         this.cameraRoll = this.cameraRoll.bind(this);
         this.camera = this.camera.bind(this);
+
+        this.userInfo = this.userInfo.bind(this);
+
+        this.state = {
+            imageState: null
+        }
+    }
+
+    userInfo() {
+
+        Api.uploadFile()
+/*
+        Api.uploadFile().then(function(result) {
+            console.log('user info result');
+            console.log(result);
+        }, function(reason) {
+            console.log('user info failed');
+            console.log(reason);
+        });
+*/
     }
 
     loginPage() {
@@ -70,13 +92,19 @@ class HomePage extends React.Component {
             console.log('User tapped custom button: ', response.customButton);
           } else {
 
+              Api.uploadFile(response.uri).then(function(result) {
+                  console.log('file uploaded', result);
+              }, function(reason) {
+                  console.log('upload failed', reason);
+              });
+
             // uri (on android)
             const source = {uri: response.uri, isStatic: true};
-/*
+
             this.setState({
-              avatarSource: source
+              imageSource: source
             });
-            */
+
           }
         });
     }
@@ -96,6 +124,12 @@ class HomePage extends React.Component {
           <TouchableHighlight onPress={this.camera} underlayColor="transparent">
             <Text>Camera</Text>
           </TouchableHighlight>
+          <TouchableHighlight onPress={this.userInfo} underlayColor="transparent">
+            <Text>UserInfo</Text>
+          </TouchableHighlight>
+          <Image
+              source={this.state.imageSource}
+              style={{ width: 200, height: 200 }} />
         </View>
       );
   }
