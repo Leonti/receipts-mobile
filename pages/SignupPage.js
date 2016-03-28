@@ -10,7 +10,7 @@ import LoginPage from './LoginPage';
 import CredentialsForm from '../components/CredentialsForm';
 
 const propTypes = {
-  toRoute: PropTypes.func.isRequired
+  resetToRoute: PropTypes.func.isRequired
 };
 
 class SignupPage extends React.Component {
@@ -23,7 +23,7 @@ class SignupPage extends React.Component {
 
   _navigateToLogin() {
       ToastAndroid.show('User was created', ToastAndroid.LONG);
-      this.props.toRoute({
+      this.props.resetToRoute({
         name: "Login",
         component: LoginPage
       });

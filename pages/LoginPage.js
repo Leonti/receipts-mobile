@@ -6,7 +6,8 @@ import Api from '../services/Api';
 import CredentialsForm from '../components/CredentialsForm';
 
 const propTypes = {
-  toRoute: PropTypes.func.isRequired
+  toRoute: PropTypes.func.isRequired,
+  replaceRoute: PropTypes.func.isRequired
 };
 
 class LoginPage extends React.Component {
@@ -19,7 +20,7 @@ class LoginPage extends React.Component {
     }
 
   _navigateHome() {
-      this.props.toRoute({
+      this.props.replaceRoute({
         name: "Home",
         component: HomePage
       });

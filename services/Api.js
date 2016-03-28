@@ -60,9 +60,17 @@ class Api {
           })).json()
     }
 
+    static async _getAccessToken() {
+        return (await Storage.get(TOKEN_STORAGE_KEY)).access_token;
+    }
+
+    static async _getUserId() {
+        return (await Storage.get(USER_INFO_KEY)).id;
+    }
+
     static async uploadFile(fileUri, progressCallback) {
-        let token = (await Storage.get(TOKEN_STORAGE_KEY)).access_token;
-        let userId = (await Storage.get(USER_INFO_KEY)).id;
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
 
         return new Promise(function(resolve, reject) {
 
@@ -94,6 +102,35 @@ class Api {
             formData.append('filename', 'receipt.jpg');
             xhr.send(formData);
         });
+    }
+
+    static async isLoggedIn() {
+        let token = await Storage.get(TOKEN_STORAGE_KEY);
+
+        if (token) {
+            return true;
+        }
+
+        return false;
+    }
+
+    static async logout() {
+        await Storage.remove(TOKEN_STORAGE_KEY);
+        await Storage.remove(USER_INFO_KEY);
+    }
+
+    static async getReceipts() {
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+        return await (await fetch(baseUrl + '/user/' + userId + '/receipt', {
+              method: 'GET',
+              headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              }
+          })).json()
     }
 }
 

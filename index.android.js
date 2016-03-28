@@ -3,7 +3,7 @@
 import Router from 'react-native-simple-router';
 import React, { AppRegistry, StyleSheet } from 'react-native';
 
-import HomePage from './pages/HomePage';
+import Loader from './components/Loader';
 
 const styles = StyleSheet.create({
   header: {
@@ -11,12 +11,10 @@ const styles = StyleSheet.create({
   },
 });
 
-// Your route object should contain at least:
-// - The name of the route (which will become the navigation bar title)
-// - The component object for the page to render
+// TODO: consider https://github.com/aksonov/react-native-router-flux
 const firstRoute = {
-  name: 'Welcome!',
-  component: HomePage,
+  name: 'Loader',
+  component: Loader,
 };
 
 // The Router wrapper

@@ -39,12 +39,12 @@ class CredentialsForm extends React.Component {
             let result = await this.props.onSubmit(this.state.username, this.state.password);
             console.log('Form processed');
             console.log(result);
+            this.setState({processing: false});
             this.props.onSuccess(result);
         } catch (e) {
             console.log('Exception while processing a form', e);
-            this.setState({error: e.message})
-        } finally {
             this.setState({processing: false});
+            this.setState({error: e.message})
         }
     }
 

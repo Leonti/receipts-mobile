@@ -1,48 +1,34 @@
 import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, CameraRoll, Image } from 'react-native';
-import LoginPage from './LoginPage';
 import ReceiptsPage from './ReceiptsPage';
+import Loader from '../components/Loader'
 var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
 
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
+  replaceRoute: PropTypes.func.isRequired,
 };
 
 class HomePage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.loginPage = this.loginPage.bind(this);
         this.receiptsPage = this.receiptsPage.bind(this);
         this.cameraRoll = this.cameraRoll.bind(this);
         this.camera = this.camera.bind(this);
-
-        this.userInfo = this.userInfo.bind(this);
+        this._logout = this._logout.bind(this);
 
         this.state = {
             imageState: null
         }
     }
 
-    userInfo() {
-
-        Api.uploadFile()
-/*
-        Api.uploadFile().then(function(result) {
-            console.log('user info result');
-            console.log(result);
-        }, function(reason) {
-            console.log('user info failed');
-            console.log(reason);
-        });
-*/
-    }
-
-    loginPage() {
-        this.props.toRoute({
-            name: "Login",
-            component: LoginPage
+    async _logout() {
+        await Api.logout();
+        this.props.replaceRoute({
+            name: "Loader",
+            component: Loader
         });
     }
 
@@ -53,18 +39,10 @@ class HomePage extends React.Component {
         });
     }
 
-// https://facebook.github.io/react-native/docs/native-modules-android.html
-// http://developer.android.com/training/camera/photobasics.html
-
     async cameraRoll() {
-        let params = {
-            first: 10,
-        //    groupTypes: 'All',
-            assetType: 'Photos',
-        };
-        let photos = await CameraRoll.getPhotos(params);
+        let receipts = await Api.getReceipts();
 
-        console.log(photos);
+        console.log('RECEIPTS', receipts.length);
     }
 
     async camera() {
@@ -112,20 +90,17 @@ class HomePage extends React.Component {
   render() {
       return (
         <View>
-          <TouchableHighlight onPress={this.loginPage} underlayColor="transparent">
-            <Text>Login!</Text>
+          <TouchableHighlight onPress={this._logout} underlayColor="transparent">
+            <Text>Logout!</Text>
           </TouchableHighlight>
           <TouchableHighlight onPress={this.receiptsPage} underlayColor="transparent">
             <Text>Receipts</Text>
           </TouchableHighlight>
           <TouchableHighlight onPress={this.cameraRoll} underlayColor="transparent">
-            <Text>CameraRoll</Text>
+            <Text>User Receipts</Text>
           </TouchableHighlight>
           <TouchableHighlight onPress={this.camera} underlayColor="transparent">
             <Text>Camera</Text>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={this.userInfo} underlayColor="transparent">
-            <Text>UserInfo</Text>
           </TouchableHighlight>
           <Image
               source={this.state.imageSource}
