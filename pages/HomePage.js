@@ -1,6 +1,10 @@
-import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, CameraRoll, Image } from 'react-native';
+import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image } from 'react-native';
 import ReceiptsPage from './ReceiptsPage';
 import Loader from '../components/Loader'
+import ActionButton from 'react-native-action-button';
+
+var Icon = require('react-native-vector-icons/Ionicons');
+
 var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
@@ -10,18 +14,33 @@ const propTypes = {
   replaceRoute: PropTypes.func.isRequired,
 };
 
+const imagePickerOptions = {
+    cameraType: 'back',
+    mediaType: 'photo',
+    quality: 1,
+    allowsEditing: false,
+    noData: true,
+};
+
 class HomePage extends React.Component {
 
     constructor(props) {
         super(props);
         this.receiptsPage = this.receiptsPage.bind(this);
-        this.cameraRoll = this.cameraRoll.bind(this);
-        this.camera = this.camera.bind(this);
+        this._loadReceipts = this._loadReceipts.bind(this);
+        this._showCamera = this._showCamera.bind(this);
+        this._showImageLibrary = this._showImageLibrary.bind(this);
+        this._processImagePickerResponse = this._processImagePickerResponse.bind(this);
         this._logout = this._logout.bind(this);
 
         this.state = {
-            imageState: null
+            imageState: null,
+            receipts: []
         }
+    }
+
+    componentWillMount() {
+        this._loadReceipts();
     }
 
     async _logout() {
@@ -39,57 +58,49 @@ class HomePage extends React.Component {
         });
     }
 
-    async cameraRoll() {
+    async _loadReceipts() {
         let receipts = await Api.getReceipts();
 
         console.log('RECEIPTS', receipts.length);
+        this.setState({receipts: receipts});
     }
 
-    async camera() {
-        var options = {
-          title: 'Select Image',
-          cancelButtonTitle: 'Cancel',
-          takePhotoButtonTitle: 'Take Photo...', // specify null or empty string to remove this button
-          chooseFromLibraryButtonTitle: 'Choose from Library...', // specify null or empty string to remove this button
-          cameraType: 'back', // 'front' or 'back'
-          mediaType: 'photo', // 'photo' or 'video'
-          quality: 1, // 0 to 1, photos only
-          angle: 0, // android only, photos only
-          allowsEditing: false, // Built in functionality to resize/reposition the image after selection
-          noData: true,
-        };
+    _showCamera() {
+        ImagePickerManager.launchCamera(imagePickerOptions, this._processImagePickerResponse);
+    }
 
-        ImagePickerManager.showImagePicker(options, (response) => {
-          console.log('Response = ', response);
+    _showImageLibrary() {
+        ImagePickerManager.launchImageLibrary(imagePickerOptions, this._processImagePickerResponse);
+    }
 
-          if (response.didCancel) {
-            console.log('User cancelled image picker');
-          } else if (response.error) {
-            console.log('ImagePickerManager Error: ', response.error);
-          } else if (response.customButton) {
-            console.log('User tapped custom button: ', response.customButton);
-          } else {
-
-              Api.uploadFile(response.uri).then(function(result) {
-                  console.log('file uploaded', result);
-              }, function(reason) {
-                  console.log('upload failed', reason);
-              });
+    async _processImagePickerResponse(response) {
+        if (response.uri) {
 
             // uri (on android)
             const source = {uri: response.uri, isStatic: true};
 
             this.setState({
-              imageSource: source
+                imageSource: source
             });
 
-          }
+            try {
+                let receipt = await Api.uploadFile(response.uri);
+                this._loadReceipts();
+            } catch (e) {
+                console.log('Upload failed ' + e.message);
+            }
+        }
+    }
+
+    async camera() {
+        ImagePickerManager.showImagePicker(options, (response) => {
+          console.log('Response = ', response);
         });
     }
 
   render() {
       return (
-        <View>
+        <View style={{flex:1, backgroundColor: '#f3f3f3'}}>
           <TouchableHighlight onPress={this._logout} underlayColor="transparent">
             <Text>Logout!</Text>
           </TouchableHighlight>
@@ -102,14 +113,34 @@ class HomePage extends React.Component {
           <TouchableHighlight onPress={this.camera} underlayColor="transparent">
             <Text>Camera</Text>
           </TouchableHighlight>
+          <Text>Total receipts {this.state.receipts.length}</Text>
           <Image
               source={this.state.imageSource}
               style={{ width: 200, height: 200 }} />
+
+
+
+         <ActionButton buttonColor="#F44336">
+            <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
+                <Icon name="camera" style={styles.actionButtonIcon} />
+            </ActionButton.Item>
+            <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary}>
+                <Icon name="images" style={styles.actionButtonIcon} />
+            </ActionButton.Item>
+         </ActionButton>
         </View>
       );
   }
 
 }
+
+const styles = StyleSheet.create({
+  actionButtonIcon: {
+    fontSize: 20,
+    height: 22,
+    color: 'white',
+  },
+});
 
 HomePage.propTypes = propTypes;
 export default HomePage;
