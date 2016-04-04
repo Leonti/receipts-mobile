@@ -30,6 +30,15 @@ function maxOffset(offset, windowWidth, width) {
     return offset < max ? max : offset;
 }
 
+function calcOffsetByZoom(width, height, zoom) {
+    let xDiff = width * zoom - width;
+    let yDiff = height * zoom - height;
+    return {
+        left: -xDiff/2,
+        top: -yDiff/2,
+    }
+}
+
 class ZoomableImage extends React.Component {
 
     constructor(props) {
@@ -52,6 +61,66 @@ class ZoomableImage extends React.Component {
         }
     }
 
+    processPinch(x1, y1, x2, y2) {
+        let distance = calcDistance(x1, y1, x2, y2);
+        let center = calcCenter(x1, y1, x2, y2);
+
+        if (!this.state.isZooming) {
+            let offsetByZoom = calcOffsetByZoom(this.props.style.width, this.props.style.height, this.state.zoom);
+            this.setState({
+                isZooming: true,
+                initialDistance: distance,
+                initialX: center.x,
+                initialY: center.y,
+                initialTop: this.state.top,
+                initialLeft: this.state.left,
+                initialZoom: this.state.zoom,
+                initialTopWithoutZoom: this.state.top - offsetByZoom.top,
+                initialLeftWithoutZoom: this.state.left - offsetByZoom.left,
+            });
+
+        } else {
+            let touchZoom = distance / this.state.initialDistance;
+            let zoom = touchZoom * this.state.initialZoom > 1
+                ? touchZoom * this.state.initialZoom : 1;
+
+            let offsetByZoom = calcOffsetByZoom(this.props.style.width, this.props.style.height, zoom);
+            let left = (this.state.initialLeftWithoutZoom * touchZoom) + offsetByZoom.left;
+            let top = (this.state.initialTopWithoutZoom * touchZoom) + offsetByZoom.top;
+
+            this.setState({
+                zoom: zoom,
+                left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * zoom),
+                top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * zoom),
+            });
+        }
+    }
+
+    processTouch(x, y) {
+        if (!this.state.isMoving) {
+            this.setState({
+                isMoving: true,
+                initialX: x,
+                initialY: y,
+                initialTop: this.state.top,
+                initialLeft: this.state.left,
+            });
+        } else {
+            let left = this.state.initialLeft + x - this.state.initialX;
+            let top = this.state.initialTop + y - this.state.initialY;
+
+            function maxOffset(offset, windowWidth, width) {
+                let max = windowWidth - width;
+                return offset < max ? max : offset;
+            }
+
+            this.setState({
+                left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * this.state.zoom),
+                top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * this.state.zoom),
+            });
+        }
+    }
+
     componentWillMount() {
         this._panResponder = PanResponder.create({  // Ask to be the responder:
 
@@ -62,91 +131,17 @@ class ZoomableImage extends React.Component {
             onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
             onPanResponderGrant: (evt, gestureState) => {
                 console.log('RESPONDER GRANT');
-                // The guesture has started. Show visual feedback so the user knows
-                // what is happening!
-                // gestureState.{x,y}0 will be set to zero now
             },
-            onPanResponderMove: (evt, gestureState) => {  // The most recent move distance is gestureState.move{X,Y}
-                // The accumulated gesture distance since becoming responder is
-                // gestureState.d{x,y}
-            //    console.log(gestureState);
-
+            onPanResponderMove: (evt, gestureState) => {
                 let touches = evt.nativeEvent.touches;
                 if (touches.length == 2) {
                     let touch1 = touches[0];
                     let touch2 = touches[1];
 
-                    let distance = calcDistance(touch1.pageX, touch1.pageY, touch2.pageX, touch2.pageY);
-                    let center = calcCenter(touch1.pageX, touch1.pageY, touch2.pageX, touch2.pageY);
-
-                    if (!this.state.isZooming) {
-
-                        let xDiff = this.props.style.width * this.state.zoom - this.props.style.width;
-                        let yDiff = this.props.style.height * this.state.zoom - this.props.style.height;
-                        let leftByZoom = -xDiff/2;
-                        let topByZoom = -yDiff/2;
-
-                        this.setState({
-                            isZooming: true,
-                            initialDistance: distance,
-                            initialX: center.x,
-                            initialY: center.y,
-                            initialTop: this.state.top,
-                            initialLeft: this.state.left,
-                            initialZoom: this.state.zoom,
-                            initialTopWithoutZoom: this.state.top - topByZoom,
-                            initialLeftWithoutZoom: this.state.left - leftByZoom,
-                        });
-
-//console.log('INITIAL TOP WITHOUT ZOOM', this.state.initialTopWithoutZoom);
-//console.log('INITIAL LEFT WITHOUT ZOOM', this.state.initialLeftWithoutZoom);
-
-                    } else {
-                        let touchZoom = distance / this.state.initialDistance;
-                        let unboundedZoom = touchZoom * this.state.initialZoom;
-                        let zoom = unboundedZoom > 1 ? unboundedZoom : 1;
-
-                        let xDiff = this.props.style.width * zoom - this.props.style.width;
-                        let yDiff = this.props.style.height * zoom - this.props.style.height;
-                        let leftByZoom = -xDiff/2;
-                        let topByZoom = -yDiff/2;
-
-                        let left = (this.state.initialLeftWithoutZoom * touchZoom) + leftByZoom;
-                        let top = (this.state.initialTopWithoutZoom * touchZoom) + topByZoom;
-
-                        this.setState({
-                            zoom: zoom,
-                            left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * zoom),
-                            top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * zoom),
-                        });
-                    }
+                    this.processPinch(touches[0].pageX, touches[0].pageY,
+                        touches[1].pageX, touches[1].pageY);
                 } else if (touches.length == 1) {
-                    let x = touches[0].pageX;
-                    let y = touches[0].pageY;
-
-                    if (!this.state.isMoving) {
-                        this.setState({
-                            isMoving: true,
-                            initialX: x,
-                            initialY: y,
-                            initialTop: this.state.top,
-                            initialLeft: this.state.left,
-                        });
-                    } else {
-                        let left = this.state.initialLeft + x - this.state.initialX;
-                        let top = this.state.initialTop + y - this.state.initialY;
-
-                        function maxOffset(offset, windowWidth, width) {
-                            let max = windowWidth - width;
-                            return offset < max ? max : offset;
-                        }
-
-                        this.setState({
-                            left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * this.state.zoom),
-                            top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * this.state.zoom),
-                        });
-                    }
-
+                    this.processTouch(touches[0].pageX, touches[0].pageY);
                 }
             },
 
@@ -155,20 +150,10 @@ class ZoomableImage extends React.Component {
                 console.log('ON TERMINATION REQUEST');
                 this.setState({
                     isZooming: false,
-                    isMoving: false,
-                    initialDistance: null,
-                    initialZoom: this.state.zoom
+                    isMoving: false
                 });
             },
             onPanResponderTerminate: (evt, gestureState) => {  // Another component has become the responder, so this gesture
-                console.log('ON TERMINATE');
-                // should be cancelled
-                this.setState({
-                    isZooming: false,
-                    isMoving: false,
-                    initialDistance: null,
-                    initialZoom: this.state.zoom
-                });
             },
             onShouldBlockNativeResponder: (evt, gestureState) => {  // Returns whether this component should block native components from becoming the JS
      // responder. Returns true by default. Is currently only supported on android.
