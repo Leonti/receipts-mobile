@@ -104,6 +104,25 @@ class Api {
         });
     }
 
+    static async updateReceipt(receiptId, fields) {
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+        return await (await fetch(baseUrl + '/user/' + userId + '/receipt/' + receiptId, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify([{
+                op: 'replace',
+                path: '/description',
+                value: fields.description
+            }])
+        })).json()
+    }
+
     static async isLoggedIn() {
         let token = await Storage.get(TOKEN_STORAGE_KEY);
 

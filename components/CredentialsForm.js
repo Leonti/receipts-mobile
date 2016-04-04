@@ -2,7 +2,6 @@ import React, {
     PropTypes,
     StyleSheet,
     View,
-    TouchableHighlight,
     ProgressBarAndroid,
     TextInput,
     Text } from 'react-native';
@@ -51,11 +50,6 @@ class CredentialsForm extends React.Component {
     render() {
         var signupButton = this.state.processing ? <ProgressBarAndroid indeterminate={true} /> :
         <Button text={this.props.label.toUpperCase()} onPress={this.submit} raised={true} theme="dark" />
-/*
-            <TouchableHighlight onPress={this.submit} underlayColor="transparent">
-              <Text>{this.props.label}</Text>
-            </TouchableHighlight>
-*/
         var errorView = this.state.error ? <ErrorView message={this.state.error} /> : null;
 
         return (

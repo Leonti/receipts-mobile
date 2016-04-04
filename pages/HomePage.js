@@ -1,6 +1,9 @@
-import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image } from 'react-native';
+import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image, ListView, ScrollView } from 'react-native';
 import ReceiptsPage from './ReceiptsPage';
-import Loader from '../components/Loader'
+import Loader from '../components/Loader';
+import ZoomableImage from '../components/ZoomableImage';
+import ReceiptSavePage from './ReceiptSavePage'
+import { SaveButton, CloseButton } from '../components/ModalButtons';
 import ActionButton from 'react-native-action-button';
 
 var Icon = require('react-native-vector-icons/Ionicons');
@@ -9,9 +12,12 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
 
+import ReceiptForm from '../components/ReceiptForm';
+
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
   replaceRoute: PropTypes.func.isRequired,
+  resetToRoute: PropTypes.func.isRequired
 };
 
 const imagePickerOptions = {
@@ -33,9 +39,14 @@ class HomePage extends React.Component {
         this._processImagePickerResponse = this._processImagePickerResponse.bind(this);
         this._logout = this._logout.bind(this);
 
+        this._updateReceipt = this._updateReceipt.bind(this);
+
+        this._ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
         this.state = {
             imageState: null,
-            receipts: []
+            receipts: [],
+            dataSource: this._ds,
         }
     }
 
@@ -63,6 +74,7 @@ class HomePage extends React.Component {
 
         console.log('RECEIPTS', receipts.length);
         this.setState({receipts: receipts});
+        this.setState({dataSource: this._ds.cloneWithRows(receipts)});
     }
 
     _showCamera() {
@@ -86,6 +98,8 @@ class HomePage extends React.Component {
             try {
                 let receipt = await Api.uploadFile(response.uri);
                 this._loadReceipts();
+                console.log('RECEIPT UPLOADED, UPDATING');
+                this._updateReceipt(receipt.id);
             } catch (e) {
                 console.log('Upload failed ' + e.message);
             }
@@ -98,9 +112,52 @@ class HomePage extends React.Component {
         });
     }
 
+    _updateReceipt(receiptId) {
+
+        let receiptData = {
+            description: null
+        }
+
+        let backToHome = () => {
+            this.props.resetToRoute({
+                name: "Home",
+                component: HomePage
+            })
+        }
+
+        this.props.toRoute({
+            name: "New receipt",
+            component: ReceiptForm,
+            leftCorner: CloseButton,
+            rightCorner: SaveButton,
+            leftCornerProps: {
+                onClose: backToHome
+            },
+            rightCornerProps: {
+                onSave: () => {
+                    console.log('Saving receipt', receiptData);
+                    let updateResult = Api.updateReceipt(receiptId,
+                        { description: receiptData.description })
+
+                    updateResult.then(backToHome);
+                }
+            },
+
+            passProps: {
+                onUpdate: (state) => {
+                    receiptData.description = state.description;
+                }
+            }
+        });
+    }
+
   render() {
       return (
-        <View style={{flex:1, backgroundColor: '#f3f3f3'}}>
+        <View
+        onLayout={(event) => {
+        //    console.log(event.nativeEvent.layout.width);
+        }}
+        style={{ flex:1, backgroundColor: '#f3f3f3' }}>
           <TouchableHighlight onPress={this._logout} underlayColor="transparent">
             <Text>Logout!</Text>
           </TouchableHighlight>
@@ -118,7 +175,20 @@ class HomePage extends React.Component {
               source={this.state.imageSource}
               style={{ width: 200, height: 200 }} />
 
+          <TouchableHighlight onPress={this._updateReceipt} underlayColor="transparent">
+            <Text>Update Receipt</Text>
+          </TouchableHighlight>
 
+          <ZoomableImage style={{
+              width: 300,
+              height: 300
+            }}
+          />
+
+          <ListView
+            dataSource={this.state.dataSource}
+            renderRow={(receipt) => <Text>{receipt.id} {receipt.description}</Text>}
+            />
 
          <ActionButton buttonColor="#F44336">
             <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
@@ -128,18 +198,36 @@ class HomePage extends React.Component {
                 <Icon name="images" style={styles.actionButtonIcon} />
             </ActionButton.Item>
          </ActionButton>
+
+
         </View>
       );
   }
 
 }
 
+/*
+         <View style={{
+             position: 'absolute',
+             left: 0,
+             top: 0,
+             backgroundColor: 'yellow',
+            width: 200,
+            height: 200,
+             borderColor: 'red',
+             borderStyle: 'solid',
+             borderWidth: 2
+         }}>
+             <ProgressBarAndroid indeterminate={true} />
+         </View>
+         */
+
 const styles = StyleSheet.create({
   actionButtonIcon: {
     fontSize: 20,
     height: 22,
     color: 'white',
-  },
+  }
 });
 
 HomePage.propTypes = propTypes;
