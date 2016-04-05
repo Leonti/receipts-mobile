@@ -179,11 +179,16 @@ class HomePage extends React.Component {
             <Text>Update Receipt</Text>
           </TouchableHighlight>
 
-          <ZoomableImage style={{
+          <ScrollView style={{
               width: 300,
               height: 300
-            }}
-          />
+          }}>
+              <ZoomableImage style={{
+                  width: 300,
+                  height: 500
+                }}
+              />
+        </ScrollView>
 
           <ListView
             dataSource={this.state.dataSource}

@@ -124,11 +124,22 @@ class ZoomableImage extends React.Component {
     componentWillMount() {
         this._panResponder = PanResponder.create({  // Ask to be the responder:
 
-            onStartShouldSetPanResponder: (evt, gestureState) => true,
+            onStartShouldSetPanResponder: (evt, gestureState) => false,
 
-            onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
-            onMoveShouldSetPanResponder: (evt, gestureState) => true,
-            onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onStartShouldSetPanResponderCapture: (evt, gestureState) => false,
+            onMoveShouldSetPanResponder: (evt, gestureState) => {
+                let maxTop = this.props.style.height - (this.props.style.height * this.state.zoom);
+
+                // bottom of scaled image matches the bottom of ZoomableImage
+                if (gestureState.dy < 0 && this.state.top < 0 && this.state.top == maxTop) {
+                    return false;
+                // top of scaled image matche the top of ZoomableImage
+                } else if (gestureState.dy > 0 && this.state.top == 0) {
+                    return false;
+                }
+                return true;
+            },
+            onMoveShouldSetPanResponderCapture: (evt, gestureState) => false,
             onPanResponderGrant: (evt, gestureState) => {
                 console.log('RESPONDER GRANT');
             },
