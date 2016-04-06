@@ -2,6 +2,7 @@ import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image, Li
 import ReceiptsPage from './ReceiptsPage';
 import Loader from '../components/Loader';
 import ZoomableImage from '../components/ZoomableImage';
+import ImageViewer from '../components/ImageViewer';
 import ReceiptSavePage from './ReceiptSavePage'
 import { SaveButton, CloseButton } from '../components/ModalButtons';
 import ActionButton from 'react-native-action-button';
@@ -151,7 +152,17 @@ class HomePage extends React.Component {
         });
     }
 
-  render() {
+    render() {
+        return (
+            <ImageViewer
+                source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
+                imageWidth={1080}
+                imageHeight={1920}
+            ></ImageViewer>
+        );
+    }
+
+  render2() {
       return (
         <View
         onLayout={(event) => {
@@ -187,6 +198,7 @@ class HomePage extends React.Component {
                   width: 300,
                   height: 500
                 }}
+                source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
               />
         </ScrollView>
 

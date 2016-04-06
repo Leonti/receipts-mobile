@@ -1,11 +1,4 @@
-import React, { Text, View, PanResponder, Image } from 'react-native';
-
-/*
-const propTypes = {
-  width: PropTypes.func.isRequired,
-  height: PropTypes.func.isRequired,
-};
-*/
+import React, { PropTypes, Text, View, PanResponder, Image } from 'react-native';
 
 function calcDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x1 - x2)
@@ -30,9 +23,9 @@ function maxOffset(offset, windowWidth, width) {
     return offset < max ? max : offset;
 }
 
-function calcOffsetByZoom(width, height, zoom) {
-    let xDiff = width * zoom - width;
-    let yDiff = height * zoom - height;
+function calcOffsetByZoom(width, height, imageWidth, imageHeight, zoom) {
+    let xDiff = imageWidth * zoom - width;
+    let yDiff = imageHeight * zoom - height;
     return {
         left: -xDiff/2,
         top: -yDiff/2,
@@ -44,8 +37,12 @@ class ZoomableImage extends React.Component {
     constructor(props) {
         super(props);
 
+        this._onLayout = this._onLayout.bind(this);
+
         this.state = {
-            zoom: 1,
+            zoom: null,
+            minZoom: null,
+            layoutKnown: false,
             isZooming: false,
             isMoving: false,
             initialDistance: null,
@@ -66,7 +63,8 @@ class ZoomableImage extends React.Component {
         let center = calcCenter(x1, y1, x2, y2);
 
         if (!this.state.isZooming) {
-            let offsetByZoom = calcOffsetByZoom(this.props.style.width, this.props.style.height, this.state.zoom);
+            let offsetByZoom = calcOffsetByZoom(this.state.width, this.state.height,
+                            this.props.imageWidth, this.props.imageHeight, this.state.zoom);
             this.setState({
                 isZooming: true,
                 initialDistance: distance,
@@ -81,17 +79,20 @@ class ZoomableImage extends React.Component {
 
         } else {
             let touchZoom = distance / this.state.initialDistance;
-            let zoom = touchZoom * this.state.initialZoom > 1
-                ? touchZoom * this.state.initialZoom : 1;
+            let zoom = touchZoom * this.state.initialZoom > this.state.minZoom
+                ? touchZoom * this.state.initialZoom : this.state.minZoom;
 
-            let offsetByZoom = calcOffsetByZoom(this.props.style.width, this.props.style.height, zoom);
+            let offsetByZoom = calcOffsetByZoom(this.state.width, this.state.height,
+                this.props.imageWidth, this.props.imageHeight, zoom);
             let left = (this.state.initialLeftWithoutZoom * touchZoom) + offsetByZoom.left;
             let top = (this.state.initialTopWithoutZoom * touchZoom) + offsetByZoom.top;
 
             this.setState({
                 zoom: zoom,
-                left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * zoom),
-                top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * zoom),
+                left: 0,
+                top: 0,
+                left: left > 0 ? 0 : maxOffset(left, this.state.width, this.props.imageWidth * zoom),
+                top: top > 0 ? 0 : maxOffset(top, this.state.height, this.props.imageHeight * zoom),
             });
         }
     }
@@ -115,34 +116,38 @@ class ZoomableImage extends React.Component {
             }
 
             this.setState({
-                left: left > 0 ? 0 : maxOffset(left, this.props.style.width, this.props.style.width * this.state.zoom),
-                top: top > 0 ? 0 : maxOffset(top, this.props.style.height, this.props.style.height * this.state.zoom),
+                left: left > 0 ? 0 : maxOffset(left, this.state.width, this.props.imageWidth * this.state.zoom),
+                top: top > 0 ? 0 : maxOffset(top, this.state.height, this.props.imageHeight * this.state.zoom),
             });
         }
     }
 
+    _onLayout(event) {
+        let layout = event.nativeEvent.layout;
+
+        if (layout.width === this.state.width
+            && layout.height === this.state.height) {
+            return;
+        }
+
+        let zoom = layout.width / this.props.imageWidth;
+
+        this.setState({
+            layoutKnown: true,
+            width: layout.width,
+            height: layout.height,
+            zoom: zoom,
+            minZoom: zoom
+        });
+    }
+
     componentWillMount() {
-        this._panResponder = PanResponder.create({  // Ask to be the responder:
-
-            onStartShouldSetPanResponder: (evt, gestureState) => false,
-
-            onStartShouldSetPanResponderCapture: (evt, gestureState) => false,
-            onMoveShouldSetPanResponder: (evt, gestureState) => {
-                let maxTop = this.props.style.height - (this.props.style.height * this.state.zoom);
-
-                // bottom of scaled image matches the bottom of ZoomableImage
-                if (gestureState.dy < 0 && this.state.top < 0 && this.state.top == maxTop) {
-                    return false;
-                // top of scaled image matche the top of ZoomableImage
-                } else if (gestureState.dy > 0 && this.state.top == 0) {
-                    return false;
-                }
-                return true;
-            },
-            onMoveShouldSetPanResponderCapture: (evt, gestureState) => false,
-            onPanResponderGrant: (evt, gestureState) => {
-                console.log('RESPONDER GRANT');
-            },
+        this._panResponder = PanResponder.create({
+            onStartShouldSetPanResponder: (evt, gestureState) => true,
+            onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onMoveShouldSetPanResponder: (evt, gestureState) => true,
+            onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+            onPanResponderGrant: (evt, gestureState) => {},
             onPanResponderMove: (evt, gestureState) => {
                 let touches = evt.nativeEvent.touches;
                 if (touches.length == 2) {
@@ -156,39 +161,41 @@ class ZoomableImage extends React.Component {
                 }
             },
 
-            onPanResponderTerminationRequest: (evt, gestureState) => true, onPanResponderRelease: (evt, gestureState) => {  // The user has released all touches while this view is the
-                // responder. This typically means a gesture has succeeded
-                console.log('ON TERMINATION REQUEST');
+            onPanResponderTerminationRequest: (evt, gestureState) => true,
+            onPanResponderRelease: (evt, gestureState) => {
                 this.setState({
                     isZooming: false,
                     isMoving: false
                 });
             },
-            onPanResponderTerminate: (evt, gestureState) => {  // Another component has become the responder, so this gesture
-            },
-            onShouldBlockNativeResponder: (evt, gestureState) => {  // Returns whether this component should block native components from becoming the JS
-     // responder. Returns true by default. Is currently only supported on android.
-                return true;
-            },
+            onPanResponderTerminate: (evt, gestureState) => {},
+            onShouldBlockNativeResponder: (evt, gestureState) => true,
         });
     }
 
     render() {
         return (
-          <View style={{ width: this.props.style.width, height: this.props.style.height, backgroundColor: 'blue' }}
-          {...this._panResponder.panHandlers}>
+          <View
+            style={this.props.style}
+            {...this._panResponder.panHandlers}
+            onLayout={this._onLayout}>
              <Image style={{
                     position: 'absolute',
                     top: this.state.top,
                     left: this.state.left,
-                    width: this.props.style.width * this.state.zoom,
-                    height: this.props.style.height * this.state.zoom
+                    width: this.props.imageWidth * this.state.zoom,
+                    height: this.props.imageHeight * this.state.zoom
              }}
-             source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}} />
+             source={this.props.source} />
           </View>
         );
     }
 
 }
 
+ZoomableImage.propTypes = {
+  imageWidth: PropTypes.number.isRequired,
+  imageHeight: PropTypes.number.isRequired,
+  source: PropTypes.object.isRequired,
+};
 export default ZoomableImage;
