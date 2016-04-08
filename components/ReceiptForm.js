@@ -4,44 +4,103 @@ import React, {
     View,
     ProgressBarAndroid,
     TextInput,
-    TouchableHighlight,
+    TouchableOpacity,
+    Image,
     Text } from 'react-native';
 
-import { Button } from 'react-native-material-design';
-
+import { CloseButton } from './ModalButtons';
+import ImageViewer from './ImageViewer';
+import Spinner from './Spinner';
 var Icon = require('react-native-vector-icons/Ionicons');
 
-const propTypes = {
-    onUpdate: PropTypes.func.isRequired
-};
+const MAX_HEIGHT = 200;
 
 class ReceiptForm extends React.Component {
 
     constructor(props) {
         super(props);
+
+        let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
-            description: null
+            description: props.description,
+            total: props.total.toString(),
+            thumbnailWidth: props.imageWidth * scale,
+            thumbnailHeight: props.imageHeight * scale,
         };
 
-        console.log(this);
+        this._imageViewer = this._imageViewer.bind(this);
+    }
+
+    _imageViewer() {
+        this.props.toRoute({
+            name: "View receipt",
+            component: ImageViewer,
+            leftCorner: CloseButton,
+            leftCornerProps: {
+                onClose: this.props.toBack
+            },
+
+            passProps: {
+                source: this.props.source,
+                imageWidth: this.props.imageWidth,
+                imageHeight: this.props.imageHeight
+            }
+        });
     }
 
     componentWillUpdate(nextProps, nextState) {
-        this.props.onUpdate(nextState);
+        this.props.onUpdate({
+            total: nextState.total,
+            description: nextState.description,
+        });
     }
 
     render() {
         return (
-            <View style={{ backgroundColor: 'green', flex: 1}}>
-                <Text>Notes(optional):</Text>
+            <View style={{
+                flex: 1
+            }}>
+                <View style={{
+                    alignItems: 'center'
+                }}>
+                        <View style={{
+                            padding: 15
+                        }}>
+                        <TouchableOpacity onPress={this._imageViewer}>
+                            <Image
+                                source={this.props.source}
+                                style={{
+                                    width: this.state.thumbnailWidth,
+                                    height: this.state.thumbnailHeight,
+                                }} />
+                        </TouchableOpacity>
+                        </View>
+                </View>
+
+                <Text>Total:</Text>
+                <TextInput
+                    keyboardType='numeric'
+                    onChangeText={(text) => this.setState({total: text})}
+                    value={this.state.total} />
+
+                <Text>Notes:</Text>
                 <TextInput style={{ height: 100, textAlignVertical: 'top'}}
                     onChangeText={(text) => this.setState({description: text})}
                     multiline={true}
-                    value={this.state.notes} />
+                    value={this.state.description} />
+
             </View>
         );
     }
 }
 
-ReceiptForm.propTypes = propTypes;
+// <Spinner message='Saving receipt ...' visible={this.props.spinnerVisible} />
+
+ReceiptForm.propTypes = {
+    onUpdate: PropTypes.func.isRequired,
+    source: PropTypes.object.isRequired,
+    imageWidth: PropTypes.number.isRequired,
+    imageHeight: PropTypes.number.isRequired,
+    toBack: PropTypes.func.isRequired
+};
 export default ReceiptForm

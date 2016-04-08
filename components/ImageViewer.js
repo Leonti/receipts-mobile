@@ -1,12 +1,6 @@
 import React, {Text, View, PropTypes} from 'react-native';
 import ZoomableImage from './ZoomableImage';
 
-const propTypes = {
-  source: PropTypes.object.isRequired,
-  imageWidth: PropTypes.number.isRequired,
-  imageHeight: PropTypes.number.isRequired,
-};
-
 class ImageViewer extends React.Component {
 
     render() {
@@ -26,5 +20,9 @@ class ImageViewer extends React.Component {
     }
 }
 
-ImageViewer.propTypes = propTypes;
+ImageViewer.propTypes = {
+    source: PropTypes.object.isRequired,
+    imageWidth: PropTypes.number.isRequired,
+    imageHeight: PropTypes.number.isRequired,
+};
 export default ImageViewer;

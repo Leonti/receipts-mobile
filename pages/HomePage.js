@@ -40,7 +40,8 @@ class HomePage extends React.Component {
         this._processImagePickerResponse = this._processImagePickerResponse.bind(this);
         this._logout = this._logout.bind(this);
 
-        this._updateReceipt = this._updateReceipt.bind(this);
+        this._createReceipt = this._createReceipt.bind(this);
+        this._openReceiptForm = this._openReceiptForm.bind(this);
 
         this._ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
@@ -52,7 +53,7 @@ class HomePage extends React.Component {
     }
 
     componentWillMount() {
-        this._loadReceipts();
+    //    this._loadReceipts();
     }
 
     async _logout() {
@@ -90,20 +91,12 @@ class HomePage extends React.Component {
         if (response.uri) {
 
             // uri (on android)
-            const source = {uri: response.uri, isStatic: true};
-
-            this.setState({
-                imageSource: source
+            console.log('IMAGE', response);
+            this._openReceiptForm({
+                source: {uri: response.uri, isStatic: true},
+                width: response.isVertical ? response.height : response.width,
+                height: response.isVertical ? response.width : response.height,
             });
-
-            try {
-                let receipt = await Api.uploadFile(response.uri);
-                this._loadReceipts();
-                console.log('RECEIPT UPLOADED, UPDATING');
-                this._updateReceipt(receipt.id);
-            } catch (e) {
-                console.log('Upload failed ' + e.message);
-            }
         }
     }
 
@@ -113,17 +106,23 @@ class HomePage extends React.Component {
         });
     }
 
-    _updateReceipt(receiptId) {
+    async _createReceipt(imageUri, total, description) {
+        try {
+            let receipt = await Api.uploadFile(imageUri, total, description);
+            console.log('RECEIPT UPLOADED ', receipt);
+            this.props.toBack();
+        //    this._loadReceipts();
+        } catch (e) {
+            console.log('Upload failed ' + e.message);
+            this.props.toBack()
+        }
+    }
+
+    async _openReceiptForm(image) {
 
         let receiptData = {
-            description: null
-        }
-
-        let backToHome = () => {
-            this.props.resetToRoute({
-                name: "Home",
-                component: HomePage
-            })
+            description: 'some initial description',
+            total: 20.21
         }
 
         this.props.toRoute({
@@ -132,37 +131,39 @@ class HomePage extends React.Component {
             leftCorner: CloseButton,
             rightCorner: SaveButton,
             leftCornerProps: {
-                onClose: backToHome
+                onClose: this.props.toBack
             },
             rightCornerProps: {
                 onSave: () => {
-                    console.log('Saving receipt', receiptData);
-                    let updateResult = Api.updateReceipt(receiptId,
-                        { description: receiptData.description })
-
-                    updateResult.then(backToHome);
+                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description)
                 }
             },
 
             passProps: {
                 onUpdate: (state) => {
                     receiptData.description = state.description;
-                }
+                    receiptData.total = state.total;
+                },
+                source: image.source,
+                imageWidth: image.width,
+                imageHeight: image.height,
+                description: receiptData.description,
+                total: receiptData.total
             }
         });
     }
 
-    render() {
+    render2() {
         return (
             <ImageViewer
                 source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
                 imageWidth={1080}
                 imageHeight={1920}
-            ></ImageViewer>
+            />
         );
     }
 
-  render2() {
+  render() {
       return (
         <View
         onLayout={(event) => {
@@ -189,18 +190,6 @@ class HomePage extends React.Component {
           <TouchableHighlight onPress={this._updateReceipt} underlayColor="transparent">
             <Text>Update Receipt</Text>
           </TouchableHighlight>
-
-          <ScrollView style={{
-              width: 300,
-              height: 300
-          }}>
-              <ZoomableImage style={{
-                  width: 300,
-                  height: 500
-                }}
-                source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
-              />
-        </ScrollView>
 
           <ListView
             dataSource={this.state.dataSource}

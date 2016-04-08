@@ -68,7 +68,7 @@ class Api {
         return (await Storage.get(USER_INFO_KEY)).id;
     }
 
-    static async uploadFile(fileUri, progressCallback) {
+    static async uploadFile(fileUri, total, description) {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
@@ -100,6 +100,8 @@ class Api {
             var formData = new FormData();
             formData.append('receipt', receipt);
             formData.append('filename', 'receipt.jpg');
+            formData.append('total', total);
+            formData.append('description', description);
             xhr.send(formData);
         });
     }
