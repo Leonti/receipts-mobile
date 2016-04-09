@@ -5,6 +5,7 @@ import React, {
     ProgressBarAndroid,
     TextInput,
     TouchableOpacity,
+    ScrollView,
     Image,
     Text } from 'react-native';
 
@@ -23,7 +24,7 @@ class ReceiptForm extends React.Component {
         let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
             description: props.description,
-            total: props.total.toString(),
+            total: props.total !== null ? props.total.toString(): null,
             thumbnailWidth: props.imageWidth * scale,
             thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
@@ -65,34 +66,36 @@ class ReceiptForm extends React.Component {
             <View style={{
                 flex: 1
             }}>
-                <View style={{
-                    alignItems: 'center'
-                }}>
-                        <View style={{
-                            padding: 15
-                        }}>
-                        <TouchableOpacity onPress={this._imageViewer}>
-                            <Image
-                                source={this.props.source}
-                                style={{
-                                    width: this.state.thumbnailWidth,
-                                    height: this.state.thumbnailHeight,
-                                }} />
-                        </TouchableOpacity>
-                        </View>
-                </View>
+                <ScrollView>
+                    <View style={{
+                        alignItems: 'center'
+                    }}>
+                            <View style={{
+                                padding: 15
+                            }}>
+                            <TouchableOpacity onPress={this._imageViewer}>
+                                <Image
+                                    source={this.props.source}
+                                    style={{
+                                        width: this.state.thumbnailWidth,
+                                        height: this.state.thumbnailHeight,
+                                    }} />
+                            </TouchableOpacity>
+                            </View>
+                    </View>
 
-                <Text>Total:</Text>
-                <TextInput
-                    keyboardType='numeric'
-                    onChangeText={(text) => this.setState({total: text})}
-                    value={this.state.total} />
+                    <Text>Total:</Text>
+                    <TextInput
+                        keyboardType='numeric'
+                        onChangeText={(text) => this.setState({total: text})}
+                        value={this.state.total} />
 
-                <Text>Notes:</Text>
-                <TextInput style={{ height: 100, textAlignVertical: 'top'}}
-                    onChangeText={(text) => this.setState({description: text})}
-                    multiline={true}
-                    value={this.state.description} />
+                    <Text>Notes:</Text>
+                    <TextInput style={{ height: 100, textAlignVertical: 'top'}}
+                        onChangeText={(text) => this.setState({description: text})}
+                        multiline={true}
+                        value={this.state.description} />
+                </ScrollView>
                 <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
             </View>
         );

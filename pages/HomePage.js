@@ -72,11 +72,15 @@ class HomePage extends React.Component {
     }
 
     async _loadReceipts() {
-        let receipts = await Api.getReceipts();
+        try {
+            let receipts = await Api.getReceipts();
 
-        console.log('RECEIPTS', receipts.length);
-        this.setState({receipts: receipts});
-        this.setState({dataSource: this._ds.cloneWithRows(receipts)});
+            console.log('RECEIPTS', receipts.length);
+            this.setState({receipts: receipts});
+            this.setState({dataSource: this._ds.cloneWithRows(receipts)});
+        } catch (e) {
+            ToastAndroid.show('Failed to load receipts', ToastAndroid.LONG);
+        }
     }
 
     _showCamera() {
@@ -115,7 +119,6 @@ class HomePage extends React.Component {
             this._loadReceipts();
         } catch (e) {
             console.log('Upload failed ' + e.message);
-            this.props.toBack();
             ToastAndroid.show('Failed to save the receipt', ToastAndroid.LONG);
         }
     }
@@ -123,8 +126,8 @@ class HomePage extends React.Component {
     async _openReceiptForm(image) {
 
         let receiptData = {
-            description: 'some initial description',
-            total: 20.21
+            description: null,
+            total: null
         }
 
         let bus = {};
@@ -140,7 +143,8 @@ class HomePage extends React.Component {
             rightCornerProps: {
                 onSave: () => {
                     bus.toggleSpinner(true);
-                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description);
+                    let hideSpinner = bus.toggleSpinner.bind(this, false);
+                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description).then(hideSpinner, hideSpinner);
                 }
             },
 

@@ -79,12 +79,12 @@ class Api {
                 if (xhr.status >= 200 && xhr.status < 300) {
                   resolve(JSON.parse(xhr.responseText));
                 } else {
-                  reject(xhr.statusText);
+                  reject(new Error('Upload failed with status code ' + xhr.status));
                 }
             };
 
             xhr.onerror = function() {
-                reject(xhr.statusText);
+                reject(new Error(xhr.statusText));
             }
 
             xhr.open('POST', baseUrl + '/user/' + userId + '/receipt');
