@@ -26,6 +26,11 @@ class ReceiptForm extends React.Component {
             total: props.total.toString(),
             thumbnailWidth: props.imageWidth * scale,
             thumbnailHeight: props.imageHeight * scale,
+            spinnerVisible: false,
+        };
+
+        this.props.bus.toggleSpinner = (visible) => {
+            this.setState({spinnerVisible: visible});
         };
 
         this._imageViewer = this._imageViewer.bind(this);
@@ -88,19 +93,18 @@ class ReceiptForm extends React.Component {
                     onChangeText={(text) => this.setState({description: text})}
                     multiline={true}
                     value={this.state.description} />
-
+                <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
             </View>
         );
     }
 }
-
-// <Spinner message='Saving receipt ...' visible={this.props.spinnerVisible} />
 
 ReceiptForm.propTypes = {
     onUpdate: PropTypes.func.isRequired,
     source: PropTypes.object.isRequired,
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
-    toBack: PropTypes.func.isRequired
+    toBack: PropTypes.func.isRequired,
+    bus: PropTypes.object.isRequired,
 };
 export default ReceiptForm

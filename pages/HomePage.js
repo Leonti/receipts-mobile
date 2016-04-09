@@ -1,4 +1,4 @@
-import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image, ListView, ScrollView } from 'react-native';
+import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image, ListView, ScrollView, ToastAndroid } from 'react-native';
 import ReceiptsPage from './ReceiptsPage';
 import Loader from '../components/Loader';
 import ZoomableImage from '../components/ZoomableImage';
@@ -53,7 +53,7 @@ class HomePage extends React.Component {
     }
 
     componentWillMount() {
-    //    this._loadReceipts();
+        this._loadReceipts();
     }
 
     async _logout() {
@@ -111,10 +111,12 @@ class HomePage extends React.Component {
             let receipt = await Api.uploadFile(imageUri, total, description);
             console.log('RECEIPT UPLOADED ', receipt);
             this.props.toBack();
-        //    this._loadReceipts();
+            ToastAndroid.show('Receipt saved', ToastAndroid.SHORT);
+            this._loadReceipts();
         } catch (e) {
             console.log('Upload failed ' + e.message);
-            this.props.toBack()
+            this.props.toBack();
+            ToastAndroid.show('Failed to save the receipt', ToastAndroid.LONG);
         }
     }
 
@@ -124,6 +126,8 @@ class HomePage extends React.Component {
             description: 'some initial description',
             total: 20.21
         }
+
+        let bus = {};
 
         this.props.toRoute({
             name: "New receipt",
@@ -135,7 +139,8 @@ class HomePage extends React.Component {
             },
             rightCornerProps: {
                 onSave: () => {
-                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description)
+                    bus.toggleSpinner(true);
+                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description);
                 }
             },
 
@@ -148,7 +153,8 @@ class HomePage extends React.Component {
                 imageWidth: image.width,
                 imageHeight: image.height,
                 description: receiptData.description,
-                total: receiptData.total
+                total: receiptData.total,
+                bus: bus,
             }
         });
     }
