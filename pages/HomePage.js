@@ -1,11 +1,25 @@
-import React, { PropTypes, StyleSheet, View, TouchableHighlight, Text, Image, ListView, ScrollView, ToastAndroid } from 'react-native';
-import ReceiptsPage from './ReceiptsPage';
+import React, {
+    PropTypes,
+    StyleSheet,
+    View,
+    TouchableHighlight,
+    Text,
+    Image,
+    ListView,
+    ScrollView,
+    ToastAndroid,
+    DrawerLayoutAndroid,
+    RecyclerViewBackedScrollView,
+ } from 'react-native';
+
 import Loader from '../components/Loader';
 import ZoomableImage from '../components/ZoomableImage';
 import ImageViewer from '../components/ImageViewer';
 import ReceiptSavePage from './ReceiptSavePage'
 import { SaveButton, CloseButton } from '../components/ModalButtons';
 import ActionButton from 'react-native-action-button';
+
+var moment = require('moment');
 
 var Icon = require('react-native-vector-icons/Ionicons');
 
@@ -33,13 +47,12 @@ class HomePage extends React.Component {
 
     constructor(props) {
         super(props);
-        this.receiptsPage = this.receiptsPage.bind(this);
+
         this._loadReceipts = this._loadReceipts.bind(this);
         this._showCamera = this._showCamera.bind(this);
         this._showImageLibrary = this._showImageLibrary.bind(this);
         this._processImagePickerResponse = this._processImagePickerResponse.bind(this);
         this._logout = this._logout.bind(this);
-
         this._createReceipt = this._createReceipt.bind(this);
         this._openReceiptForm = this._openReceiptForm.bind(this);
 
@@ -61,13 +74,6 @@ class HomePage extends React.Component {
         this.props.replaceRoute({
             name: "Loader",
             component: Loader
-        });
-    }
-
-    receiptsPage() {
-        this.props.toRoute({
-            name: "Receipts",
-            component: ReceiptsPage
         });
     }
 
@@ -102,12 +108,6 @@ class HomePage extends React.Component {
                 height: response.isVertical ? response.width : response.height,
             });
         }
-    }
-
-    async camera() {
-        ImagePickerManager.showImagePicker(options, (response) => {
-          console.log('Response = ', response);
-        });
     }
 
     async _createReceipt(imageUri, total, description) {
@@ -163,88 +163,82 @@ class HomePage extends React.Component {
         });
     }
 
-    render2() {
+    render() {
+        var navigationView = (
+            <View style={{flex: 1, backgroundColor: '#fff'}}>
+                <TouchableHighlight onPress={this._logout} underlayColor="transparent">
+                  <Text>Logout</Text>
+                </TouchableHighlight>
+            </View>
+        );
+
         return (
-            <ImageViewer
-                source={{uri: 'http://facebook.github.io/react/img/logo_og.png'}}
-                imageWidth={1080}
-                imageHeight={1920}
-            />
+            <DrawerLayoutAndroid
+                        drawerWidth={200}
+                        drawerPosition={DrawerLayoutAndroid.positions.Left}
+                        renderNavigationView={() => navigationView}>
+                        {this._renderHome()}
+            </DrawerLayoutAndroid>
         );
     }
 
-  render() {
-      return (
-        <View
-        onLayout={(event) => {
-        //    console.log(event.nativeEvent.layout.width);
-        }}
-        style={{ flex:1, backgroundColor: '#f3f3f3' }}>
-          <TouchableHighlight onPress={this._logout} underlayColor="transparent">
-            <Text>Logout!</Text>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={this.receiptsPage} underlayColor="transparent">
-            <Text>Receipts</Text>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={this.cameraRoll} underlayColor="transparent">
-            <Text>User Receipts</Text>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={this.camera} underlayColor="transparent">
-            <Text>Camera</Text>
-          </TouchableHighlight>
-          <Text>Total receipts {this.state.receipts.length}</Text>
-          <Image
-              source={this.state.imageSource}
-              style={{ width: 200, height: 200 }} />
+    _renderRow(receipt) {
+        return (
+            <TouchableHighlight onPress={() => this._pressRow(rowID)}>
+                <View>
+                    <View style={styles.row}>
+                        <Text style={styles.text}>{moment(receipt.timestamp).format('lll')} {receipt.description} {receipt.total}</Text>
+                    </View>
+                </View>
+            </TouchableHighlight>
+        );
+    }
 
-          <TouchableHighlight onPress={this._updateReceipt} underlayColor="transparent">
-            <Text>Update Receipt</Text>
-          </TouchableHighlight>
-
-          <ListView
-            dataSource={this.state.dataSource}
-            renderRow={(receipt) => <Text>{receipt.id} {receipt.description}</Text>}
-            />
-
-         <ActionButton buttonColor="#F44336">
-            <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
-                <Icon name="camera" style={styles.actionButtonIcon} />
-            </ActionButton.Item>
-            <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary}>
-                <Icon name="images" style={styles.actionButtonIcon} />
-            </ActionButton.Item>
-         </ActionButton>
-
-
-        </View>
-      );
-  }
+    _renderHome() {
+        return (
+            <View style={{ flex:1, backgroundColor: '#f3f3f3' }}>
+                <ListView
+                    dataSource={this.state.dataSource}
+                    renderRow={this._renderRow}
+                    renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
+                    renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
+                />
+                <ActionButton buttonColor="#F44336">
+                    <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
+                        <Icon name="camera" style={styles.actionButtonIcon} />
+                    </ActionButton.Item>
+                    <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary}>
+                        <Icon name="images" style={styles.actionButtonIcon} />
+                    </ActionButton.Item>
+                </ActionButton>
+            </View>
+        );
+    }
 
 }
 
-/*
-         <View style={{
-             position: 'absolute',
-             left: 0,
-             top: 0,
-             backgroundColor: 'yellow',
-            width: 200,
-            height: 200,
-             borderColor: 'red',
-             borderStyle: 'solid',
-             borderWidth: 2
-         }}>
-             <ProgressBarAndroid indeterminate={true} />
-         </View>
-         */
-
 const styles = StyleSheet.create({
-  actionButtonIcon: {
-    fontSize: 20,
-    height: 22,
-    color: 'white',
-  }
+    actionButtonIcon: {
+        fontSize: 20,
+        height: 22,
+        color: 'white',
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        padding: 10,
+        backgroundColor: '#F6F6F6',
+    },
+    separator: {
+        height: 1,
+        backgroundColor: '#CCCCCC',
+    },
+    text: {
+        flex: 1,
+    },
 });
+
+
 
 HomePage.propTypes = propTypes;
 export default HomePage;

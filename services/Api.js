@@ -71,7 +71,7 @@ class Api {
     static async uploadFile(fileUri, total, description) {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
-
+console.log('UPLOADING', arguments);
         return new Promise(function(resolve, reject) {
 
             let xhr = new XMLHttpRequest();
@@ -100,8 +100,8 @@ class Api {
             var formData = new FormData();
             formData.append('receipt', receipt);
             formData.append('filename', 'receipt.jpg');
-            formData.append('total', total);
-            formData.append('description', description);
+            formData.append('total', total === null ? '' : total);
+            formData.append('description', description === null ? '' : description);
             xhr.send(formData);
         });
     }

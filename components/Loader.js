@@ -1,4 +1,4 @@
-import React, { PropTypes, View, Navigator } from 'react-native';
+import React, { PropTypes, View, Navigator, TouchableHighlight } from 'react-native';
 
 import LoginPage from '../pages/LoginPage';
 import HomePage from '../pages/HomePage';
@@ -28,13 +28,13 @@ class Loader extends React.Component {
     _login() {
         this.props.replaceRoute({
             name: "Login",
-            component: LoginPage
+            component: LoginPage,
         });
     }
 
     _start() {
         this.props.replaceRoute({
-          name: 'Welcome!',
+          name: 'Your receipts',
           component: HomePage,
         });
     }
