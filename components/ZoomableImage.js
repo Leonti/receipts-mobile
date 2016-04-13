@@ -18,8 +18,11 @@ function calcCenter(x1, y1, x2, y2) {
     };
 }
 
-function maxOffset(offset, windowWidth, width) {
-    let max = windowWidth - width;
+function maxOffset(offset, windowDimension, imageDimension) {
+    let max = windowDimension - imageDimension;
+    if (max >= 0) {
+        return 0;
+    }
     return offset < max ? max : offset;
 }
 
@@ -109,11 +112,6 @@ class ZoomableImage extends React.Component {
         } else {
             let left = this.state.initialLeft + x - this.state.initialX;
             let top = this.state.initialTop + y - this.state.initialY;
-
-            function maxOffset(offset, windowWidth, width) {
-                let max = windowWidth - width;
-                return offset < max ? max : offset;
-            }
 
             this.setState({
                 left: left > 0 ? 0 : maxOffset(left, this.state.width, this.props.imageWidth * this.state.zoom),
