@@ -9,8 +9,8 @@ import React, {
     Image,
     Text } from 'react-native';
 
-import ImageViewer from './ImageViewer';
-import Spinner from './Spinner';
+import ImageViewer from '../components/ImageViewer';
+import Spinner from '../components/Spinner';
 var Icon = require('react-native-vector-icons/Ionicons');
 
 const MAX_HEIGHT = 200;
@@ -86,17 +86,21 @@ class ReceiptFormPage extends React.Component {
                             </View>
                     </View>
 
-                    <Text>Total:</Text>
-                    <TextInput
-                        keyboardType='numeric'
-                        onChangeText={(text) => this.setState({total: text})}
-                        value={this.state.total} />
+                    <View style={styles.formFieldsWrapper}>
+                        <Text style={styles.formLabel}>Total:</Text>
+                        <TextInput
+                            style={styles.total}
+                            keyboardType='numeric'
+                            onChangeText={(text) => this.setState({total: text})}
+                            value={this.state.total} />
 
-                    <Text>Notes:</Text>
-                    <TextInput style={{ height: 100, textAlignVertical: 'top'}}
-                        onChangeText={(text) => this.setState({description: text})}
-                        multiline={true}
-                        value={this.state.description} />
+                        <Text style={styles.formLabel}>Notes:</Text>
+                        <TextInput
+                            style={styles.description}
+                            onChangeText={(text) => this.setState({description: text})}
+                            multiline={true}
+                            value={this.state.description} />
+                    </View>
                 </ScrollView>
                 <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
             </View>
@@ -108,6 +112,24 @@ const styles = StyleSheet.create({
     toolbar: {
         backgroundColor: '#e9eaed',
         height: 56,
+    },
+
+    formFieldsWrapper: {
+        padding: 20
+    },
+
+    formLabel: {
+        fontSize: 18
+    },
+
+    total: {
+        fontSize: 18
+    },
+
+    description: {
+        fontSize: 18,
+        height: 100,
+        textAlignVertical: 'top',
     }
 });
 

@@ -162,7 +162,7 @@ class HomePage extends React.Component {
             <TouchableHighlight onPress={() => this._pressRow(rowID)}>
                 <View>
                     <View style={styles.row}>
-                        <Text style={styles.text}>{moment(receipt.timestamp).format('lll')} {receipt.description} {receipt.total}</Text>
+                        <Text style={styles.rowText}>{moment(receipt.timestamp).format('lll')} {receipt.description} {receipt.total}</Text>
                     </View>
                 </View>
             </TouchableHighlight>
@@ -175,11 +175,10 @@ class HomePage extends React.Component {
             <View style={{ flex:1, backgroundColor: '#f3f3f3' }}>
             <Icon.ToolbarAndroid
                 style={styles.toolbar}
-                title="AwesomeApp"
+                title="Your Receipts"
                 navIconName="android-menu"
-                actions={[{title: 'Settings', show: 'always'}]}
                 onIconClicked={() => this.refs['DRAWER'].openDrawer()}
-                onActionSelected={this.onActionSelected} />
+                />
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow}
@@ -220,8 +219,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#e9eaed',
         height: 56,
     },
-    text: {
+    rowText: {
         flex: 1,
+        fontSize: 20,
     },
 });
 
