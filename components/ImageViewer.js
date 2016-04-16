@@ -1,4 +1,4 @@
-import React, {Text, View, PropTypes, TouchableHighlight} from 'react-native';
+import React, {Text, View, PropTypes, TouchableHighlight, StyleSheet} from 'react-native';
 import ZoomableImage from './ZoomableImage';
 var Icon = require('react-native-vector-icons/Ionicons');
 
@@ -17,21 +17,23 @@ class ImageViewer extends React.Component {
                   imageHeight={this.props.imageHeight}
                   source={this.props.source}
                 />
-                <TouchableHighlight onPress={this.props.toBack}
-                    style={{
-                        position: 'absolute',
-                        top: 20,
-                        left: 20
-                    }}
-                >
-                <Icon name="android-close" size={30} color='white'
-
-                />
+                <TouchableHighlight onPress={this.props.toBack} style={styles.closeButton}>
+                    <Icon name="android-close" size={30} color='white'/>
                 </TouchableHighlight>
             </View>
         );
     }
 }
+
+const styles = StyleSheet.create({
+
+    closeButton: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        padding: 20
+    }
+});
 
 ImageViewer.propTypes = {
     source: PropTypes.object.isRequired,
