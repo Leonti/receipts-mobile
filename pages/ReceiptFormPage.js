@@ -9,14 +9,13 @@ import React, {
     Image,
     Text } from 'react-native';
 
-import { CloseButton } from './ModalButtons';
 import ImageViewer from './ImageViewer';
 import Spinner from './Spinner';
 var Icon = require('react-native-vector-icons/Ionicons');
 
 const MAX_HEIGHT = 200;
 
-class ReceiptForm extends React.Component {
+class ReceiptFormPage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -30,22 +29,13 @@ class ReceiptForm extends React.Component {
             spinnerVisible: false,
         };
 
-        this.props.bus.toggleSpinner = (visible) => {
-            this.setState({spinnerVisible: visible});
-        };
-
         this._imageViewer = this._imageViewer.bind(this);
+        this._onActionSelected = this._onActionSelected.bind(this);
     }
 
     _imageViewer() {
         this.props.toRoute({
-            name: "View receipt",
             component: ImageViewer,
-            leftCorner: CloseButton,
-            leftCornerProps: {
-                onClose: this.props.toBack
-            },
-
             passProps: {
                 source: this.props.source,
                 imageWidth: this.props.imageWidth,
@@ -54,11 +44,16 @@ class ReceiptForm extends React.Component {
         });
     }
 
-    componentWillUpdate(nextProps, nextState) {
-        this.props.onUpdate({
-            total: nextState.total,
-            description: nextState.description,
-        });
+    _onActionSelected(position) {
+        this.setState({spinnerVisible: true});
+        let hideSpinner = function() {
+            this.setState({spinnerVisible: false});
+        }.bind(this);
+
+        this.props.onSave({
+            total: this.state.total,
+            description: this.state.description
+        }).then(hideSpinner, hideSpinner);
     }
 
     render() {
@@ -66,6 +61,13 @@ class ReceiptForm extends React.Component {
             <View style={{
                 flex: 1
             }}>
+                <Icon.ToolbarAndroid
+                    style={styles.toolbar}
+                    title="New Receipt"
+                    navIconName="android-close"
+                    actions={[{title: 'Save', show: 'always'}]}
+                    onIconClicked={this.props.toBack}
+                    onActionSelected={this._onActionSelected} />
                 <ScrollView>
                     <View style={{
                         alignItems: 'center'
@@ -102,12 +104,18 @@ class ReceiptForm extends React.Component {
     }
 }
 
-ReceiptForm.propTypes = {
-    onUpdate: PropTypes.func.isRequired,
+const styles = StyleSheet.create({
+    toolbar: {
+        backgroundColor: '#e9eaed',
+        height: 56,
+    }
+});
+
+ReceiptFormPage.propTypes = {
+    onSave: PropTypes.func.isRequired,
     source: PropTypes.object.isRequired,
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
     toBack: PropTypes.func.isRequired,
-    bus: PropTypes.object.isRequired,
 };
-export default ReceiptForm
+export default ReceiptFormPage

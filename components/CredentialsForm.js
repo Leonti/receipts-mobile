@@ -48,15 +48,23 @@ class CredentialsForm extends React.Component {
     }
 
     render() {
+
+
         var signupButton = this.state.processing ? <ProgressBarAndroid indeterminate={true} /> :
-        <Button text={this.props.label.toUpperCase()} onPress={this.submit} raised={true} theme="dark" />
+        <View style={styles.button}>
+            <Button text={this.props.label.toUpperCase()} onPress={this.submit} raised={true} theme="dark" />
+        </View>
         var errorView = this.state.error ? <ErrorView message={this.state.error} /> : null;
 
         return (
             <View>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
+                    style={styles.textfield}
                     onChangeText={(text) => this.setState({username: text})} value={this.state.username} />
+                <Text style={styles.label}>Password</Text>
                 <TextInput
+                    style={styles.textfield}
                     onChangeText={(text) => this.setState({password: text})} value={this.state.password} secureTextEntry={true}/>
                 {signupButton}
                 {errorView}
@@ -64,6 +72,15 @@ class CredentialsForm extends React.Component {
         );
     }
 }
+
+const styles = StyleSheet.create({
+
+    button: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'flex-end'
+    }
+});
 
 CredentialsForm.propTypes = propTypes;
 export default CredentialsForm

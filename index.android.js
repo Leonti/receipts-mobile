@@ -8,6 +8,7 @@ import Loader from './components/Loader';
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#5cafec',
+    height: 0
   },
 });
 
@@ -26,6 +27,8 @@ class ReceiptsMobile extends React.Component {
         firstRoute={firstRoute}
         headerStyle={styles.header}
         handleBackAndroid={true}
+        hideNavigationBar={true}
+        noStatusBar={true}
       />
     );
   }

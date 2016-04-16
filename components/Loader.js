@@ -27,15 +27,13 @@ class Loader extends React.Component {
 
     _login() {
         this.props.replaceRoute({
-            name: "Login",
             component: LoginPage,
         });
     }
 
     _start() {
         this.props.replaceRoute({
-          name: 'Your receipts',
-          component: HomePage,
+          component: HomePage
         });
     }
 

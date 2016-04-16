@@ -15,9 +15,8 @@ import React, {
 import Loader from '../components/Loader';
 import ZoomableImage from '../components/ZoomableImage';
 import ImageViewer from '../components/ImageViewer';
-import ReceiptSavePage from './ReceiptSavePage'
-import { SaveButton, CloseButton } from '../components/ModalButtons';
 import ActionButton from 'react-native-action-button';
+import ReceiptFormPage from './ReceiptFormPage';
 
 var moment = require('moment');
 
@@ -26,8 +25,6 @@ var Icon = require('react-native-vector-icons/Ionicons');
 var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
-
-import ReceiptForm from '../components/ReceiptForm';
 
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
@@ -104,8 +101,8 @@ class HomePage extends React.Component {
             console.log('IMAGE', response);
             this._openReceiptForm({
                 source: {uri: response.uri, isStatic: true},
-                width: response.isVertical ? response.height : response.width,
-                height: response.isVertical ? response.width : response.height,
+                width: response.width,
+                height: response.height,
             });
         }
     }
@@ -125,40 +122,17 @@ class HomePage extends React.Component {
 
     async _openReceiptForm(image) {
 
-        let receiptData = {
-            description: null,
-            total: null
-        }
-
-        let bus = {};
-
         this.props.toRoute({
-            name: "New receipt",
-            component: ReceiptForm,
-            leftCorner: CloseButton,
-            rightCorner: SaveButton,
-            leftCornerProps: {
-                onClose: this.props.toBack
-            },
-            rightCornerProps: {
-                onSave: () => {
-                    bus.toggleSpinner(true);
-                    let hideSpinner = bus.toggleSpinner.bind(this, false);
-                    this._createReceipt(image.source.uri, receiptData.total, receiptData.description).then(hideSpinner, hideSpinner);
-                }
-            },
-
+            component: ReceiptFormPage,
             passProps: {
-                onUpdate: (state) => {
-                    receiptData.description = state.description;
-                    receiptData.total = state.total;
+                onSave: (receipt) => {
+                    return this._createReceipt(image.source.uri, receipt.total, receipt.description);
                 },
                 source: image.source,
                 imageWidth: image.width,
                 imageHeight: image.height,
-                description: receiptData.description,
-                total: receiptData.total,
-                bus: bus,
+                description: '',
+                total:'',
             }
         });
     }
@@ -176,6 +150,7 @@ class HomePage extends React.Component {
             <DrawerLayoutAndroid
                         drawerWidth={200}
                         drawerPosition={DrawerLayoutAndroid.positions.Left}
+                        ref={'DRAWER'}
                         renderNavigationView={() => navigationView}>
                         {this._renderHome()}
             </DrawerLayoutAndroid>
@@ -195,8 +170,16 @@ class HomePage extends React.Component {
     }
 
     _renderHome() {
+
         return (
             <View style={{ flex:1, backgroundColor: '#f3f3f3' }}>
+            <Icon.ToolbarAndroid
+                style={styles.toolbar}
+                title="AwesomeApp"
+                navIconName="android-menu"
+                actions={[{title: 'Settings', show: 'always'}]}
+                onIconClicked={() => this.refs['DRAWER'].openDrawer()}
+                onActionSelected={this.onActionSelected} />
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow}
@@ -232,6 +215,10 @@ const styles = StyleSheet.create({
     separator: {
         height: 1,
         backgroundColor: '#CCCCCC',
+    },
+    toolbar: {
+        backgroundColor: '#e9eaed',
+        height: 56,
     },
     text: {
         flex: 1,
