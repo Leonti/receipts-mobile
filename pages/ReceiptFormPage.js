@@ -69,21 +69,15 @@ class ReceiptFormPage extends React.Component {
                     onIconClicked={this.props.toBack}
                     onActionSelected={this._onActionSelected} />
                 <ScrollView>
-                    <View style={{
-                        alignItems: 'center'
-                    }}>
-                            <View style={{
-                                padding: 15
-                            }}>
-                            <TouchableOpacity onPress={this._imageViewer}>
-                                <Image
-                                    source={this.props.source}
-                                    style={{
-                                        width: this.state.thumbnailWidth,
-                                        height: this.state.thumbnailHeight,
-                                    }} />
-                            </TouchableOpacity>
-                            </View>
+                    <View style={styles.imageWrapper}>
+                        <TouchableOpacity onPress={this._imageViewer}>
+                            <Image
+                                source={this.props.source}
+                                style={{
+                                    width: this.state.thumbnailWidth,
+                                    height: this.state.thumbnailHeight,
+                                }} />
+                        </TouchableOpacity>
                     </View>
 
                     <View style={styles.formFieldsWrapper}>
@@ -114,16 +108,21 @@ const styles = StyleSheet.create({
         height: 56,
     },
 
+    imageWrapper: {
+        alignItems: 'center',
+        padding: 15,
+    },
+
     formFieldsWrapper: {
-        padding: 20
+        padding: 20,
     },
 
     formLabel: {
-        fontSize: 18
+        fontSize: 18,
     },
 
     total: {
-        fontSize: 18
+        fontSize: 18,
     },
 
     description: {
