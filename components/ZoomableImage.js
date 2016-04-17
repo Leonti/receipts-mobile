@@ -101,6 +101,7 @@ class ZoomableImage extends React.Component {
     }
 
     processTouch(x, y) {
+
         if (!this.state.isMoving) {
             this.setState({
                 isMoving: true,
@@ -154,7 +155,7 @@ class ZoomableImage extends React.Component {
 
                     this.processPinch(touches[0].pageX, touches[0].pageY,
                         touches[1].pageX, touches[1].pageY);
-                } else if (touches.length == 1) {
+                } else if (touches.length == 1 && !this.state.isZooming) {
                     this.processTouch(touches[0].pageX, touches[0].pageY);
                 }
             },
