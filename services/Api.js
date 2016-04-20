@@ -1,4 +1,5 @@
 import Storage from './Storage';
+import NetworkFiles from './NetworkFiles';
 var Buffer = require('buffer/').Buffer
 
 const baseUrl = 'http://10.0.2.2:9000';
@@ -68,10 +69,22 @@ class Api {
         return (await Storage.get(USER_INFO_KEY)).id;
     }
 
+    static async downloadReceiptFile(receiptId, fileId, fileExt) {
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+        let result = await NetworkFiles.download({
+            url: baseUrl + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt,
+            headers: {'Authorization': 'Bearer ' + token}
+        });
+
+        return 'file://' + result.file;
+    }
+
     static async uploadFile(fileUri, total, description) {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
-console.log('UPLOADING', arguments);
+
         return new Promise(function(resolve, reject) {
 
             let xhr = new XMLHttpRequest();

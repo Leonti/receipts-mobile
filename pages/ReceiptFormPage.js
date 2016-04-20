@@ -2,14 +2,12 @@ import React, {
     PropTypes,
     StyleSheet,
     View,
-    ProgressBarAndroid,
-    TextInput,
-    TouchableOpacity,
     ScrollView,
-    Image,
     Text } from 'react-native';
 
 import ImageViewer from '../components/ImageViewer';
+import ReceiptThumbnail from '../components/ReceiptThumbnail';
+import ReceiptForm from '../components/ReceiptForm';
 import Spinner from '../components/Spinner';
 var Icon = require('react-native-vector-icons/Ionicons');
 
@@ -28,9 +26,6 @@ class ReceiptFormPage extends React.Component {
             thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
         };
-
-        this._imageViewer = this._imageViewer.bind(this);
-        this._onActionSelected = this._onActionSelected.bind(this);
     }
 
     _imageViewer() {
@@ -58,43 +53,27 @@ class ReceiptFormPage extends React.Component {
 
     render() {
         return (
-            <View style={{
-                flex: 1
-            }}>
+            <View style={styles.container}>
                 <Icon.ToolbarAndroid
                     style={styles.toolbar}
                     title="New Receipt"
                     navIconName="android-close"
                     actions={[{title: 'Save', show: 'always'}]}
                     onIconClicked={this.props.toBack}
-                    onActionSelected={this._onActionSelected} />
+                    onActionSelected={(position) => this._onActionSelected(position) } />
                 <ScrollView>
-                    <View style={styles.imageWrapper}>
-                        <TouchableOpacity onPress={this._imageViewer}>
-                            <Image
-                                source={this.props.source}
-                                style={{
-                                    width: this.state.thumbnailWidth,
-                                    height: this.state.thumbnailHeight,
-                                }} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.formFieldsWrapper}>
-                        <Text style={styles.formLabel}>Total:</Text>
-                        <TextInput
-                            style={styles.total}
-                            keyboardType='numeric'
-                            onChangeText={(text) => this.setState({total: text})}
-                            value={this.state.total} />
-
-                        <Text style={styles.formLabel}>Notes:</Text>
-                        <TextInput
-                            style={styles.description}
-                            onChangeText={(text) => this.setState({description: text})}
-                            multiline={true}
-                            value={this.state.description} />
-                    </View>
+                    <ReceiptThumbnail
+                        onPress={() => this._imageViewer()}
+                        source={this.props.source}
+                        width={this.state.thumbnailWidth}
+                        height={this.state.thumbnailHeight}
+                    />
+                    <ReceiptForm
+                        total={this.state.total}
+                        onTotalChange={(text) => this.setState({total: text})}
+                        description={this.state.description}
+                        onDescriptionChange={(text) => this.setState({description: text})}
+                    />
                 </ScrollView>
                 <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
             </View>
@@ -103,33 +82,13 @@ class ReceiptFormPage extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1
+    },
     toolbar: {
         backgroundColor: '#e9eaed',
         height: 56,
     },
-
-    imageWrapper: {
-        alignItems: 'center',
-        padding: 15,
-    },
-
-    formFieldsWrapper: {
-        padding: 20,
-    },
-
-    formLabel: {
-        fontSize: 18,
-    },
-
-    total: {
-        fontSize: 18,
-    },
-
-    description: {
-        fontSize: 18,
-        height: 100,
-        textAlignVertical: 'top',
-    }
 });
 
 ReceiptFormPage.propTypes = {
@@ -137,6 +96,9 @@ ReceiptFormPage.propTypes = {
     source: PropTypes.object.isRequired,
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
+    description: PropTypes.string.isRequired,
+    total: PropTypes.any.isRequired,
+    toRoute: PropTypes.func.isRequired,
     toBack: PropTypes.func.isRequired,
 };
 export default ReceiptFormPage

@@ -17,6 +17,7 @@ import ZoomableImage from '../components/ZoomableImage';
 import ImageViewer from '../components/ImageViewer';
 import ActionButton from 'react-native-action-button';
 import ReceiptFormPage from './ReceiptFormPage';
+import ReceiptViewPage from './ReceiptViewPage';
 
 var moment = require('moment');
 
@@ -52,6 +53,8 @@ class HomePage extends React.Component {
         this._logout = this._logout.bind(this);
         this._createReceipt = this._createReceipt.bind(this);
         this._openReceiptForm = this._openReceiptForm.bind(this);
+        this._openReceiptView = this._openReceiptView.bind(this);
+        this._renderRow = this._renderRow.bind(this)
 
         this._ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
@@ -137,6 +140,20 @@ class HomePage extends React.Component {
         });
     }
 
+    async _openReceiptView(receipt) {
+        console.log('OPENING RECEIPT: ', receipt);
+
+        this.props.toRoute({
+            component: ReceiptViewPage,
+            passProps: {
+                onSave: (receipt) => {
+                    //return this._createReceipt(image.source.uri, receipt.total, receipt.description);
+                },
+                receipt: receipt
+            }
+        });
+    }
+
     render() {
         var navigationView = (
             <View style={{flex: 1, backgroundColor: '#fff'}}>
@@ -158,8 +175,9 @@ class HomePage extends React.Component {
     }
 
     _renderRow(receipt) {
+        let openReceiptView = this._openReceiptView.bind(this);
         return (
-            <TouchableHighlight onPress={() => this._pressRow(rowID)}>
+            <TouchableHighlight onPress={() => this._openReceiptView(receipt)}>
                 <View>
                     <View style={styles.row}>
                         <Text style={styles.rowText}>{moment(receipt.timestamp).format('lll')} {receipt.description} {receipt.total}</Text>
@@ -179,6 +197,12 @@ class HomePage extends React.Component {
                 navIconName="android-menu"
                 onIconClicked={() => this.refs['DRAWER'].openDrawer()}
                 />
+                <Image
+                    source={this.state.testFile}
+                    style={{
+                        width: 200,
+                        height: 200
+                    }} />
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow}

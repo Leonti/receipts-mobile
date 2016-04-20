@@ -9,6 +9,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import com.imagepicker.ImagePickerPackage;
+import com.receiptsmobile.com.receiptsmobile.files.NetworkFilesPackage;
 
 public class MainActivity extends ReactActivity {
 
@@ -39,7 +40,8 @@ public class MainActivity extends ReactActivity {
         return Arrays.<ReactPackage>asList(
                 new MainReactPackage(),
                 new VectorIconsPackage(),
-                new ImagePickerPackage()
+                new ImagePickerPackage(),
+                new NetworkFilesPackage()
         );
     }
 }
