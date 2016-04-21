@@ -8,20 +8,13 @@ import React, {
 
 import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
+import ImagePlaceholder from '../components/ImagePlaceholder';
+import ReceiptDetails from '../components/ReceiptDetails';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 import Api from '../services/Api';
 
 const MAX_HEIGHT = 200;
-
-function thumbnailDimensions(image) {
-    let scale = MAX_HEIGHT / image.height
-
-    return {
-        width: image.width * scale,
-        height: image.height * scale,
-    };
-}
 
 async function receiptToImage(receipt) {
     let file = receipt.files[0];
@@ -33,6 +26,16 @@ async function receiptToImage(receipt) {
         },
         width: file.metaData.width,
         height: file.metaData.height,
+    };
+}
+
+function receiptToThumbnailDimensions(receipt) {
+    let file = receipt.files[0];
+    let scale = MAX_HEIGHT / file.metaData.height
+
+    return {
+        width: file.metaData.width * scale,
+        height: file.metaData.height * scale,
     };
 }
 
@@ -70,16 +73,36 @@ class ReceiptViewPage extends React.Component {
         });
     }
 
+    _renderThumbnail() {
+        let thumbnailDimensions = receiptToThumbnailDimensions(this.props.receipt);
+
+        return (
+            <ReceiptThumbnail
+                onPress={() => this._openImageViewer()}
+                source={this.state.receiptImage.source}
+                width={thumbnailDimensions.width}
+                height={thumbnailDimensions.height}
+            />
+        );
+    }
+
+    _renderPlaceholder() {
+        let thumbnailDimensions = receiptToThumbnailDimensions(this.props.receipt);
+
+        return (
+            <ImagePlaceholder
+                width={thumbnailDimensions.width}
+                height={thumbnailDimensions.height}
+            />
+        );
+    }
+
     render () {
 
         let thumbnail = this.state.receiptImage != null ?
-        (<ReceiptThumbnail
-            onPress={() => this._openImageViewer()}
-            source={this.state.receiptImage.source}
-            width={thumbnailDimensions(this.state.receiptImage).width}
-            height={thumbnailDimensions(this.state.receiptImage).height}
-        />) :
-        null;
+            this._renderThumbnail() : this._renderPlaceholder();
+
+    //    let thumbnail = this._renderPlaceholder();
 
         return (
             <View style={styles.container}>
@@ -91,6 +114,7 @@ class ReceiptViewPage extends React.Component {
                     onIconClicked={this.props.toBack}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 {thumbnail}
+                <ReceiptDetails receipt={this.props.receipt} />
             </View>
         );
     }
