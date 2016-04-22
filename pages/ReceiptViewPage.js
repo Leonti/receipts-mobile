@@ -6,6 +6,7 @@ import React, {
     ToastAndroid,
     Text } from 'react-native';
 
+import ReceiptFormPage from './ReceiptFormPage';
 import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ImagePlaceholder from '../components/ImagePlaceholder';
@@ -23,19 +24,26 @@ async function receiptToImage(receipt) {
         source: {
             uri: (await Api.downloadReceiptFile(receipt.id, file.id, file.ext)),
             isStatic: true
-        },
+        }
+    };
+}
+
+function receiptToImageDimensions(receipt) {
+    let file = receipt.files[0];
+
+    return {
         width: file.metaData.width,
         height: file.metaData.height,
     };
 }
 
 function receiptToThumbnailDimensions(receipt) {
-    let file = receipt.files[0];
-    let scale = MAX_HEIGHT / file.metaData.height
+    let imageDimensions = receiptToImageDimensions(receipt);
+    let scale = MAX_HEIGHT / imageDimensions.height
 
     return {
-        width: file.metaData.width * scale,
-        height: file.metaData.height * scale,
+        width: imageDimensions.width * scale,
+        height: imageDimensions.height * scale,
     };
 }
 
@@ -45,30 +53,62 @@ class ReceiptViewPage extends React.Component {
         super(props);
 
         this.state = {
-            receiptImage: null
+            source: null,
+            receipt: props.receipt
         }
     }
 
     componentWillMount() {
 
-        let self = this;
-        receiptToImage(this.props.receipt).then(function(receiptImage) {
-            self.setState({
-                receiptImage: receiptImage
-            });
-        }, function(e) {
+        let imageSourcePromise = receiptToImage(this.props.receipt)
+            .then((receiptImage) => receiptImage.source);
+
+        imageSourcePromise.then((source) => {
+            this.setState({source: source});
+        }, (e) => {
             console.error('Failed to download image', e);
             ToastAndroid.show('Failed to download receipt image', ToastAndroid.LONG);
         });
+
+        this.imageSourcePromise = imageSourcePromise;
     }
 
     _openImageViewer() {
+        let imageDimensions = receiptToImageDimensions(this.props.receipt);
+
         this.props.toRoute({
             component: ImageViewer,
             passProps: {
-                source: this.state.receiptImage.source,
-                imageWidth: this.state.receiptImage.width,
-                imageHeight: this.state.receiptImage.height,
+                source: this.state.source,
+                imageWidth: imageDimensions.width,
+                imageHeight: imageDimensions.height,
+            }
+        });
+    }
+
+    _onActionSelected(position) {
+        let imageDimensions = receiptToImageDimensions(this.props.receipt);
+
+        let source = this.state.source !== null ? this.state.source
+            : this.imageSourcePromise;
+
+        this.props.toRoute({
+            component: ReceiptFormPage,
+            passProps: {
+                onSave: (fields) => {
+                    let receipt = this.state.receipt;
+                    receipt.total = fields.total;
+                    receipt.description = fields.description;
+
+                    this.setState({receipt: receipt});
+
+                    return this.props.onSave(fields);
+                },
+                source: source,
+                imageWidth: imageDimensions.width,
+                imageHeight: imageDimensions.height,
+                description: this.props.receipt.description,
+                total: this.props.receipt.total,
             }
         });
     }
@@ -79,7 +119,7 @@ class ReceiptViewPage extends React.Component {
         return (
             <ReceiptThumbnail
                 onPress={() => this._openImageViewer()}
-                source={this.state.receiptImage.source}
+                source={this.state.source}
                 width={thumbnailDimensions.width}
                 height={thumbnailDimensions.height}
             />
@@ -98,11 +138,8 @@ class ReceiptViewPage extends React.Component {
     }
 
     render () {
-
-        let thumbnail = this.state.receiptImage != null ?
+        let thumbnail = this.state.source != null ?
             this._renderThumbnail() : this._renderPlaceholder();
-
-    //    let thumbnail = this._renderPlaceholder();
 
         return (
             <View style={styles.container}>
@@ -114,7 +151,7 @@ class ReceiptViewPage extends React.Component {
                     onIconClicked={this.props.toBack}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 {thumbnail}
-                <ReceiptDetails receipt={this.props.receipt} />
+                <ReceiptDetails receipt={this.state.receipt} />
             </View>
         );
     }

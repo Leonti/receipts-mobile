@@ -134,6 +134,11 @@ class Api {
                 op: 'replace',
                 path: '/description',
                 value: fields.description
+            },
+            {
+                op: 'replace',
+                path: '/total',
+                value: parseFloat(fields.total)
             }])
         })).json()
     }

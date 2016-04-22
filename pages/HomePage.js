@@ -123,6 +123,22 @@ class HomePage extends React.Component {
         }
     }
 
+    async _updateReceipt(receiptId, total, description) {
+        try {
+            let receipt = await Api.updateReceipt(receiptId, {
+                total: total,
+                description: description
+            });
+            console.log('RECEIPT UPDATED ', receipt);
+            this.props.toBack();
+            ToastAndroid.show('Receipt updated', ToastAndroid.SHORT);
+            this._loadReceipts();
+        } catch (e) {
+            console.log('Update failed ' + e.message);
+            ToastAndroid.show('Failed to update the receipt', ToastAndroid.LONG);
+        }
+    }
+
     async _openReceiptForm(image) {
 
         this.props.toRoute({
@@ -146,8 +162,9 @@ class HomePage extends React.Component {
         this.props.toRoute({
             component: ReceiptViewPage,
             passProps: {
-                onSave: (receipt) => {
-                    //return this._createReceipt(image.source.uri, receipt.total, receipt.description);
+                onSave: (fields) => {
+                    console.log('UPDATING RECEIPT', receipt);
+                    return this._updateReceipt(receipt.id, fields.total, fields.description);
                 },
                 receipt: receipt
             }

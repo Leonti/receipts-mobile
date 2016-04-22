@@ -9,6 +9,7 @@ import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ReceiptForm from '../components/ReceiptForm';
 import Spinner from '../components/Spinner';
+import ImagePlaceholder from '../components/ImagePlaceholder';
 var Icon = require('react-native-vector-icons/Ionicons');
 
 const MAX_HEIGHT = 200;
@@ -26,13 +27,22 @@ class ReceiptFormPage extends React.Component {
             thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
         };
+
+        if (props.source instanceof Promise) {
+            props.source.then((source) => {
+                this.setState({source: source});
+            }, () => console.log('Failed to resolve image promise in receipt form page'));
+        } else {
+            this.state.source = this.props.source;
+        }
+
     }
 
     _imageViewer() {
         this.props.toRoute({
             component: ImageViewer,
             passProps: {
-                source: this.props.source,
+                source: this.state.source,
                 imageWidth: this.props.imageWidth,
                 imageHeight: this.props.imageHeight
             }
@@ -51,7 +61,30 @@ class ReceiptFormPage extends React.Component {
         }).then(hideSpinner, hideSpinner);
     }
 
+    _renderThumbnail() {
+        return (
+            <ReceiptThumbnail
+                onPress={() => this._imageViewer()}
+                source={this.state.source}
+                width={this.state.thumbnailWidth}
+                height={this.state.thumbnailHeight}
+            />
+        );
+    }
+
+    _renderPlaceholder() {
+        return (
+            <ImagePlaceholder
+                width={this.state.thumbnailWidth}
+                height={this.state.thumbnailHeight}
+            />
+        );
+    }
+
     render() {
+        let thumbnail = this.state.source != null ?
+            this._renderThumbnail() : this._renderPlaceholder();
+
         return (
             <View style={styles.container}>
                 <Icon.ToolbarAndroid
@@ -62,12 +95,7 @@ class ReceiptFormPage extends React.Component {
                     onIconClicked={this.props.toBack}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 <ScrollView>
-                    <ReceiptThumbnail
-                        onPress={() => this._imageViewer()}
-                        source={this.props.source}
-                        width={this.state.thumbnailWidth}
-                        height={this.state.thumbnailHeight}
-                    />
+                    {thumbnail}
                     <ReceiptForm
                         total={this.state.total}
                         onTotalChange={(text) => this.setState({total: text})}
