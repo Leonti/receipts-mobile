@@ -51,6 +51,8 @@ class ZoomableImage extends React.Component {
             initialDistance: null,
             initialX: null,
             initalY: null,
+            offsetTop: 0,
+            offsetLeft: 0,
             initialTop: 0,
             initialLeft: 0,
             initialTopWithoutZoom: 0,
@@ -131,11 +133,16 @@ class ZoomableImage extends React.Component {
 
         let zoom = layout.width / this.props.imageWidth;
 
+        let offsetTop = layout.height > this.props.imageHeight * zoom ?
+            (layout.height - this.props.imageHeight * zoom) / 2
+            : 0;
+
         this.setState({
             layoutKnown: true,
             width: layout.width,
             height: layout.height,
             zoom: zoom,
+            offsetTop: offsetTop,
             minZoom: zoom
         });
     }
@@ -180,8 +187,8 @@ class ZoomableImage extends React.Component {
             onLayout={this._onLayout}>
              <Image style={{
                     position: 'absolute',
-                    top: this.state.top,
-                    left: this.state.left,
+                    top: this.state.offsetTop + this.state.top,
+                    left: this.state.offsetLeft + this.state.left,
                     width: this.props.imageWidth * this.state.zoom,
                     height: this.props.imageHeight * this.state.zoom
              }}
