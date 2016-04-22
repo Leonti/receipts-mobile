@@ -18,8 +18,7 @@ import ImageViewer from '../components/ImageViewer';
 import ActionButton from 'react-native-action-button';
 import ReceiptFormPage from './ReceiptFormPage';
 import ReceiptViewPage from './ReceiptViewPage';
-
-var moment = require('moment');
+import ReceiptRow from '../components/ReceiptRow';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 
@@ -85,6 +84,7 @@ class HomePage extends React.Component {
             this.setState({receipts: receipts});
             this.setState({dataSource: this._ds.cloneWithRows(receipts)});
         } catch (e) {
+            console.error('EXCEPTION ON RECEIPT LOADING', e);
             ToastAndroid.show('Failed to load receipts', ToastAndroid.LONG);
         }
     }
@@ -194,13 +194,8 @@ class HomePage extends React.Component {
     _renderRow(receipt) {
         let openReceiptView = this._openReceiptView.bind(this);
         return (
-            <TouchableHighlight onPress={() => this._openReceiptView(receipt)}>
-                <View>
-                    <View style={styles.row}>
-                        <Text style={styles.rowText}>{moment(receipt.timestamp).format('lll')} {receipt.description} {receipt.total}</Text>
-                    </View>
-                </View>
-            </TouchableHighlight>
+
+                <ReceiptRow onPress={() => this._openReceiptView(receipt)} receipt={receipt} />
         );
     }
 

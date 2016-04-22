@@ -108,7 +108,7 @@ class ReceiptViewPage extends React.Component {
                 imageWidth: imageDimensions.width,
                 imageHeight: imageDimensions.height,
                 description: this.props.receipt.description,
-                total: this.props.receipt.total,
+                total: this.props.receipt.total === undefined ? '' : this.props.receipt.total,
             }
         });
     }
