@@ -135,7 +135,21 @@ class HomePage extends React.Component {
             this._loadReceipts();
         } catch (e) {
             console.log('Update failed ' + e.message);
-            ToastAndroid.show('Failed to update the receipt', ToastAndroid.LONG);
+            ToastAndroid.show('Failed to update receipt', ToastAndroid.LONG);
+        }
+    }
+
+    async _deleteReceipt(receiptId) {
+        try {
+            await Api.deleteReceipt(receiptId);
+
+            console.log('RECEIPT DELETED ', receiptId);
+            this.props.toBack();
+            ToastAndroid.show('Receipt deleted', ToastAndroid.SHORT);
+            this._loadReceipts();
+        } catch (e) {
+            console.log('Delete failed ' + e.message);
+            ToastAndroid.show('Failed to delete receipt', ToastAndroid.LONG);
         }
     }
 
@@ -165,6 +179,10 @@ class HomePage extends React.Component {
                 onSave: (fields) => {
                     console.log('UPDATING RECEIPT', receipt);
                     return this._updateReceipt(receipt.id, fields.total, fields.description);
+                },
+                onDelete: () => {
+                    console.log('DELETING RECEIPT', receipt);
+                    return this._deleteReceipt(receipt.id);
                 },
                 receipt: receipt
             }

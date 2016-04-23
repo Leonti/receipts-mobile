@@ -4,6 +4,7 @@ import React, {
     View,
     ScrollView,
     ToastAndroid,
+    Alert,
     Text } from 'react-native';
 
 import ReceiptFormPage from './ReceiptFormPage';
@@ -11,6 +12,7 @@ import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import ReceiptDetails from '../components/ReceiptDetails';
+import Spinner from '../components/Spinner';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 import Api from '../services/Api';
@@ -54,7 +56,8 @@ class ReceiptViewPage extends React.Component {
 
         this.state = {
             source: null,
-            receipt: props.receipt
+            receipt: props.receipt,
+            spinnerVisible: false,
         }
     }
 
@@ -87,6 +90,28 @@ class ReceiptViewPage extends React.Component {
     }
 
     _onActionSelected(position) {
+        if (position === 0) {
+            this._openEditView();
+        } else if (position == 1) {
+            Alert.alert('Delete Receipt',
+            'Are you sure you want to delete this receipt?',
+             [
+                 {text: 'Cancel', onPress: () => console.log('Cancel Pressed!')},
+                 {text: 'OK', onPress: () => this._onDeleteReceipt()},
+             ]);
+        }
+    }
+
+    _onDeleteReceipt() {
+        this.setState({spinnerVisible: true});
+        let hideSpinner = function() {
+            this.setState({spinnerVisible: false});
+        }.bind(this);
+
+        this.props.onDelete().then(hideSpinner, hideSpinner);
+    }
+
+    _openEditView() {
         let imageDimensions = receiptToImageDimensions(this.props.receipt);
 
         let source = this.state.source !== null ? this.state.source
@@ -147,11 +172,14 @@ class ReceiptViewPage extends React.Component {
                     style={styles.toolbar}
                     title="Receipt"
                     navIconName="android-close"
-                    actions={[{title: 'Edit', show: 'always'}]}
+                    actions={[
+                        {title: 'Edit', show: 'always'},
+                        {title: 'Delete', show: 'never'}]}
                     onIconClicked={this.props.toBack}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 {thumbnail}
                 <ReceiptDetails receipt={this.state.receipt} />
+                <Spinner message='Deleting receipt ...' visible={this.state.spinnerVisible} />
             </View>
         );
     }
@@ -170,6 +198,7 @@ const styles = StyleSheet.create({
 
 ReceiptViewPage.propTypes = {
     onSave: PropTypes.func.isRequired,
+    onDelete: PropTypes.func.isRequired,
     receipt: PropTypes.object.isRequired,
     toRoute: PropTypes.func.isRequired,
     toBack: PropTypes.func.isRequired,

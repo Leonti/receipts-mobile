@@ -143,6 +143,20 @@ class Api {
         })).json()
     }
 
+    static async deleteReceipt(receiptId) {
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+        return await fetch(baseUrl + '/user/' + userId + '/receipt/' + receiptId, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+        });
+    }
+
     static async isLoggedIn() {
         let token = await Storage.get(TOKEN_STORAGE_KEY);
 
