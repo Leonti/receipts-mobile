@@ -138,7 +138,7 @@ class Api {
             {
                 op: 'replace',
                 path: '/total',
-                value: parseFloat(fields.total)
+                value: toTotalValue(fields.total)
             }])
         })).json()
     }
@@ -170,6 +170,19 @@ class Api {
                 'Content-Type': 'application/json',
               }
           })).json()
+    }
+}
+
+function toTotalValue(total) {
+    try {
+        let result = parseFloat(total);
+        if (isNaN(result)) {
+            return null;
+        }
+
+        return result;
+    } catch (e) {
+        return null;
     }
 }
 
