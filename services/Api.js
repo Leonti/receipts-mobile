@@ -94,9 +94,20 @@ class Api {
             let xhr = new XMLHttpRequest();
             xhr.onload = function () {
                 if (xhr.status >= 200 && xhr.status < 300) {
-                  resolve(JSON.parse(xhr.responseText));
+
+                    let receipt = JSON.parse(xhr.responseText);
+
+                    let file = receipt.files[0];
+                    let url = baseUrl + '/user/' + userId + '/receipt/' + receipt.id + '/file/' + file.id + '.' + file.ext;
+                    console.log('Receipt uloaded ' + fileUri, url);
+
+                    let cachedFilePromise = NetworkFiles.addToCache({
+                        url: url,
+                        file: fileUri
+                    }).then(() => receipt);
+                    resolve(cachedFilePromise);
                 } else {
-                  reject(new Error('Upload failed with status code ' + xhr.status));
+                    reject(new Error('Upload failed with status code ' + xhr.status));
                 }
             };
 
