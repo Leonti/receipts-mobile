@@ -61,6 +61,10 @@ class Api {
           })).json()
     }
 
+    static async getUserInfo() {
+        return await Storage.get(USER_INFO_KEY);
+    }
+
     static async _getAccessToken() {
         return (await Storage.get(TOKEN_STORAGE_KEY)).access_token;
     }

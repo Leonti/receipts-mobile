@@ -7,7 +7,7 @@ import Loader from './components/Loader';
 
 const styles = StyleSheet.create({
   header: {
-    backgroundColor: '#5cafec',
+    backgroundColor: '#2196f3',
     height: 0
   },
 });

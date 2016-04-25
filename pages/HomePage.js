@@ -19,6 +19,7 @@ import ActionButton from 'react-native-action-button';
 import ReceiptFormPage from './ReceiptFormPage';
 import ReceiptViewPage from './ReceiptViewPage';
 import ReceiptRow from '../components/ReceiptRow';
+import NavigationView from '../components/NavigationView';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 
@@ -61,11 +62,13 @@ class HomePage extends React.Component {
             imageState: null,
             receipts: [],
             dataSource: this._ds,
+            userName: '',
         }
     }
 
     componentWillMount() {
         this._loadReceipts();
+        this._loadUserInfo();
     }
 
     async _logout() {
@@ -87,6 +90,14 @@ class HomePage extends React.Component {
             console.error('EXCEPTION ON RECEIPT LOADING', e);
             ToastAndroid.show('Failed to load receipts', ToastAndroid.LONG);
         }
+    }
+
+    async _loadUserInfo() {
+        let userInfo = await Api.getUserInfo();
+
+        this.setState({
+            userName: userInfo.userName,
+        });
     }
 
     _showCamera() {
@@ -190,17 +201,14 @@ class HomePage extends React.Component {
     }
 
     render() {
-        var navigationView = (
-            <View style={{flex: 1, backgroundColor: '#fff'}}>
-                <TouchableHighlight onPress={this._logout} underlayColor="transparent">
-                  <Text>Logout</Text>
-                </TouchableHighlight>
-            </View>
-        );
+        let navigationView = <NavigationView
+            userName={this.state.userName}
+            onLogout={this._logout}
+        />
 
         return (
             <DrawerLayoutAndroid
-                        drawerWidth={200}
+                        drawerWidth={250}
                         drawerPosition={DrawerLayoutAndroid.positions.Left}
                         ref={'DRAWER'}
                         renderNavigationView={() => navigationView}>
@@ -211,10 +219,9 @@ class HomePage extends React.Component {
 
     _renderRow(receipt) {
         let openReceiptView = this._openReceiptView.bind(this);
-        return (
-
-                <ReceiptRow onPress={() => this._openReceiptView(receipt)} receipt={receipt} />
-        );
+        return (<ReceiptRow
+            onPress={() => this._openReceiptView(receipt)}
+            receipt={receipt} />);
     }
 
     _renderHome() {
@@ -227,12 +234,6 @@ class HomePage extends React.Component {
                 navIconName="android-menu"
                 onIconClicked={() => this.refs['DRAWER'].openDrawer()}
                 />
-                <Image
-                    source={this.state.testFile}
-                    style={{
-                        width: 200,
-                        height: 200
-                    }} />
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow}
