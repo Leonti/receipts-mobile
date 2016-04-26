@@ -2,6 +2,7 @@ package com.receiptsmobile.uploader;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import com.receiptsmobile.MainActivity;
+import com.receiptsmobile.R;
 
 public class UploadService extends Service {
 
@@ -43,8 +46,10 @@ public class UploadService extends Service {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .setContentTitle("Receipts is uploading")
-                .setContentText("some text");
+                .setContentTitle("Receipt is being upaloded")
+                .setContentText("some text")
+                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 
         return builder.build();
     }
