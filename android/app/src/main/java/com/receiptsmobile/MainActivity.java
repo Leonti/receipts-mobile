@@ -10,6 +10,7 @@ import java.util.List;
 
 import com.imagepicker.ImagePickerPackage;
 import com.receiptsmobile.com.receiptsmobile.files.NetworkFilesPackage;
+import com.receiptsmobile.uploader.UploaderPackage;
 
 public class MainActivity extends ReactActivity {
 
@@ -41,7 +42,8 @@ public class MainActivity extends ReactActivity {
                 new MainReactPackage(),
                 new VectorIconsPackage(),
                 new ImagePickerPackage(),
-                new NetworkFilesPackage()
+                new NetworkFilesPackage(),
+                new UploaderPackage()
         );
     }
 }

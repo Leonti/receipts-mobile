@@ -21,11 +21,15 @@ import ReceiptViewPage from './ReceiptViewPage';
 import ReceiptRow from '../components/ReceiptRow';
 import NavigationView from '../components/NavigationView';
 
+
+
 var Icon = require('react-native-vector-icons/Ionicons');
 
 var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
+
+import ReceiptsUploader from '../services/ReceiptsUploader';
 
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
@@ -69,6 +73,7 @@ class HomePage extends React.Component {
     componentWillMount() {
         this._loadReceipts();
         this._loadUserInfo();
+        ReceiptsUploader.submit({});
     }
 
     async _logout() {
