@@ -30,8 +30,6 @@ var ImagePickerManager = require('NativeModules').ImagePickerManager;
 
 import Api from '../services/Api';
 
-import ReceiptsUploader from '../services/ReceiptsUploader';
-
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
   replaceRoute: PropTypes.func.isRequired,
@@ -80,11 +78,11 @@ class HomePage extends React.Component {
                 assetType: 'Photos',
             })
               .then((photos) => {
+
                   console.log('PHOTOS', photos);
-                  ReceiptsUploader.submit({
-                      files: ['content://media/external/images/media/23', 'content://media/external/images/media/17']
-                  });
+                  return Api.batchUpload(['content://media/external/images/media/23', 'content://media/external/images/media/17']);
               }, (e) => console.error(e));
+
 
 
     }

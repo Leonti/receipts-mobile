@@ -1,5 +1,7 @@
 import Storage from './Storage';
 import NetworkFiles from './NetworkFiles';
+import ReceiptsUploader from './ReceiptsUploader';
+
 var Buffer = require('buffer/').Buffer
 
 const baseUrl = 'http://10.0.2.2:9000';
@@ -156,6 +158,17 @@ class Api {
                 value: toTotalValue(fields.total)
             }])
         })).json()
+    }
+
+    static async batchUpload(files) {
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+        return (await ReceiptsUploader.submit({
+            files: files,
+            token: token,
+            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+        }));
     }
 
     static async deleteReceipt(receiptId) {

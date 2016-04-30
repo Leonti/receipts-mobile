@@ -27,13 +27,20 @@ public class UploadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
-        files.addAll(new UploadJobsStorage(this).getUploads());
+        UploadJobsStorage storage = new UploadJobsStorage(this);
+        files.addAll(storage.getUploads());
 
         Log.i(TAG, "FILES TO UPLOAD");
 
         for (String file : files) {
             Log.i(TAG, file);
         }
+
+        Log.i(TAG, "Auth token " + storage.getAuthToken());
+        Log.i(TAG, "Upload url " + storage.getUploadUrl());
+
+        updateProgress(30);
+        notifyFinished(this);
 
         return Service.START_STICKY;
     }
@@ -43,23 +50,46 @@ public class UploadService extends Service {
         Log.i(TAG, "ON CREATE COMMAND");
 
 
-        startForeground(42, createNotification(this));
+        startForeground(42, createProgressNotification(this, 0));
+    }
+
+    private void notifyFinished(Context context) {
+
+        stopForeground(true);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                .setAutoCancel(true)
+                .setOngoing(false)
+                .setContentTitle("Receipts uploaded")
+                .setContentText("Receipts are uploaded")
+          //      .setProgress(100, 100, false)
+                .setSmallIcon(R.drawable.ic_done_all_white_24dp)
+                .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
+
+        getNotificationManager().notify(42, builder.build());
+    }
+
+    private void updateProgress(int progress) {
+        getNotificationManager().notify(42, createProgressNotification(this, progress));
     }
 
     @Override
     public void onDestroy() {
-        NotificationManager notificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationManager.cancel(42);
+        getNotificationManager().cancel(42);
     }
 
-    private static Notification createNotification(Context context) {
+    private NotificationManager getNotificationManager() {
+        return (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+    }
+
+    private static Notification createProgressNotification(Context context, int progress) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setAutoCancel(false)
                 .setOngoing(true)
-                .setContentTitle("Receipt is being upaloded")
-                .setContentText("some text")
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setContentTitle("Receipts upload")
+                .setContentText("Receipts are being uploaded")
+                .setProgress(100, progress, false)
+                .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 
         return builder.build();

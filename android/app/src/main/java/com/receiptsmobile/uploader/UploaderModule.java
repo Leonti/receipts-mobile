@@ -27,17 +27,20 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void submit(ReadableMap files, Promise promise) {
+    public void submit(ReadableMap payload, Promise promise) {
         Context context = getCurrentActivity();
 
+        String token = payload.getString("token");
+        String url = payload.getString("uploadUrl");
+
         Set<String> uploads = new HashSet<>();
-        ReadableArray contentUris = files.getArray("files");
+        ReadableArray contentUris = payload.getArray("files");
 
         for (int i = 0; i < contentUris.size(); i++) {
             uploads.add(contentUriToFile(contentUris.getString(i)));
         }
 
-        new UploadJobsStorage(context).submitUploads(uploads);
+        new UploadJobsStorage(context).submitUploads(uploads, token, url);
 
         Intent intent = new Intent(context, UploadService.class);
         context.startService(intent);
