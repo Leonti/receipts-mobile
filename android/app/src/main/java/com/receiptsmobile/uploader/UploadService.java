@@ -13,16 +13,27 @@ import android.util.Log;
 import com.receiptsmobile.MainActivity;
 import com.receiptsmobile.R;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class UploadService extends Service {
 
     private final IBinder binder = new UploadServiceBinder();
 
     private static String TAG = "UploadService";
 
+    private Set<String> files = new HashSet<>();
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
+        files.addAll(new UploadJobsStorage(this).getUploads());
 
+        Log.i(TAG, "FILES TO UPLOAD");
+
+        for (String file : files) {
+            Log.i(TAG, file);
+        }
 
         return Service.START_STICKY;
     }

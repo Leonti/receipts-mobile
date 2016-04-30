@@ -10,6 +10,7 @@ import React, {
     ToastAndroid,
     DrawerLayoutAndroid,
     RecyclerViewBackedScrollView,
+    CameraRoll,
  } from 'react-native';
 
 import Loader from '../components/Loader';
@@ -73,7 +74,19 @@ class HomePage extends React.Component {
     componentWillMount() {
         this._loadReceipts();
         this._loadUserInfo();
-        ReceiptsUploader.submit({});
+
+        CameraRoll.getPhotos({
+                first: 5,
+                assetType: 'Photos',
+            })
+              .then((photos) => {
+                  console.log('PHOTOS', photos);
+                  ReceiptsUploader.submit({
+                      files: ['content://media/external/images/media/23', 'content://media/external/images/media/17']
+                  });
+              }, (e) => console.error(e));
+
+
     }
 
     async _logout() {

@@ -13,6 +13,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.receiptsmobile.InputStreamToFile.streamToFile;
+
 class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     @Override
@@ -108,34 +110,15 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
             InputStream inputStream = getCurrentActivity().getContentResolver().openInputStream(file);
             File dst = new File(getCacheDir(), urlToHash(url));
 
-            inputStreamToFile(inputStream, dst);
+            try {
+                streamToFile(inputStream, dst);
+            } finally {
+                inputStream.close();
+            }
 
             promise.resolve(dst.getAbsolutePath());
         } catch (Exception e) {
             promise.reject(e);
-        }
-    }
-
-    private static void inputStreamToFile(InputStream inputStream, File dst) throws IOException {
-        try {
-            OutputStream output = new FileOutputStream(dst);
-            try {
-                try {
-                    byte[] buffer = new byte[4 * 1024]; // or other buffer size
-                    int read;
-
-                    while ((read = inputStream.read(buffer)) != -1) {
-                        output.write(buffer, 0, read);
-                    }
-                    output.flush();
-                } finally {
-                    output.close();
-                }
-            } catch (Exception e) {
-                e.printStackTrace(); // handle exception, define IOException and others
-            }
-        } finally {
-            inputStream.close();
         }
     }
 
