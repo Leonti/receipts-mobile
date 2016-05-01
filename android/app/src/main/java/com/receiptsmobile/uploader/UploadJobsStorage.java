@@ -30,6 +30,15 @@ public class UploadJobsStorage {
         return getSharedPreferences().getStringSet(FILES_KEY, new HashSet<String>());
     }
 
+    public void removeUpload(String file) {
+        Set<String> uploads = getUploads();
+        uploads.remove(file);
+
+        SharedPreferences.Editor editor = getSharedPreferences().edit();
+        editor.putStringSet(FILES_KEY, uploads);
+        editor.commit();
+    }
+
     public String getAuthToken() {
         return getSharedPreferences().getString(TOKEN_KEY, "EMPTY TOKEN");
     }

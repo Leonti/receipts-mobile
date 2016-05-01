@@ -161,6 +161,7 @@ class Api {
     }
 
     static async batchUpload(files) {
+        console.log('BATCH UPLOADING', files);
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 

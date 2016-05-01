@@ -1,4 +1,4 @@
-package com.receiptsmobile.com.receiptsmobile.files;
+package com.receiptsmobile.files;
 
 import java.io.*;
 import java.net.HttpURLConnection;

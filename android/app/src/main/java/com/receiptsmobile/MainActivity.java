@@ -8,8 +8,8 @@ import com.facebook.react.shell.MainReactPackage;
 import java.util.Arrays;
 import java.util.List;
 
-import com.imagepicker.ImagePickerPackage;
-import com.receiptsmobile.com.receiptsmobile.files.NetworkFilesPackage;
+import com.receiptsmobile.files.NetworkFilesPackage;
+import com.receiptsmobile.picker.ImagePickerPackage;
 import com.receiptsmobile.uploader.UploaderPackage;
 
 public class MainActivity extends ReactActivity {

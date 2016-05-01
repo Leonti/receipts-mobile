@@ -1,4 +1,4 @@
-package com.receiptsmobile.com.receiptsmobile.files;
+package com.receiptsmobile.files;
 
 public class DownloadResult {
     public final int statusCode;

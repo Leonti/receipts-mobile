@@ -1,4 +1,4 @@
-package com.receiptsmobile.com.receiptsmobile.files;
+package com.receiptsmobile.files;
 
 import android.net.Uri;
 import android.util.Log;

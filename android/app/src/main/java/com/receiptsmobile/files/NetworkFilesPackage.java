@@ -1,4 +1,4 @@
-package com.receiptsmobile.com.receiptsmobile.files;
+package com.receiptsmobile.files;
 
 import com.facebook.react.ReactPackage;
 import com.facebook.react.bridge.JavaScriptModule;

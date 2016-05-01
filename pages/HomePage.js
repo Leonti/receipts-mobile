@@ -26,9 +26,8 @@ import NavigationView from '../components/NavigationView';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 
-var ImagePickerManager = require('NativeModules').ImagePickerManager;
-
 import Api from '../services/Api';
+import ImagePicker from '../services/ImagePicker';
 
 const propTypes = {
   toRoute: PropTypes.func.isRequired,
@@ -72,7 +71,7 @@ class HomePage extends React.Component {
     componentWillMount() {
         this._loadReceipts();
         this._loadUserInfo();
-
+/*
         CameraRoll.getPhotos({
                 first: 5,
                 assetType: 'Photos',
@@ -82,7 +81,7 @@ class HomePage extends React.Component {
                   console.log('PHOTOS', photos);
                   return Api.batchUpload(['content://media/external/images/media/23', 'content://media/external/images/media/17']);
               }, (e) => console.error(e));
-
+*/
 
 
     }
@@ -117,23 +116,32 @@ class HomePage extends React.Component {
     }
 
     _showCamera() {
-        ImagePickerManager.launchCamera(imagePickerOptions, this._processImagePickerResponse);
+        ImagePicker.takePhoto().then(this._processImagePickerResponse, () => {
+            ToastAndroid.show('Failed to choose receipt', ToastAndroid.LONG);
+        });
     }
 
     _showImageLibrary() {
-        ImagePickerManager.launchImageLibrary(imagePickerOptions, this._processImagePickerResponse);
+        ImagePicker.pick().then(this._processImagePickerResponse, () => {
+            ToastAndroid.show('Failed to choose receipt', ToastAndroid.LONG);
+        });
     }
 
-    async _processImagePickerResponse(response) {
-        if (response.uri) {
+    async _processImagePickerResponse(uris) {
+        console.log('IMAGES', uris);
+        if (uris.length == 0) {
+            return;
+        }
 
-            // uri (on android)
-            console.log('IMAGE', response);
+        if (uris.length == 1) {
             this._openReceiptForm({
-                source: {uri: response.uri, isStatic: true},
-                width: response.width,
-                height: response.height,
+                source: {uri: uris[0].uri, isStatic: true},
+                width: uris[0].width,
+                height: uris[0].height,
             });
+        } else {
+            ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
+            return Api.batchUpload(uris.map(uri => uri.uri));    
         }
     }
 
