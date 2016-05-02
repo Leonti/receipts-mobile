@@ -31,6 +31,10 @@ public class UploadService extends Service {
 
     private static int MAX_RETRIES = 3;
 
+    public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
+
+    public static String RECEIPT_ID = "receiptId";
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
@@ -74,8 +78,10 @@ public class UploadService extends Service {
                     public void onDone(ReceiptUploader.Result result) {
                         processing.remove(file);
 
-                        if (result == ReceiptUploader.Result.SUCCESS) {
+                        if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
+                            notifyReceiptResult(result);
                             removeUpload(file);
+                            showProgressOrFinish();
                         } else {
                             Log.i(TAG, "File upload is finished (" + file + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
@@ -83,15 +89,24 @@ public class UploadService extends Service {
                                 Log.i(TAG, "Max retries not yet reached (" + file + "), retrying");
                                 scheduleDelayed(file, retry + 1);
                             } else {
-                                Log.i(TAG, "Max retries reached (" + file + "), removing from the queue");
+                                Log.i(TAG, "Max retries reached (" + file + "), not retrying");
+                                notifyReceiptResult(result);
+                                showProgressOrFinish();
                             }
 
                         }
-
-                        showProgressOrFinish();
                     }
                 }));
         processing.add(file);
+    }
+
+    private void notifyReceiptResult(ReceiptUploader.Result result) {
+        Intent intent = new Intent(RECEIPT_UPLOADED);
+
+        if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
+            intent.putExtra(RECEIPT_ID, result.receiptId);
+        }
+        sendBroadcast(intent);
     }
 
     private void scheduleDelayed(final String file, final int retry) {

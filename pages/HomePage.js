@@ -11,6 +11,7 @@ import React, {
     DrawerLayoutAndroid,
     RecyclerViewBackedScrollView,
     CameraRoll,
+    DeviceEventEmitter,
  } from 'react-native';
 
 import Loader from '../components/Loader';
@@ -71,6 +72,12 @@ class HomePage extends React.Component {
     componentWillMount() {
         this._loadReceipts();
         this._loadUserInfo();
+
+        DeviceEventEmitter.addListener('receiptUploaded', function(e: Event) {  // handle event.
+            console.log('RECEIPT UPLOADED EVENT JS', e);
+            this._loadReceipts();
+        }.bind(this));
+
 /*
         CameraRoll.getPhotos({
                 first: 5,
@@ -81,9 +88,8 @@ class HomePage extends React.Component {
                   console.log('PHOTOS', photos);
                   return Api.batchUpload(['content://media/external/images/media/23', 'content://media/external/images/media/17']);
               }, (e) => console.error(e));
+
 */
-
-
     }
 
     async _logout() {
@@ -141,7 +147,7 @@ class HomePage extends React.Component {
             });
         } else {
             ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
-            return Api.batchUpload(uris.map(uri => uri.uri));    
+            return Api.batchUpload(uris.map(uri => uri.uri));
         }
     }
 
