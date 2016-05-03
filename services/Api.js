@@ -1,6 +1,7 @@
 import Storage from './Storage';
 import NetworkFiles from './NetworkFiles';
 import ReceiptsUploader from './ReceiptsUploader';
+import { DeviceEventEmitter } from 'react-native';
 
 var Buffer = require('buffer/').Buffer
 
@@ -214,7 +215,43 @@ class Api {
               }
           })).json()
     }
+
+    static _uploadCallbacks = [];
+
+    static onReceiptUploaded(callback) {
+
+        console.log('Current callbacks size ' + Api._uploadCallbacks.length);
+
+        Api._uploadCallbacks.push(callback);
+
+        /*
+        DeviceEventEmitter.addListener('receiptUploaded', function(e: Event) {  // handle event.
+            console.log('RECEIPT UPLOADED EVENT IN API', e);
+            callback(e);
+        });
+        */
+    }
+
+    static async _addToCache(receiptId, fileId, fileExt, fileUri) {
+        let userId = await Api._getUserId();
+        let url = baseUrl + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt;
+
+        return NetworkFiles.addToCache({
+            url: url,
+            file: fileUri
+        });
+    }
 }
+
+DeviceEventEmitter.addListener('receiptUploaded', function(event) {  // handle event.
+    console.log('RECEIPT UPLOADED EVENT JS', event);
+
+    let addToCachePromise = Api._addToCache(event.receiptId, event.fileId, event.ext, event.uri);
+
+    addToCachePromise.then(() => {
+        Api._uploadCallbacks.forEach(callback => callback(event));
+    }, (e) => console.log('FAILED TO ADD TO CACHE', e));
+});
 
 function toTotalValue(total) {
     try {

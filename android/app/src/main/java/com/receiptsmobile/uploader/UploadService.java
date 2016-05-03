@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
@@ -20,20 +21,16 @@ import java.util.concurrent.*;
 public class UploadService extends Service {
 
     private final IBinder binder = new UploadServiceBinder();
-
     private static String TAG = "UploadService";
-
     private Set<String> processing = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
-
     private ExecutorService executor;
-
     private int total = 0;
-
     private static int MAX_RETRIES = 3;
-
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
-
     public static String RECEIPT_ID = "receiptId";
+    public static String URI = "uri";
+    public static String FILE_EXT = "ext";
+    public static String FILE_ID = "fileId";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -105,8 +102,16 @@ public class UploadService extends Service {
 
         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
             intent.putExtra(RECEIPT_ID, result.receiptId);
+            intent.putExtra(URI, Uri.fromFile(result.file).toString());
+            intent.putExtra(FILE_EXT, toExt(result.file));
+            intent.putExtra(FILE_ID, result.fileId);
         }
         sendBroadcast(intent);
+    }
+
+    private String toExt(File file) {
+        String[] splitted = file.getName().split("\\.");
+        return splitted.length > 0 ? splitted[splitted.length -1] : "";
     }
 
     private void scheduleDelayed(final String file, final int retry) {

@@ -66,6 +66,9 @@ public class UploaderModule extends ReactContextBaseJavaModule {
 
                 WritableMap params = Arguments.createMap();
                 params.putString("receiptId", receiptId);
+                params.putString("fileId", bundle.getString(UploadService.FILE_ID));
+                params.putString("uri", bundle.getString(UploadService.URI));
+                params.putString("ext", bundle.getString(UploadService.FILE_EXT));
                 sendEvent("receiptUploaded", params);
             }
         };

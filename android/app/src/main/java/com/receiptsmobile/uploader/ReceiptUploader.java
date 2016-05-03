@@ -2,6 +2,7 @@ package com.receiptsmobile.uploader;
 
 import android.util.Log;
 import com.squareup.okhttp.*;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -31,18 +32,22 @@ public class ReceiptUploader implements Runnable {
 
         public final Status status;
         public final String receiptId;
+        public final String fileId;
+        public final File file;
 
-        private Result(Status status, String receiptId) {
+        private Result(Status status, String receiptId, String fileId, File file) {
             this.status = status;
             this.receiptId = receiptId;
+            this.fileId = fileId;
+            this.file = file;
         }
 
-        public static Result success(String receiptId) {
-            return new Result(Status.SUCCESS, receiptId);
+        public static Result success(String receiptId, String fileId, File file) {
+            return new Result(Status.SUCCESS, receiptId, fileId, file);
         }
 
         public static Result failure() {
-            return new Result(Status.FAILURE, null);
+            return new Result(Status.FAILURE, null, null, null);
         }
     }
 
@@ -76,7 +81,11 @@ public class ReceiptUploader implements Runnable {
             if (response.isSuccessful()) {
 
                 JSONObject json = new JSONObject(responseBody);
-                callback.onDone(Result.success(json.getString("id")));
+
+                JSONArray files = json.getJSONArray("files");
+                JSONObject jsonFile = files.getJSONObject(0);
+
+                callback.onDone(Result.success(json.getString("id"), jsonFile.getString("id"), file));
             } else {
                 callback.onDone(Result.failure());
                 Log.i(TAG, "Invalid response " + response.code());

@@ -11,7 +11,6 @@ import React, {
     DrawerLayoutAndroid,
     RecyclerViewBackedScrollView,
     CameraRoll,
-    DeviceEventEmitter,
  } from 'react-native';
 
 import Loader from '../components/Loader';
@@ -73,10 +72,7 @@ class HomePage extends React.Component {
         this._loadReceipts();
         this._loadUserInfo();
 
-        DeviceEventEmitter.addListener('receiptUploaded', function(e: Event) {  // handle event.
-            console.log('RECEIPT UPLOADED EVENT JS', e);
-            this._loadReceipts();
-        }.bind(this));
+        Api.onReceiptUploaded(() => this._loadReceipts());
 
 /*
         CameraRoll.getPhotos({
