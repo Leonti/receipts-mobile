@@ -15,39 +15,7 @@ import ReceiptDetails from '../components/ReceiptDetails';
 import Spinner from '../components/Spinner';
 
 var Icon = require('react-native-vector-icons/Ionicons');
-import Api from '../services/Api';
-
-const MAX_HEIGHT = 200;
-
-async function receiptToImage(receipt) {
-    let file = receipt.files[0];
-
-    return {
-        source: {
-            uri: (await Api.downloadReceiptFile(receipt.id, file.id, file.ext)),
-            isStatic: true
-        }
-    };
-}
-
-function receiptToImageDimensions(receipt) {
-    let file = receipt.files[0];
-
-    return {
-        width: file.metaData.width,
-        height: file.metaData.height,
-    };
-}
-
-function receiptToThumbnailDimensions(receipt) {
-    let imageDimensions = receiptToImageDimensions(receipt);
-    let scale = MAX_HEIGHT / imageDimensions.height
-
-    return {
-        width: imageDimensions.width * scale,
-        height: imageDimensions.height * scale,
-    };
-}
+import Receipt from '../services/Receipt';
 
 class ReceiptViewPage extends React.Component {
 
@@ -63,7 +31,7 @@ class ReceiptViewPage extends React.Component {
 
     componentWillMount() {
 
-        let imageSourcePromise = receiptToImage(this.props.receipt)
+        let imageSourcePromise = Receipt.receiptToImage(this.props.receipt)
             .then((receiptImage) => receiptImage.source);
 
         imageSourcePromise.then((source) => {
@@ -77,7 +45,7 @@ class ReceiptViewPage extends React.Component {
     }
 
     _openImageViewer() {
-        let imageDimensions = receiptToImageDimensions(this.props.receipt);
+        let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
 
         this.props.toRoute({
             component: ImageViewer,
@@ -112,7 +80,7 @@ class ReceiptViewPage extends React.Component {
     }
 
     _openEditView() {
-        let imageDimensions = receiptToImageDimensions(this.props.receipt);
+        let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
 
         let source = this.state.source !== null ? this.state.source
             : this.imageSourcePromise;
@@ -134,12 +102,13 @@ class ReceiptViewPage extends React.Component {
                 imageHeight: imageDimensions.height,
                 description: this.props.receipt.description,
                 total: this.props.receipt.total === undefined ? '' : this.props.receipt.total,
+                title: 'Edit Receipt',
             }
         });
     }
 
     _renderThumbnail() {
-        let thumbnailDimensions = receiptToThumbnailDimensions(this.props.receipt);
+        let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
 
         return (
             <ReceiptThumbnail
@@ -152,7 +121,7 @@ class ReceiptViewPage extends React.Component {
     }
 
     _renderPlaceholder() {
-        let thumbnailDimensions = receiptToThumbnailDimensions(this.props.receipt);
+        let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
 
         return (
             <ImagePlaceholder

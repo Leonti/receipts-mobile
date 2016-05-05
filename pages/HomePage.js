@@ -22,11 +22,10 @@ import ReceiptViewPage from './ReceiptViewPage';
 import ReceiptRow from '../components/ReceiptRow';
 import NavigationView from '../components/NavigationView';
 
-
-
 var Icon = require('react-native-vector-icons/Ionicons');
 
 import Api from '../services/Api';
+import Receipt from '../services/Receipt';
 import ImagePicker from '../services/ImagePicker';
 
 const propTypes = {
@@ -54,7 +53,8 @@ class HomePage extends React.Component {
         this._processImagePickerResponse = this._processImagePickerResponse.bind(this);
         this._logout = this._logout.bind(this);
         this._createReceipt = this._createReceipt.bind(this);
-        this._openReceiptForm = this._openReceiptForm.bind(this);
+        this._openReceiptCreateView = this._openReceiptCreateView.bind(this);
+        this._openReceiptEditView = this._openReceiptEditView.bind(this);
         this._openReceiptView = this._openReceiptView.bind(this);
         this._renderRow = this._renderRow.bind(this)
 
@@ -73,19 +73,6 @@ class HomePage extends React.Component {
         this._loadUserInfo();
 
         Api.onReceiptUploaded(() => this._loadReceipts());
-
-/*
-        CameraRoll.getPhotos({
-                first: 5,
-                assetType: 'Photos',
-            })
-              .then((photos) => {
-
-                  console.log('PHOTOS', photos);
-                  return Api.batchUpload(['content://media/external/images/media/23', 'content://media/external/images/media/17']);
-              }, (e) => console.error(e));
-
-*/
     }
 
     async _logout() {
@@ -136,7 +123,7 @@ class HomePage extends React.Component {
         }
 
         if (uris.length == 1) {
-            this._openReceiptForm({
+            this._openReceiptCreateView({
                 source: {uri: uris[0].uri, isStatic: true},
                 width: uris[0].width,
                 height: uris[0].height,
@@ -190,7 +177,7 @@ class HomePage extends React.Component {
         }
     }
 
-    async _openReceiptForm(image) {
+    async _openReceiptCreateView(image) {
 
         this.props.toRoute({
             component: ReceiptFormPage,
@@ -203,11 +190,34 @@ class HomePage extends React.Component {
                 imageHeight: image.height,
                 description: '',
                 total:'',
+                title: 'New Receipt',
             }
         });
     }
 
-    async _openReceiptView(receipt) {
+    _openReceiptEditView(receipt) {
+
+        let imageDimensions = Receipt.receiptToImageDimensions(receipt);
+        let source = Receipt.receiptToImage(receipt).then((receiptImage) => receiptImage.source);
+
+        this.props.toRoute({
+            component: ReceiptFormPage,
+            passProps: {
+                onSave: (fields) => {
+                    console.log('UPDATING RECEIPT', receipt);
+                    return this._updateReceipt(receipt.id, fields.total, fields.description);
+                },
+                source: source,
+                imageWidth: imageDimensions.width,
+                imageHeight: imageDimensions.height,
+                description: receipt.description,
+                total: receipt.total === undefined ? '' : receipt.total,
+                title: 'Edit Receipt',
+            }
+        });
+    }
+
+    _openReceiptView(receipt) {
         console.log('OPENING RECEIPT: ', receipt);
 
         this.props.toRoute({
@@ -244,9 +254,12 @@ class HomePage extends React.Component {
     }
 
     _renderRow(receipt) {
-        let openReceiptView = this._openReceiptView.bind(this);
+
+        let receiptView = receipt.total === undefined ? this._openReceiptEditView
+            : this._openReceiptView;
+
         return (<ReceiptRow
-            onPress={() => this._openReceiptView(receipt)}
+            onPress={() => receiptView(receipt)}
             receipt={receipt} />);
     }
 

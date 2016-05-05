@@ -8,12 +8,16 @@ import React, {
 
 var moment = require('moment');
 
-function formatTotal(total) {
-    return total ? '$' + total : ' ';
-}
-
 function formatDescription(description) {
     return description ? description : ' ';
+}
+
+function mainText(total) {
+    if (total) {
+        return (<Text style={styles.total}>{'$' + total}</Text>)
+    }
+
+    return (<Text style={styles.edit}>Add details</Text>)
 }
 
 class ReceiptRow extends React.Component {
@@ -27,7 +31,7 @@ class ReceiptRow extends React.Component {
         <TouchableHighlight onPress={this.props.onPress}>
             <View style={styles.container}>
                 <View style={styles.rowHeader}>
-                    <Text style={styles.total}>{formatTotal(this.props.receipt.total)}</Text>
+                    {mainText(this.props.receipt.total)}
                     <Text style={styles.timestamp}>{moment(this.props.receipt.timestamp).format('lll')}</Text>
                 </View>
                 <Text style={styles.description} numberOfLines={1}>{formatDescription(this.props.receipt.description)}</Text>
@@ -51,6 +55,11 @@ const styles = StyleSheet.create({
     total: {
         fontSize: 30,
         fontWeight: 'bold',
+    },
+    edit: {
+        lineHeight: 40,
+        fontSize: 24,
+        color: '#ccc',
     },
     timestamp: {
         fontSize: 16,

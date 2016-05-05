@@ -18,7 +18,6 @@ class ReceiptFormPage extends React.Component {
 
     constructor(props) {
         super(props);
-
         let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
             description: props.description,
@@ -35,7 +34,6 @@ class ReceiptFormPage extends React.Component {
         } else {
             this.state.source = this.props.source;
         }
-
     }
 
     _imageViewer() {
@@ -62,6 +60,7 @@ class ReceiptFormPage extends React.Component {
     }
 
     _renderThumbnail() {
+        console.log('rendering thumbnail', this.state.source);
         return (
             <ReceiptThumbnail
                 onPress={() => this._imageViewer()}
@@ -73,6 +72,7 @@ class ReceiptFormPage extends React.Component {
     }
 
     _renderPlaceholder() {
+        console.log('rendering placeholder');
         return (
             <ImagePlaceholder
                 width={this.state.thumbnailWidth}
@@ -89,7 +89,7 @@ class ReceiptFormPage extends React.Component {
             <View style={styles.container}>
                 <Icon.ToolbarAndroid
                     style={styles.toolbar}
-                    title="New Receipt"
+                    title={this.props.title}
                     navIconName="android-close"
                     actions={[{title: 'Save', show: 'always'}]}
                     onIconClicked={this.props.toBack}
@@ -126,6 +126,7 @@ ReceiptFormPage.propTypes = {
     imageHeight: PropTypes.number.isRequired,
     description: PropTypes.string.isRequired,
     total: PropTypes.any.isRequired,
+    title: PropTypes.string.isRequired,
     toRoute: PropTypes.func.isRequired,
     toBack: PropTypes.func.isRequired,
 };
