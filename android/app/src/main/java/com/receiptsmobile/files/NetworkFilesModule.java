@@ -17,6 +17,8 @@ import static com.receiptsmobile.InputStreamToFile.streamToFile;
 
 class NetworkFilesModule extends ReactContextBaseJavaModule {
 
+    private static String TAG = "NetworkFilesModule";
+
     @Override
     public String getName() {
         return "NetworkFiles";
@@ -107,11 +109,14 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
             String url = parameters.getString("url");
             Uri file = Uri.parse(parameters.getString("file"));
 
+            Log.i(TAG, "Adding file to cache " + url + " " + file);
+
             InputStream inputStream = getCurrentActivity().getContentResolver().openInputStream(file);
             File dst = new File(getCacheDir(), urlToHash(url));
 
             try {
                 streamToFile(inputStream, dst);
+                Log.i(TAG, "File was added to cache " + url);
             } finally {
                 inputStream.close();
             }

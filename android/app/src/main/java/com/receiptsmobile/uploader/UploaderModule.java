@@ -91,7 +91,7 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         ReadableArray contentUris = payload.getArray("files");
 
         for (int i = 0; i < contentUris.size(); i++) {
-            uploads.add(contentUriToFile(contentUris.getString(i)));
+            uploads.add(contentUris.getString(i));
         }
 
         new UploadJobsStorage(context).submitUploads(uploads, token, url);
@@ -102,37 +102,5 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         promise.resolve("started");
     }
 
-    private String contentUriToFileExtension(Uri uri) {
-        try {
-            Cursor returnCursor =
-                    getCurrentActivity().getContentResolver().query(uri, null, null, null, null);
-            returnCursor.moveToFirst();
-            int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
 
-            String fileName = returnCursor.getString(nameIndex);
-            String[] splitted = fileName.split("\\.");
-            return splitted.length > 0 ? splitted[splitted.length -1] : "";
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String contentUriToFile(String uri) {
-
-        try {
-            Uri file = Uri.parse(uri);
-            InputStream inputStream = getCurrentActivity().getContentResolver().openInputStream(file);
-            File dst = new File(getCurrentActivity().getCacheDir(),
-                    UUID.randomUUID().toString() + "." + contentUriToFileExtension(file));
-
-            try {
-                streamToFile(inputStream, dst);
-                return dst.getAbsolutePath();
-            } finally {
-                inputStream.close();
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
 }

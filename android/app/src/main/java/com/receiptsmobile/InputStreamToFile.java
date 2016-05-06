@@ -4,7 +4,7 @@ import java.io.*;
 
 public class InputStreamToFile {
 
-    public static void streamToFile(InputStream inputStream, File dst) {
+    public static File streamToFile(InputStream inputStream, File dst) {
         try {
             OutputStream output = new FileOutputStream(dst);
             try {
@@ -18,6 +18,8 @@ public class InputStreamToFile {
             } finally {
                 output.close();
             }
+
+            return dst;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

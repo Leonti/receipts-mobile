@@ -14,6 +14,8 @@ import com.facebook.react.bridge.*;
 
 import java.io.*;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ImagePickerModule extends ReactContextBaseJavaModule implements ActivityEventListener {
 
@@ -93,16 +95,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             ClipData clipData = data.getClipData();
 
             if (clipData != null) {
-                for (int i = 0; i < clipData.getItemCount(); i++) {
-                    Uri photoUri = clipData.getItemAt(i).getUri();
-                    result.pushMap(toImageInfo(photoUri));
-
-                    Log.i("IMAGE PICKER", "photo: " + photoUri);
-                }
+                processImagesAsync(currentPromise, clipData);
             } else {
                 Uri photoUri = data.getData();
                 result.pushMap(toImageInfo(photoUri));
                 Log.i("IMAGE PICKER", "photo: " + photoUri);
+                currentPromise.resolve(result);
             }
         } else if (requestCode == PHOTO_CODE) {
 
@@ -110,9 +108,30 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
             result.pushMap(toImageInfo(dstUri));
             Log.i("IMAGE PICKER", "photo: " + dstUri);
+            currentPromise.resolve(result);
         }
+    }
 
-        currentPromise.resolve(result);
+    private void processImagesAsync(final Promise promise, final ClipData clipData) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+
+                WritableArray result = Arguments.createArray();
+                for (int i = 0; i < clipData.getItemCount(); i++) {
+                    Uri photoUri = clipData.getItemAt(i).getUri();
+                    result.pushMap(toImageInfo(photoUri));
+
+                    Log.i("IMAGE PICKER", "photo: " + photoUri);
+                }
+
+                promise.resolve(result);
+            }
+        });
+
+        executor.shutdown();
     }
 
     private WritableMap toImageInfo(Uri uri) {

@@ -42,13 +42,13 @@ public class UploadService extends Service {
 
         Log.i(TAG, "FILES TO UPLOAD");
 
-        for (final String file : toUpload) {
+        for (final String uri : toUpload) {
 
-            if (!processing.contains(file)) {
-                submitFile(file, 0);
+            if (!processing.contains(uri)) {
+                submitFile(uri, 0);
             }
 
-            Log.i(TAG, file);
+            Log.i(TAG, uri);
         }
 
         Log.i(TAG, "Auth token " + storage.getAuthToken());
@@ -65,28 +65,28 @@ public class UploadService extends Service {
         return toUpload.size();
     }
 
-    private void submitFile(final String file, final int retry) {
-        Log.i(TAG, "Submitting file for upload (" + file + "), retrying");
+    private void submitFile(final String uri, final int retry) {
+        Log.i(TAG, "Submitting uri for upload (" + uri + "), retrying " + retry);
 
         UploadJobsStorage storage = new UploadJobsStorage(this);
-        executor.submit(new ReceiptUploader(new File(file), storage.getAuthToken(), storage.getUploadUrl(),
+        executor.submit(new ReceiptUploader(this, Uri.parse(uri), storage.getAuthToken(), storage.getUploadUrl(),
                 new ReceiptUploader.Callback() {
                     @Override
                     public void onDone(ReceiptUploader.Result result) {
-                        processing.remove(file);
+                        processing.remove(uri);
 
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
                             notifyReceiptResult(result);
-                            removeUpload(file);
+                            removeUpload(uri);
                             showProgressOrFinish();
                         } else {
-                            Log.i(TAG, "File upload is finished (" + file + "), but upload failed on retry " + retry);
+                            Log.i(TAG, "File upload is finished (" + uri + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
 
-                                Log.i(TAG, "Max retries not yet reached (" + file + "), retrying");
-                                scheduleDelayed(file, retry + 1);
+                                Log.i(TAG, "Max retries not yet reached (" + uri + "), retrying");
+                                scheduleDelayed(uri, retry + 1);
                             } else {
-                                Log.i(TAG, "Max retries reached (" + file + "), not retrying");
+                                Log.i(TAG, "Max retries reached (" + uri + "), not retrying");
                                 notifyReceiptResult(result);
                                 showProgressOrFinish();
                             }
@@ -94,7 +94,7 @@ public class UploadService extends Service {
                         }
                     }
                 }));
-        processing.add(file);
+        processing.add(uri);
     }
 
     private void notifyReceiptResult(ReceiptUploader.Result result) {
