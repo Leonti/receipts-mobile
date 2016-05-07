@@ -1,4 +1,5 @@
-import React, {Text, View, PropTypes, TouchableHighlight, StyleSheet} from 'react-native';
+import React from 'react';
+import {Text, View, PropTypes, TouchableHighlight, StyleSheet} from 'react-native';
 import ZoomableImage from './ZoomableImage';
 var Icon = require('react-native-vector-icons/Ionicons');
 

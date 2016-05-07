@@ -1,4 +1,5 @@
-import React, { PropTypes, Text, View, PanResponder, Image } from 'react-native';
+import React from 'react';
+import { PropTypes, Text, View, PanResponder, Image } from 'react-native';
 
 function calcDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x1 - x2)

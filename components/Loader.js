@@ -1,4 +1,5 @@
-import React, { PropTypes, View, Navigator, TouchableHighlight } from 'react-native';
+import React from 'react';
+import { PropTypes, View, Navigator, TouchableHighlight } from 'react-native';
 
 import LoginPage from '../pages/LoginPage';
 import HomePage from '../pages/HomePage';
