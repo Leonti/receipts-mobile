@@ -12,12 +12,16 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.receiptsmobile.InputStreamToFile.streamToFile;
 
 class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     private static String TAG = "NetworkFilesModule";
+
+    private ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
     public String getName() {
@@ -45,10 +49,6 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
         return map;
     }
 
-    private String urlToHash(String url) {
-        return md5(url);
-    }
-
     @ReactMethod
     public void download(ReadableMap parameters, final Promise promise) {
 
@@ -60,7 +60,8 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                     parameters.getMap("headers") :
                     Arguments.createMap();
 
-            final File dst = new File(getCacheDir(), urlToHash(url));
+            final File dst = new File(getCacheDir(), UrlToHash.toHash(url));
+            Log.i(TAG, "Downloading '" + url + "', looking for cache at " + dst.getAbsolutePath());
 
             if (dst.exists() && !forceRedownload) {
                 WritableMap result = Arguments.createMap();
@@ -68,7 +69,7 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                 result.putInt("length", Long.valueOf(dst.length()).intValue());
                 result.putBoolean("wasCached", true);
 
-                Log.i("NETWORK FILES", "File for '" + url + "' is cached, returning");
+                Log.i(TAG, "File for '" + url + "' is cached, returning");
                 promise.resolve(result);
                 return;
             }
@@ -107,35 +108,26 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
         try {
 
             String url = parameters.getString("url");
-            Uri file = Uri.parse(parameters.getString("file"));
+            Uri fileUri = Uri.parse(parameters.getString("file"));
 
-            Log.i(TAG, "Adding file to cache " + url + " " + file);
+            Log.i(TAG, "Adding file to cache " + url + " " + fileUri);
 
-            InputStream inputStream = getCurrentActivity().getContentResolver().openInputStream(file);
-            File dst = new File(getCacheDir(), urlToHash(url));
+            executor.submit(new FileCacher(getCurrentActivity(), url, fileUri, new FileCacher.Callback() {
 
-            try {
-                streamToFile(inputStream, dst);
-                Log.i(TAG, "File was added to cache " + url);
-            } finally {
-                inputStream.close();
-            }
+                @Override
+                public void onResult(Uri uri) {
+                    WritableMap result = Arguments.createMap();
+                    result.putString("uri", uri.toString());
+                    promise.resolve(result);
+                }
 
-            promise.resolve(dst.getAbsolutePath());
+                @Override
+                public void onError(Throwable t) {
+                    promise.reject(t);
+                }
+            }));
         } catch (Exception e) {
             promise.reject(e);
-        }
-    }
-
-    private static String md5(String s) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("MD5");
-            digest.update(s.getBytes(Charset.forName("US-ASCII")),0,s.length());
-            byte[] magnitude = digest.digest();
-            BigInteger bi = new BigInteger(1, magnitude);
-            return String.format("%0" + (magnitude.length << 1) + "x", bi);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
         }
     }
 

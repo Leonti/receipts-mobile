@@ -13,6 +13,7 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.receiptsmobile.MainActivity;
 import com.receiptsmobile.R;
+import com.receiptsmobile.files.FileCacher;
 
 import java.io.File;
 import java.util.*;
@@ -68,7 +69,7 @@ public class UploadService extends Service {
     private void submitFile(final String uri, final int retry) {
         Log.i(TAG, "Submitting uri for upload (" + uri + "), retrying " + retry);
 
-        UploadJobsStorage storage = new UploadJobsStorage(this);
+        final UploadJobsStorage storage = new UploadJobsStorage(this);
         executor.submit(new ReceiptUploader(this, Uri.parse(uri), storage.getAuthToken(), storage.getUploadUrl(),
                 new ReceiptUploader.Callback() {
                     @Override
@@ -78,7 +79,20 @@ public class UploadService extends Service {
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
                             notifyReceiptResult(result);
                             removeUpload(uri);
-                            showProgressOrFinish();
+
+                            String fileUrl = appendSlash(storage.getUploadUrl()) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
+                            cacheFile(UploadService.this, fileUrl, Uri.parse(uri), new FileCacher.Callback() {
+                                @Override
+                                public void onResult(Uri uri) {
+                                    showProgressOrFinish();
+                                }
+
+                                @Override
+                                public void onError(Throwable t) {
+                                    showProgressOrFinish();
+                                }
+                            });
+
                         } else {
                             Log.i(TAG, "File upload is finished (" + uri + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
@@ -95,6 +109,14 @@ public class UploadService extends Service {
                     }
                 }));
         processing.add(uri);
+    }
+
+    private void cacheFile(Context context, String url, Uri srcFileUri, FileCacher.Callback callback) {
+        new FileCacher(context, url, srcFileUri, callback).run();
+    }
+
+    private static String appendSlash(String url) {
+        return url.lastIndexOf("/") == url.length() - 1 ? url : url + "/";
     }
 
     private void notifyReceiptResult(ReceiptUploader.Result result) {

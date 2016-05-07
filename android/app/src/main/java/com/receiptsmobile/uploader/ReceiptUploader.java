@@ -14,8 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
 
 import static com.receiptsmobile.InputStreamToFile.streamToFile;
 

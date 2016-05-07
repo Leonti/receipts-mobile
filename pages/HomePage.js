@@ -116,22 +116,25 @@ class HomePage extends React.Component {
         });
     }
 
-    async _processImagePickerResponse(uris) {
-        console.log('IMAGES', uris);
-        if (uris.length == 0) {
+    async _processImagePickerResponse(response) {
+        console.log('IMAGES', response);
+
+        if (response.cancelled) {
             return;
         }
 
-        if (uris.length == 1) {
-            this._openReceiptCreateView({
-                source: {uri: uris[0].uri, isStatic: true},
-                width: uris[0].width,
-                height: uris[0].height,
+        if (response.single) {
+            return this._openReceiptCreateView({
+                source: {uri: response.single.uri, isStatic: true},
+                width: response.single.width,
+                height: response.single.height,
             });
-        } else {
+        } else if (response.multiple) {
             ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
-            return Api.batchUpload(uris.map(uri => uri.uri));
+            return Api.batchUpload(response.multiple);
         }
+
+        console.error('Unknown response from image picker!');
     }
 
     async _createReceipt(imageUri, total, description) {

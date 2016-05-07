@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.util.Log;
 import com.facebook.react.bridge.*;
@@ -82,10 +81,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        WritableArray result = Arguments.createArray();
 
         if (resultCode != Activity.RESULT_OK) {
             Log.i(TAG, "Activity resultCode is not OK (" + resultCode + ")");
+            WritableMap result = Arguments.createMap();
+            result.putBoolean("cancelled", true);
             currentPromise.resolve(result);
             return;
         }
@@ -98,7 +98,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 processImagesAsync(currentPromise, clipData);
             } else {
                 Uri photoUri = data.getData();
-                result.pushMap(toImageInfo(photoUri));
+                WritableMap result = Arguments.createMap();
+                result.putMap("single", toImageInfo(photoUri));
                 Log.i("IMAGE PICKER", "photo: " + photoUri);
                 currentPromise.resolve(result);
             }
@@ -106,7 +107,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
             Log.i(TAG, "data " + data);
 
-            result.pushMap(toImageInfo(dstUri));
+            WritableMap result = Arguments.createMap();
+            result.putMap("single", toImageInfo(dstUri));
             Log.i("IMAGE PICKER", "photo: " + dstUri);
             currentPromise.resolve(result);
         }
@@ -119,14 +121,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             @Override
             public void run() {
 
-                WritableArray result = Arguments.createArray();
+                WritableMap result = Arguments.createMap();
+                WritableArray images = Arguments.createArray();
                 for (int i = 0; i < clipData.getItemCount(); i++) {
                     Uri photoUri = clipData.getItemAt(i).getUri();
-                    result.pushMap(toImageInfo(photoUri));
+                    images.pushString(photoUri.toString());
 
                     Log.i("IMAGE PICKER", "photo: " + photoUri);
                 }
 
+                result.putArray("multiple", images);
                 promise.resolve(result);
             }
         });
