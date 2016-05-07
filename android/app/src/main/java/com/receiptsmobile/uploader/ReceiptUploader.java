@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.UUID;
 
 import static com.receiptsmobile.InputStreamToFile.streamToFile;
@@ -27,14 +28,22 @@ public class ReceiptUploader implements Runnable {
     private final Context context;
     private final Uri uri;
     private final String authToken;
+    private final Map<String, String> fields;
     private final String uploadUrl;
     private final Callback callback;
 
-    public ReceiptUploader(Context context, Uri uri, String authToken, String uploadUrl, Callback callback) {
+    public ReceiptUploader(
+            Context context,
+            Uri uri,
+            String authToken,
+            String uploadUrl,
+            Map<String, String> fields,
+            Callback callback) {
         this.context = context;
         this.uri = uri;
         this.authToken = authToken;
         this.uploadUrl = uploadUrl;
+        this.fields = fields;
         this.callback = callback;
     }
 
@@ -74,17 +83,18 @@ public class ReceiptUploader implements Runnable {
 
             OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
 
-            RequestBody requestBody = new MultipartBuilder()
+            MultipartBuilder requestBuilder = new MultipartBuilder()
                     .type(MultipartBuilder.FORM)
-                    .addFormDataPart("total", "")
-                    .addFormDataPart("description", "")
-                    .addFormDataPart("receipt", file.getName(), RequestBody.create(MediaType.parse("image/jpeg"), file))
-                    .build();
+                    .addFormDataPart("receipt", file.getName(), RequestBody.create(MediaType.parse("image/jpeg"), file));
+
+            for (String key : fields.keySet()) {
+                requestBuilder.addFormDataPart(key, fields.get(key));
+            }
 
             Request request = new Request.Builder()
                     .header("Authorization", "Bearer " + authToken)
                     .url(uploadUrl)
-                    .post(requestBody)
+                    .post(requestBuilder.build())
                     .build();
 
             client.newCall(request).enqueue(new com.squareup.okhttp.Callback() {

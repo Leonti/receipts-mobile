@@ -92,49 +92,15 @@ class Api {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-        return new Promise(function(resolve, reject) {
-
-            let xhr = new XMLHttpRequest();
-            xhr.onload = function () {
-                if (xhr.status >= 200 && xhr.status < 300) {
-
-                    let receipt = JSON.parse(xhr.responseText);
-
-                    let file = receipt.files[0];
-                    let url = baseUrl + '/user/' + userId + '/receipt/' + receipt.id + '/file/' + file.id + '.' + file.ext;
-                    console.log('Receipt uloaded ' + fileUri, url);
-
-                    let cachedFilePromise = NetworkFiles.addToCache({
-                        url: url,
-                        file: fileUri
-                    }).then(() => receipt);
-                    resolve(cachedFilePromise);
-                } else {
-                    reject(new Error('Upload failed with status code ' + xhr.status));
-                }
-            };
-
-            xhr.onerror = function() {
-                reject(new Error(xhr.statusText));
-            }
-
-            xhr.open('POST', baseUrl + '/user/' + userId + '/receipt');
-            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-            xhr.setRequestHeader('Accept', 'application/json');
-
-            var receipt = {
-                uri: fileUri,
-                type: 'image/jpeg',
-                name: 'receipt.jpg',
-            };
-
-            var formData = new FormData();
-            formData.append('receipt', receipt);
-            formData.append('filename', 'receipt.jpg');
-            formData.append('total', total === null ? '' : total);
-            formData.append('description', description === null ? '' : description);
-            xhr.send(formData);
-        });
+        return (await ReceiptsUploader.submitSingle({
+            uri: fileUri,
+            fields: {
+                total: total === null ? '' : total,
+                description: description === null ? '' : description,
+            },
+            token: token,
+            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+        }));
     }
 
     static async updateReceipt(receiptId, fields) {
@@ -166,7 +132,7 @@ class Api {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-        return (await ReceiptsUploader.submit({
+        return (await ReceiptsUploader.submitMultiple({
             files: files,
             token: token,
             uploadUrl: baseUrl + '/user/' + userId + '/receipt',

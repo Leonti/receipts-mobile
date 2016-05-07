@@ -70,25 +70,35 @@ public class UploadService extends Service {
         Log.i(TAG, "Submitting uri for upload (" + uri + "), retrying " + retry);
 
         final UploadJobsStorage storage = new UploadJobsStorage(this);
-        executor.submit(new ReceiptUploader(this, Uri.parse(uri), storage.getAuthToken(), storage.getUploadUrl(),
+
+        Map<String, String> fields = new HashMap<>();
+        fields.put("total", "");
+        fields.put("description", "");
+        executor.submit(new ReceiptUploader(
+                this,
+                Uri.parse(uri),
+                storage.getAuthToken(),
+                storage.getUploadUrl(),
+                fields,
                 new ReceiptUploader.Callback() {
                     @Override
-                    public void onDone(ReceiptUploader.Result result) {
+                    public void onDone(final ReceiptUploader.Result result) {
                         processing.remove(uri);
 
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
-                            notifyReceiptResult(result);
                             removeUpload(uri);
 
                             String fileUrl = appendSlash(storage.getUploadUrl()) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
                             cacheFile(UploadService.this, fileUrl, Uri.parse(uri), new FileCacher.Callback() {
                                 @Override
                                 public void onResult(Uri uri) {
+                                    notifyReceiptResult(result);
                                     showProgressOrFinish();
                                 }
 
                                 @Override
                                 public void onError(Throwable t) {
+                                    notifyReceiptResult(result);
                                     showProgressOrFinish();
                                 }
                             });

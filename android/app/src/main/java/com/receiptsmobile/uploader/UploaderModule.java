@@ -11,12 +11,13 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 import com.facebook.react.bridge.*;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
+import com.receiptsmobile.files.FileCacher;
 
 import java.io.File;
 import java.io.InputStream;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static com.receiptsmobile.InputStreamToFile.streamToFile;
 
@@ -30,6 +31,8 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     }
 
     private final BroadcastReceiver receiver = createReceiver();
+
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     UploaderModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -81,7 +84,7 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void submit(ReadableMap payload, Promise promise) {
+    public void submitMultiple(ReadableMap payload, Promise promise) {
         Context context = getCurrentActivity();
 
         String token = payload.getString("token");
@@ -102,5 +105,72 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         promise.resolve("started");
     }
 
+    @ReactMethod
+    public void submitSingle(ReadableMap payload, final Promise promise) {
+        final Context context = getCurrentActivity();
+
+        String token = payload.getString("token");
+        final String url = payload.getString("uploadUrl");
+        final Uri uri = Uri.parse(payload.getString("uri"));
+        ReadableMap fields = payload.getMap("fields");
+
+        executor.submit(new ReceiptUploader(
+                context,
+                uri,
+                token,
+                url,
+                toMap(fields),
+                new ReceiptUploader.Callback() {
+                    @Override
+                    public void onDone(ReceiptUploader.Result result) {
+
+                        if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
+                            String fileUrl = appendSlash(url) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
+                            cacheFile(context, fileUrl, uri, new FileCacher.Callback() {
+                                @Override
+                                public void onResult(Uri uri) {
+                                    WritableMap result = Arguments.createMap();
+                                    result.putString("status", "SUCCESS");
+                                    promise.resolve(result);
+                                }
+
+                                @Override
+                                public void onError(Throwable t) {
+                                    WritableMap result = Arguments.createMap();
+                                    result.putString("status", "CACHING_ERROR");
+                                    promise.resolve(result);
+                                }
+                            });
+                        } else {
+                            promise.reject("UPLOAD_FAILED", "Failed to upload file to " + url);
+                        }
+                    }
+                }));
+    }
+
+    private String toExt(File file) {
+        String[] splitted = file.getName().split("\\.");
+        return splitted.length > 0 ? splitted[splitted.length -1] : "";
+    }
+
+    private void cacheFile(Context context, String url, Uri srcFileUri, FileCacher.Callback callback) {
+        new FileCacher(context, url, srcFileUri, callback).run();
+    }
+
+    private static String appendSlash(String url) {
+        return url.lastIndexOf("/") == url.length() - 1 ? url : url + "/";
+    }
+
+    private static Map<String, String> toMap(ReadableMap fields) {
+        Map<String, String> map = new HashMap<>();
+
+        ReadableMapKeySetIterator it = fields.keySetIterator();
+        while (it.hasNextKey()) {
+            String key = it.nextKey();
+            map.put(key, fields.getString(key));
+        }
+
+        return map;
+    }
 
 }
