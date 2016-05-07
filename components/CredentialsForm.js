@@ -1,6 +1,5 @@
-import React from 'react';
+import React, {Component, PropTypes} from "react";
 import {
-    PropTypes,
     StyleSheet,
     View,
     ProgressBarAndroid,
@@ -17,7 +16,7 @@ const propTypes = {
     onSuccess: PropTypes.func.isRequired
 };
 
-class CredentialsForm extends React.Component {
+class CredentialsForm extends Component {
 
     constructor(props) {
         super(props);

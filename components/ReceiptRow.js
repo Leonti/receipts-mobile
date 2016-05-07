@@ -1,6 +1,5 @@
-import React from 'react';
+import React, {Component, PropTypes} from "react";
 import {
-    PropTypes,
     StyleSheet,
     View,
     Text,
@@ -21,7 +20,7 @@ function mainText(total) {
     return (<Text style={styles.edit}>Add details</Text>)
 }
 
-class ReceiptRow extends React.Component {
+class ReceiptRow extends Component {
 
     constructor(props) {
         super(props);

@@ -1,6 +1,5 @@
-import React from 'react';
+import React, {Component, PropTypes} from "react";
 import {
-    PropTypes,
     View,
     ProgressBarAndroid,
     Text } from 'react-native';

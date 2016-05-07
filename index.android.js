@@ -1,5 +1,5 @@
 'use strict'
-import React from 'react';
+import React, {Component} from "react";
 import Router from 'react-native-simple-router';
 import { AppRegistry, StyleSheet } from 'react-native';
 
@@ -19,7 +19,7 @@ const firstRoute = {
 };
 
 // The Router wrapper
-class ReceiptsMobile extends React.Component {
+class ReceiptsMobile extends Component {
 
   render() {
     return (

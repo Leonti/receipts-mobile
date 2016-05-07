@@ -1,5 +1,5 @@
-import React from 'react';
-import { PropTypes, Text, View, PanResponder, Image } from 'react-native';
+import React, {Component, PropTypes} from "react";
+import { Text, View, PanResponder, Image } from 'react-native';
 
 function calcDistance(x1, y1, x2, y2) {
     let dx = Math.abs(x1 - x2)
@@ -36,7 +36,7 @@ function calcOffsetByZoom(width, height, imageWidth, imageHeight, zoom) {
     }
 }
 
-class ZoomableImage extends React.Component {
+class ZoomableImage extends Component {
 
     constructor(props) {
         super(props);

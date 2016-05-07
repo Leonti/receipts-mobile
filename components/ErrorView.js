@@ -1,6 +1,5 @@
-import React from 'react';
+import React, {Component, PropTypes} from "react";
 import {
-    PropTypes,
     StyleSheet,
     View,
     Text } from 'react-native';
@@ -9,7 +8,7 @@ const propTypes = {
     message: PropTypes.any.isRequired
 };
 
-class ErrorView extends React.Component {
+class ErrorView extends Component {
     render() {
         return(
             <View style={styles.wrapper}>

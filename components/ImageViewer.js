@@ -1,9 +1,9 @@
-import React from 'react';
-import {Text, View, PropTypes, TouchableHighlight, StyleSheet} from 'react-native';
+import React, {Component, PropTypes} from "react";
+import {Text, View, TouchableHighlight, StyleSheet} from 'react-native';
 import ZoomableImage from './ZoomableImage';
 var Icon = require('react-native-vector-icons/Ionicons');
 
-class ImageViewer extends React.Component {
+class ImageViewer extends Component {
 
     render() {
         return (

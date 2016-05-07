@@ -1,5 +1,5 @@
-import React from 'react';
-import { PropTypes, View, Navigator, TouchableHighlight } from 'react-native';
+import React, {Component, PropTypes} from "react";
+import { View, Navigator, TouchableHighlight } from 'react-native';
 
 import LoginPage from '../pages/LoginPage';
 import HomePage from '../pages/HomePage';
@@ -10,7 +10,7 @@ const propTypes = {
   replaceRoute: PropTypes.func.isRequired,
 };
 
-class Loader extends React.Component {
+class Loader extends Component {
 
     constructor(props) {
         super(props);
