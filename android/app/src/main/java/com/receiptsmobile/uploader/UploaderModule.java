@@ -32,8 +32,6 @@ public class UploaderModule extends ReactContextBaseJavaModule {
 
     private final BroadcastReceiver receiver = createReceiver();
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
-
     UploaderModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
@@ -64,14 +62,21 @@ public class UploaderModule extends ReactContextBaseJavaModule {
             @Override
             public void onReceive (Context context, Intent intent){
                 Bundle bundle = intent.getExtras();
-                String receiptId = bundle.getString(UploadService.RECEIPT_ID);
-                Log.i(TAG, "BROADCAST RECEIVED " + receiptId);
+                String uploadId =  bundle.getString(UploadService.UPLOAD_JOB_ID);
+                ReceiptUploader.Result.Status status =
+                        ReceiptUploader.Result.Status.valueOf(bundle.getString(UploadService.UPLOAD_JOB_STATUS));
+                Log.i(TAG, "BROADCAST RECEIVED " + uploadId + " " + status);
 
                 WritableMap params = Arguments.createMap();
-                params.putString("receiptId", receiptId);
-                params.putString("fileId", bundle.getString(UploadService.FILE_ID));
-                params.putString("uri", bundle.getString(UploadService.URI));
-                params.putString("ext", bundle.getString(UploadService.FILE_EXT));
+                params.putString("status", status.toString());
+                params.putString("uploadId", uploadId);
+
+                if (status == ReceiptUploader.Result.Status.SUCCESS) {
+                    params.putString("receiptId", bundle.getString(UploadService.RECEIPT_ID));
+                    params.putString("fileId", bundle.getString(UploadService.FILE_ID));
+                    params.putString("ext", bundle.getString(UploadService.FILE_EXT));
+                }
+
                 sendEvent("receiptUploaded", params);
             }
         };
@@ -84,81 +89,42 @@ public class UploaderModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void submitMultiple(ReadableMap payload, Promise promise) {
+    public void submit(ReadableMap payload, Promise promise) {
         Context context = getCurrentActivity();
 
-        String token = payload.getString("token");
-        String url = payload.getString("uploadUrl");
+        String authToken = payload.getString("token");
+        String uploadUrl = payload.getString("uploadUrl");
 
-        Set<String> uploads = new HashSet<>();
-        ReadableArray contentUris = payload.getArray("files");
+        List<ReceiptUploader.UploadJob> uploads = new LinkedList<>();
+        ReadableArray receipts = payload.getArray("receipts");
 
-        for (int i = 0; i < contentUris.size(); i++) {
-            uploads.add(contentUris.getString(i));
+        for (int i = 0; i < receipts.size(); i++) {
+
+            ReadableMap receipt = receipts.getMap(i);
+
+            ReceiptUploader.UploadJob job = new ReceiptUploader.UploadJob(
+                    UUID.randomUUID(),
+                    uploadUrl,
+                    authToken,
+                    Uri.parse(receipt.getString("uri")),
+                    toMap(receipt.getMap("fields")));
+
+            uploads.add(job);
         }
 
-        new UploadJobsStorage(context).submitUploads(uploads, token, url);
+        new UploadJobsStorage(context).submitUploads(uploads);
 
         Intent intent = new Intent(context, UploadService.class);
         context.startService(intent);
 
-        promise.resolve("started");
-    }
+        WritableMap result = Arguments.createMap();
+        WritableArray ids = Arguments.createArray();
 
-    @ReactMethod
-    public void submitSingle(ReadableMap payload, final Promise promise) {
-        final Context context = getCurrentActivity();
+        for (ReceiptUploader.UploadJob job : uploads) {
+            ids.pushString(job.id.toString());
+        }
 
-        String token = payload.getString("token");
-        final String url = payload.getString("uploadUrl");
-        final Uri uri = Uri.parse(payload.getString("uri"));
-        ReadableMap fields = payload.getMap("fields");
-
-        executor.submit(new ReceiptUploader(
-                context,
-                uri,
-                token,
-                url,
-                toMap(fields),
-                new ReceiptUploader.Callback() {
-                    @Override
-                    public void onDone(ReceiptUploader.Result result) {
-
-                        if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
-                            String fileUrl = appendSlash(url) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
-                            cacheFile(context, fileUrl, uri, new FileCacher.Callback() {
-                                @Override
-                                public void onResult(Uri uri) {
-                                    WritableMap result = Arguments.createMap();
-                                    result.putString("status", "SUCCESS");
-                                    promise.resolve(result);
-                                }
-
-                                @Override
-                                public void onError(Throwable t) {
-                                    WritableMap result = Arguments.createMap();
-                                    result.putString("status", "CACHING_ERROR");
-                                    promise.resolve(result);
-                                }
-                            });
-                        } else {
-                            promise.reject("UPLOAD_FAILED", "Failed to upload file to " + url);
-                        }
-                    }
-                }));
-    }
-
-    private String toExt(File file) {
-        String[] splitted = file.getName().split("\\.");
-        return splitted.length > 0 ? splitted[splitted.length -1] : "";
-    }
-
-    private void cacheFile(Context context, String url, Uri srcFileUri, FileCacher.Callback callback) {
-        new FileCacher(context, url, srcFileUri, callback).run();
-    }
-
-    private static String appendSlash(String url) {
-        return url.lastIndexOf("/") == url.length() - 1 ? url : url + "/";
+        promise.resolve(result);
     }
 
     private static Map<String, String> toMap(ReadableMap fields) {

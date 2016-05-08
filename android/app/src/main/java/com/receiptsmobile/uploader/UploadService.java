@@ -23,13 +23,15 @@ public class UploadService extends Service {
 
     private final IBinder binder = new UploadServiceBinder();
     private static String TAG = "UploadService";
-    private Set<String> processing = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
+    private Set<ReceiptUploader.UploadJob> processing = Collections.newSetFromMap(new ConcurrentHashMap<ReceiptUploader.UploadJob, Boolean>());
     private ExecutorService executor;
+    private UploadJobsStorage uploadJobsStorage;
     private int total = 0;
     private static int MAX_RETRIES = 3;
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
+    public static String UPLOAD_JOB_ID = "uploadJobId";
+    public static String UPLOAD_JOB_STATUS = "uploadJobStatus";
     public static String RECEIPT_ID = "receiptId";
-    public static String URI = "uri";
     public static String FILE_EXT = "ext";
     public static String FILE_ID = "fileId";
 
@@ -37,23 +39,20 @@ public class UploadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
         UploadJobsStorage storage = new UploadJobsStorage(this);
-        Set<String> toUpload = storage.getUploads();
+        List<ReceiptUploader.UploadJob> toUpload = storage.getUploadJobs();
 
         total = calculateTotal(storage);
 
         Log.i(TAG, "FILES TO UPLOAD");
 
-        for (final String uri : toUpload) {
+        for (ReceiptUploader.UploadJob job : toUpload) {
 
-            if (!processing.contains(uri)) {
-                submitFile(uri, 0);
+            if (!processing.contains(job)) {
+                submitFile(job, 0);
             }
 
-            Log.i(TAG, uri);
+            Log.i(TAG, job.toString());
         }
-
-        Log.i(TAG, "Auth token " + storage.getAuthToken());
-        Log.i(TAG, "Upload url " + storage.getUploadUrl());
 
         showProgress();
 
@@ -61,64 +60,59 @@ public class UploadService extends Service {
     }
 
     private int calculateTotal(UploadJobsStorage storage) {
-        Set<String> toUpload = storage.getUploads();
+        List<ReceiptUploader.UploadJob> toUpload = storage.getUploadJobs();
         toUpload.removeAll(processing);
         return toUpload.size();
     }
 
-    private void submitFile(final String uri, final int retry) {
-        Log.i(TAG, "Submitting uri for upload (" + uri + "), retrying " + retry);
-
-        final UploadJobsStorage storage = new UploadJobsStorage(this);
+    private void submitFile(final ReceiptUploader.UploadJob job, final int retry) {
+        Log.i(TAG, "Submitting job for upload (" + job + "), retrying " + retry);
 
         Map<String, String> fields = new HashMap<>();
         fields.put("total", "");
         fields.put("description", "");
         executor.submit(new ReceiptUploader(
                 this,
-                Uri.parse(uri),
-                storage.getAuthToken(),
-                storage.getUploadUrl(),
-                fields,
+                job,
                 new ReceiptUploader.Callback() {
                     @Override
                     public void onDone(final ReceiptUploader.Result result) {
-                        processing.remove(uri);
+                        processing.remove(job);
 
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
-                            removeUpload(uri);
+                            removeUpload(job);
 
-                            String fileUrl = appendSlash(storage.getUploadUrl()) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
-                            cacheFile(UploadService.this, fileUrl, Uri.parse(uri), new FileCacher.Callback() {
+                            String fileUrl = appendSlash(job.uploadUrl) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
+                            cacheFile(UploadService.this, fileUrl, job.fileUri, new FileCacher.Callback() {
                                 @Override
                                 public void onResult(Uri uri) {
-                                    notifyReceiptResult(result);
+                                    notifyReceiptResult(job.id, result);
                                     showProgressOrFinish();
                                 }
 
                                 @Override
                                 public void onError(Throwable t) {
-                                    notifyReceiptResult(result);
+                                    notifyReceiptResult(job.id, result);
                                     showProgressOrFinish();
                                 }
                             });
 
                         } else {
-                            Log.i(TAG, "File upload is finished (" + uri + "), but upload failed on retry " + retry);
+                            Log.i(TAG, "File upload is finished (" + job + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
 
-                                Log.i(TAG, "Max retries not yet reached (" + uri + "), retrying");
-                                scheduleDelayed(uri, retry + 1);
+                                Log.i(TAG, "Max retries not yet reached (" + job + "), retrying");
+                                scheduleDelayed(job, retry + 1);
                             } else {
-                                Log.i(TAG, "Max retries reached (" + uri + "), not retrying");
-                                notifyReceiptResult(result);
+                                Log.i(TAG, "Max retries reached (" + job + "), not retrying");
+                                notifyReceiptResult(job.id, result);
                                 showProgressOrFinish();
                             }
 
                         }
                     }
                 }));
-        processing.add(uri);
+        processing.add(job);
     }
 
     private void cacheFile(Context context, String url, Uri srcFileUri, FileCacher.Callback callback) {
@@ -129,14 +123,18 @@ public class UploadService extends Service {
         return url.lastIndexOf("/") == url.length() - 1 ? url : url + "/";
     }
 
-    private void notifyReceiptResult(ReceiptUploader.Result result) {
+    private void notifyReceiptResult(UUID uploadJobId, ReceiptUploader.Result result) {
         Intent intent = new Intent(RECEIPT_UPLOADED);
 
         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
+            intent.putExtra(UPLOAD_JOB_STATUS, result.status.toString());
+            intent.putExtra(UPLOAD_JOB_ID, uploadJobId.toString());
             intent.putExtra(RECEIPT_ID, result.receiptId);
-            intent.putExtra(URI, Uri.fromFile(result.file).toString());
             intent.putExtra(FILE_EXT, toExt(result.file));
             intent.putExtra(FILE_ID, result.fileId);
+        } else {
+            intent.putExtra(UPLOAD_JOB_STATUS, result.status.toString());
+            intent.putExtra(UPLOAD_JOB_ID, uploadJobId.toString());
         }
         sendBroadcast(intent);
     }
@@ -146,14 +144,14 @@ public class UploadService extends Service {
         return splitted.length > 0 ? splitted[splitted.length -1] : "";
     }
 
-    private void scheduleDelayed(final String file, final int retry) {
+    private void scheduleDelayed(final ReceiptUploader.UploadJob job, final int retry) {
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         try {
             executor.schedule(new Runnable() {
                 @Override
                 public void run() {
-                    submitFile(file, retry);
+                    submitFile(job, retry);
                 }
             }, 30, TimeUnit.SECONDS);
         } finally {
@@ -162,8 +160,8 @@ public class UploadService extends Service {
 
     }
 
-    private void removeUpload(String file) {
-        new UploadJobsStorage(this).removeUpload(file);
+    private void removeUpload(ReceiptUploader.UploadJob job) {
+        uploadJobsStorage.removeUpload(job);
     }
 
     private void showProgressOrFinish() {
@@ -189,6 +187,7 @@ public class UploadService extends Service {
         Log.i(TAG, "ON CREATE COMMAND");
 
         executor = Executors.newSingleThreadExecutor();
+        uploadJobsStorage = new UploadJobsStorage(this);
         startForeground(42, createProgressNotification(this, 0));
     }
 

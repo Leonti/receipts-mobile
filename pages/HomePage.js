@@ -139,8 +139,8 @@ class HomePage extends React.Component {
 
     async _createReceipt(imageUri, total, description) {
         try {
-            let receipt = await Api.uploadFile(imageUri, total, description);
-            console.log('RECEIPT UPLOADED ', receipt);
+            let upload = await Api.uploadFile(imageUri, total, description);
+            console.log('RECEIPT SENT FOR UPLOAD ', upload);
             this.props.toBack();
             ToastAndroid.show('Receipt saved', ToastAndroid.SHORT);
             this._loadReceipts();

@@ -20,30 +20,17 @@ import static com.receiptsmobile.InputStreamToFile.streamToFile;
 
 public class ReceiptUploader implements Runnable {
 
-    public interface Callback {
-        void onDone(Result result);
-    }
-
     private static String TAG = "ReceiptUploader";
     private final Context context;
-    private final Uri uri;
-    private final String authToken;
-    private final Map<String, String> fields;
-    private final String uploadUrl;
+    private final UploadJob job;
     private final Callback callback;
 
     public ReceiptUploader(
             Context context,
-            Uri uri,
-            String authToken,
-            String uploadUrl,
-            Map<String, String> fields,
+            UploadJob job,
             Callback callback) {
         this.context = context;
-        this.uri = uri;
-        this.authToken = authToken;
-        this.uploadUrl = uploadUrl;
-        this.fields = fields;
+        this.job = job;
         this.callback = callback;
     }
 
@@ -76,10 +63,10 @@ public class ReceiptUploader implements Runnable {
 
         try {
             Log.i(TAG, "Converting uri into a file");
-            final File file = contentUriToFile(context, uri);
+            final File file = contentUriToFile(context, job.fileUri);
 
             // http://stackoverflow.com/questions/24279563/uploading-a-large-file-in-multipart-using-okhttp
-            Log.i(TAG, "Uploading file " + file.getAbsolutePath() + " " + authToken + " " + uploadUrl);
+            Log.i(TAG, "Uploading file " + file.getAbsolutePath() + " " + job.authToken + " " + job.uploadUrl);
 
             OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
 
@@ -87,13 +74,13 @@ public class ReceiptUploader implements Runnable {
                     .type(MultipartBuilder.FORM)
                     .addFormDataPart("receipt", file.getName(), RequestBody.create(MediaType.parse("image/jpeg"), file));
 
-            for (String key : fields.keySet()) {
-                requestBuilder.addFormDataPart(key, fields.get(key));
+            for (String key : job.fields.keySet()) {
+                requestBuilder.addFormDataPart(key, job.fields.get(key));
             }
 
             Request request = new Request.Builder()
-                    .header("Authorization", "Bearer " + authToken)
-                    .url(uploadUrl)
+                    .header("Authorization", "Bearer " + job.authToken)
+                    .url(job.uploadUrl)
                     .post(requestBuilder.build())
                     .build();
 
@@ -175,5 +162,54 @@ public class ReceiptUploader implements Runnable {
         }
     }
 
+    static class UploadJob {
+        public final UUID id;
+        public final String uploadUrl;
+        public final String authToken;
+        public final Uri fileUri;
+        Map<String, String> fields;
 
+        public UploadJob(UUID id, String uploadUrl, String authToken, Uri fileUri, Map<String, String> fields) {
+            this.id = id;
+            this.uploadUrl = uploadUrl;
+            this.authToken = authToken;
+            this.fileUri = fileUri;
+            this.fields = fields;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            UploadJob uploadJob = (UploadJob) o;
+
+            if (!uploadUrl.equals(uploadJob.uploadUrl)) return false;
+            if (!fileUri.equals(uploadJob.fileUri)) return false;
+            return fields.equals(uploadJob.fields);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = uploadUrl.hashCode();
+            result = 31 * result + fileUri.hashCode();
+            result = 31 * result + fields.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "UploadJob{" +
+                    "id=" + id +
+                    ", uploadUrl='" + uploadUrl + '\'' +
+                    ", authToken='" + authToken + '\'' +
+                    ", fileUri=" + fileUri +
+                    ", fields=" + fields +
+                    '}';
+        }
+    }
+
+    public interface Callback {
+        void onDone(Result result);
+    }
 }

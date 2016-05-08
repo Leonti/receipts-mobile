@@ -92,14 +92,39 @@ class Api {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-        return (await ReceiptsUploader.submitSingle({
-            uri: fileUri,
-            fields: {
-                total: total === null ? '' : total,
-                description: description === null ? '' : description,
-            },
+        return (await ReceiptsUploader.submit({
             token: token,
             uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+            receipts: [
+                {
+                    uri: fileUri,
+                    fields: {
+                        total: total === null ? '' : total,
+                        description: description === null ? '' : description,
+                    },
+                },
+            ]
+        }));
+    }
+
+    static async batchUpload(files) {
+        console.log('BATCH UPLOADING', files);
+        let token = await Api._getAccessToken();
+        let userId = await Api._getUserId();
+
+
+        return (await ReceiptsUploader.submit({
+            token: token,
+            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+            receipts: files.map(file => {
+                return {
+                    uri: file,
+                    fields: {
+                        total: '',
+                        description: '',
+                    }
+                }
+            }),
         }));
     }
 
@@ -125,18 +150,6 @@ class Api {
                 value: toTotalValue(fields.total)
             }])
         })).json()
-    }
-
-    static async batchUpload(files) {
-        console.log('BATCH UPLOADING', files);
-        let token = await Api._getAccessToken();
-        let userId = await Api._getUserId();
-
-        return (await ReceiptsUploader.submitMultiple({
-            files: files,
-            token: token,
-            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
-        }));
     }
 
     static async deleteReceipt(receiptId) {
