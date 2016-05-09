@@ -143,11 +143,10 @@ class HomePage extends React.Component {
         try {
             let upload = await Api.uploadFile(imageUri, total, description).then((uploads) => {
                 console.log('UPLOAD JOBS FOR SINGLE', uploads);
-            });;
+            });
             console.log('RECEIPT SENT FOR UPLOAD ', upload);
             this.props.toBack();
-            ToastAndroid.show('Receipt saved', ToastAndroid.SHORT);
-            this._loadReceipts();
+            ToastAndroid.show('Receipt is being saved', ToastAndroid.SHORT);
         } catch (e) {
             console.log('Upload failed ' + e.message);
             ToastAndroid.show('Failed to save the receipt', ToastAndroid.LONG);
@@ -192,6 +191,7 @@ class HomePage extends React.Component {
                 onSave: (receipt) => {
                     return this._createReceipt(image.source.uri, receipt.total, receipt.description);
                 },
+                noSpinner: true,
                 source: image.source,
                 imageWidth: image.width,
                 imageHeight: image.height,

@@ -48,7 +48,10 @@ class ReceiptFormPage extends React.Component {
     }
 
     _onActionSelected(position) {
-        this.setState({spinnerVisible: true});
+        if (!this.props.noSpinner) {
+            this.setState({spinnerVisible: true});
+        }
+
         let hideSpinner = function() {
             this.setState({spinnerVisible: false});
         }.bind(this);
@@ -125,6 +128,7 @@ ReceiptFormPage.propTypes = {
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
     description: PropTypes.string.isRequired,
+    noSpinner: PropTypes.bool,
     total: PropTypes.any.isRequired,
     title: PropTypes.string.isRequired,
     toRoute: PropTypes.func.isRequired,

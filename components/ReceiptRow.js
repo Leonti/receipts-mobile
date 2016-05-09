@@ -71,6 +71,6 @@ const styles = StyleSheet.create({
 });
 
 ReceiptRow.propTypes = {
-    receipt: PropTypes.object.isRequired
+    receipt: PropTypes.object.isRequired,
 };
-export default ReceiptRow
+export default ReceiptRow;
