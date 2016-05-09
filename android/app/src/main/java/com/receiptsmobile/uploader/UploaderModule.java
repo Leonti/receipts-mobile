@@ -1,12 +1,10 @@
 package com.receiptsmobile.uploader;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import com.facebook.react.bridge.*;
@@ -32,6 +30,21 @@ public class UploaderModule extends ReactContextBaseJavaModule {
 
     private final BroadcastReceiver receiver = createReceiver();
 
+    private UploadService uploadService = null;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            UploadService.UploadServiceBinder binder = (UploadService.UploadServiceBinder) iBinder;
+            uploadService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            uploadService = null;
+        }
+    };
+
     UploaderModule(ReactApplicationContext reactContext) {
         super(reactContext);
 
@@ -41,12 +54,18 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         getReactApplicationContext().addLifecycleEventListener(new LifecycleEventListener() {
             @Override
             public void onHostResume() {
+
+                Intent intent= new Intent(getReactApplicationContext(), UploadService.class);
+                getReactApplicationContext().bindService(intent, serviceConnection,
+                        Context.BIND_AUTO_CREATE);
+
                 IntentFilter intentFilter = new IntentFilter(UploadService.RECEIPT_UPLOADED);
                 getReactApplicationContext().registerReceiver(receiver, intentFilter);
             }
 
             @Override
             public void onHostPause() {
+                getReactApplicationContext().unbindService(serviceConnection);
                 getReactApplicationContext().unregisterReceiver(receiver);
             }
 
@@ -124,6 +143,23 @@ public class UploaderModule extends ReactContextBaseJavaModule {
             ids.pushString(job.id.toString());
         }
 
+        result.putArray("jobs", ids);
+
+        promise.resolve(result);
+    }
+
+    @ReactMethod
+    public void currentUploads(Promise promise) {
+        Set<ReceiptUploader.UploadJob> currentJobs = uploadService.getCurrentJobs();
+
+        WritableMap result = Arguments.createMap();
+        WritableArray ids = Arguments.createArray();
+
+        for (ReceiptUploader.UploadJob job : currentJobs) {
+            ids.pushString(job.id.toString());
+        }
+
+        result.putArray("jobs", ids);
         promise.resolve(result);
     }
 

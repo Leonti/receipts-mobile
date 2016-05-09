@@ -131,7 +131,9 @@ class HomePage extends React.Component {
             });
         } else if (response.multiple) {
             ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
-            return Api.batchUpload(response.multiple);
+            return Api.batchUpload(response.multiple).then((uploads) => {
+                console.log('UPLOAD JOBS', uploads);
+            });
         }
 
         console.error('Unknown response from image picker!');
@@ -139,7 +141,9 @@ class HomePage extends React.Component {
 
     async _createReceipt(imageUri, total, description) {
         try {
-            let upload = await Api.uploadFile(imageUri, total, description);
+            let upload = await Api.uploadFile(imageUri, total, description).then((uploads) => {
+                console.log('UPLOAD JOBS FOR SINGLE', uploads);
+            });;
             console.log('RECEIPT SENT FOR UPLOAD ', upload);
             this.props.toBack();
             ToastAndroid.show('Receipt saved', ToastAndroid.SHORT);

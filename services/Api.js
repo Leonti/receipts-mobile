@@ -224,6 +224,10 @@ DeviceEventEmitter.addListener('receiptUploaded', function(event) {  // handle e
 
     //addToCachePromise.then(() => {
         Api._uploadCallbacks.forEach(callback => callback(event));
+
+        ReceiptsUploader.currentUploads().then((uploads) => {
+            console.log(uploads);
+        }, (e) => console.log(e));
     //}, (e) => console.log('FAILED TO ADD TO CACHE', e));
 });
 

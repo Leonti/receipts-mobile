@@ -3,6 +3,7 @@ package com.receiptsmobile.uploader;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.util.Log;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -20,6 +21,11 @@ public class UploadJobsStorage {
     }
 
     public void submitUploads(List<ReceiptUploader.UploadJob> jobs) {
+
+        Log.i("UploadJobsStorage", "UploadJobs to submit: ");
+        for (ReceiptUploader.UploadJob job : jobs) {
+            Log.i("UploadJobsStorage", "" + job);
+        }
 
         List<ReceiptUploader.UploadJob> existingJobs = getUploadJobs();
         existingJobs.addAll(jobs);
