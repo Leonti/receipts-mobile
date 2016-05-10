@@ -116,9 +116,6 @@ public class ReceiptUploader implements Runnable {
 
                 }
             });
-
-//Thread.sleep(1000);
-   //         callback.onDone(Result.success("some-receipt-id"));
         } catch (Exception e) {
             Log.e(TAG, "Exception uploading a receipt (general)" + e, e);
             callback.onDone(Result.failure());

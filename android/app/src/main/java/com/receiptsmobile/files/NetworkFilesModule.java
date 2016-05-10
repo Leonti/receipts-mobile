@@ -74,29 +74,35 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            FileDownloader downloader = new FileDownloader(new DownloadParams(
-                    new URL(url),
-                    readableMapToMap(headers),
-                    dst,
-                    new DownloadParams.OnDownloadCompleted() {
-                        @Override
-                        public void onDownloadCompleted(DownloadResult res) {
-                            if (res.exception != null) {
-                                promise.reject(res.exception);
-                            } else {
+            ExecutorService executor = Executors.newSingleThreadExecutor();
 
-                                WritableMap result = Arguments.createMap();
-                                result.putString("file", dst.getAbsolutePath());
-                                result.putInt("length", res.bytesWritten);
-                                result.putInt("statusCode", res.statusCode);
-                                result.putBoolean("wasCached", true);
-                                promise.resolve(result);
+            try {
+                FileDownloader downloader = new FileDownloader(new DownloadParams(
+                        new URL(url),
+                        readableMapToMap(headers),
+                        dst,
+                        new DownloadParams.OnDownloadCompleted() {
+                            @Override
+                            public void onDownloadCompleted(DownloadResult res) {
+                                if (res.exception != null) {
+                                    promise.reject(res.exception);
+                                } else {
+                                    WritableMap result = Arguments.createMap();
+                                    result.putString("file", dst.getAbsolutePath());
+                                    result.putInt("length", Long.valueOf(res.bytesWritten).intValue());
+                                    result.putInt("statusCode", res.statusCode);
+                                    result.putBoolean("wasCached", true);
+                                    promise.resolve(result);
+                                }
                             }
                         }
-                    }
-            ));
+                ));
 
-            downloader.execute();
+
+                executor.submit(downloader);
+            } finally {
+                executor.shutdown();
+            }
         } catch (Exception e) {
             promise.reject(e);
         }

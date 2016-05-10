@@ -4,79 +4,58 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import android.os.AsyncTask;
 import android.util.Log;
+import com.facebook.react.modules.network.OkHttpClientProvider;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
+import okio.BufferedSink;
+import okio.Okio;
 
-public class FileDownloader extends AsyncTask<Void, int[], DownloadResult> {
+public class FileDownloader implements Runnable {
+    private static String TAG = "FILE DOWNLOADER";
+
     private final DownloadParams params;
 
     public FileDownloader(DownloadParams params) {
         this.params = params;
     }
 
-    protected DownloadResult doInBackground(Void... ignored) {
-        DownloadResult result = download();
-        params.onDownloadCompleted.onDownloadCompleted(result);
-        return result;
-    }
-
-    private DownloadResult download() {
-        InputStream input = null;
-        OutputStream output = null;
-        HttpURLConnection connection = null;
-
-        File tmpDst = new File(params.dst.getAbsolutePath() + ".part");
+    @Override
+    public void run() {
 
         try {
-            connection = (HttpURLConnection) params.src.openConnection();
+            OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
 
+            Request.Builder builder = new Request.Builder().url(params.src.toString());
             for (String key : params.headers.keySet()) {
-                connection.setRequestProperty(key, params.headers.get(key));
+                builder.addHeader(key, params.headers.get(key));
             }
 
-            connection.setConnectTimeout(5000);
-            connection.connect();
+            client.newCall(builder.build()).enqueue(new com.squareup.okhttp.Callback() {
 
-            int statusCode = connection.getResponseCode();
-            int lengthOfFile = connection.getContentLength();
+                @Override
+                public void onFailure(Request request, IOException e) {
+                    params.onDownloadCompleted.onDownloadCompleted(DownloadResult.error(e));
+                }
 
-            Log.i("FILE DOWNLOADER", "Downloading a file with status code " + statusCode
-            + " and file length " + lengthOfFile);
+                @Override
+                public void onResponse(Response response) throws IOException {
+                    File tmpDst = new File(params.dst.getAbsolutePath() + ".part");
 
-            input = new BufferedInputStream(connection.getInputStream(), 8 * 1024);
+                    BufferedSink sink = Okio.buffer(Okio.sink(tmpDst));
+                    sink.writeAll(response.body().source());
+                    sink.close();
 
-            output = new FileOutputStream(params.dst);
+                    tmpDst.renameTo(params.dst);
+                    Log.i(TAG, "File downloaded and saved to '" + params.dst.getAbsolutePath() + "'");
 
-            byte data[] = new byte[8 * 1024];
-            int total = 0;
-            int count;
-
-            while ((count = input.read(data)) != -1) {
-                total += count;
-                publishProgress(new int[] { lengthOfFile, total });
-                output.write(data, 0, count);
-            }
-
-            output.flush();
-
-            tmpDst.renameTo(params.dst);
-            Log.i("FILE DOWNLOADER", "File downloaded and saved to '" + params.dst.getAbsolutePath() + "'");
-            return DownloadResult.ok(statusCode, total);
-        } catch(Exception e) {
-            return DownloadResult.error(e);
-        } finally {
-            try {
-                if (output != null) output.close();
-                if (input != null) input.close();
-                if (connection != null) connection.disconnect();
-            } catch (IOException e) {
-                Log.e("FileDownloader",
-                        "Exception while closing file downloader task " + e.getStackTrace());
-            }
-
+                    params.onDownloadCompleted.onDownloadCompleted(DownloadResult.ok(response.code(), params.dst.length()));
+                }
+            });
+        } catch (Exception e) {
+            Log.e(TAG, "Exception downloading a file", e);
+            params.onDownloadCompleted.onDownloadCompleted(DownloadResult.error(e));
         }
-    }
 
-    @Override
-    protected void onProgressUpdate(int[]... values) {
-        super.onProgressUpdate(values);
     }
 }
