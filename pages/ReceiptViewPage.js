@@ -5,7 +5,8 @@ import {
     ScrollView,
     ToastAndroid,
     Alert,
-    Text } from 'react-native';
+    Text,
+} from 'react-native';
 
 import ReceiptFormPage from './ReceiptFormPage';
 import ImageViewer from '../components/ImageViewer';
@@ -13,6 +14,7 @@ import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import ReceiptDetails from '../components/ReceiptDetails';
 import Spinner from '../components/Spinner';
+import Swiper from '../components/Swiper';
 
 var Icon = require('react-native-vector-icons/Ionicons');
 import Receipt from '../services/Receipt';
@@ -136,20 +138,24 @@ class ReceiptViewPage extends React.Component {
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
-            <View style={styles.container}>
-                <Icon.ToolbarAndroid
-                    style={styles.toolbar}
-                    title="Receipt"
-                    navIconName="android-close"
-                    actions={[
-                        {title: 'Edit', show: 'always'},
-                        {title: 'Delete', show: 'never'}]}
-                    onIconClicked={this.props.toBack}
-                    onActionSelected={(position) => this._onActionSelected(position) } />
-                {thumbnail}
-                <ReceiptDetails receipt={this.state.receipt} />
-                <Spinner message='Deleting receipt ...' visible={this.state.spinnerVisible} />
-            </View>
+            <Swiper
+                onLeftSwipe={() => console.log('LEFT SWIPE')}
+                onRightSwipe={() => console.log('RIGHT SWIPE')}>
+                <View style={styles.container}>
+                    <Icon.ToolbarAndroid
+                        style={styles.toolbar}
+                        title="Receipt"
+                        navIconName="android-close"
+                        actions={[
+                            {title: 'Edit', show: 'always'},
+                            {title: 'Delete', show: 'never'}]}
+                        onIconClicked={this.props.toBack}
+                        onActionSelected={(position) => this._onActionSelected(position) } />
+                    {thumbnail}
+                    <ReceiptDetails receipt={this.state.receipt} />
+                    <Spinner message='Deleting receipt ...' visible={this.state.spinnerVisible} />
+                </View>
+            </Swiper>
         );
     }
 
@@ -157,7 +163,7 @@ class ReceiptViewPage extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
     },
     toolbar: {
         backgroundColor: '#e9eaed',

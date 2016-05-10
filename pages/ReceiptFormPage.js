@@ -10,6 +10,7 @@ import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ReceiptForm from '../components/ReceiptForm';
 import Spinner from '../components/Spinner';
 import ImagePlaceholder from '../components/ImagePlaceholder';
+import Swiper from '../components/Swiper';
 var Icon = require('react-native-vector-icons/Ionicons');
 
 const MAX_HEIGHT = 200;
@@ -89,25 +90,29 @@ class ReceiptFormPage extends React.Component {
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
-            <View style={styles.container}>
-                <Icon.ToolbarAndroid
-                    style={styles.toolbar}
-                    title={this.props.title}
-                    navIconName="android-close"
-                    actions={[{title: 'Save', show: 'always'}]}
-                    onIconClicked={this.props.toBack}
-                    onActionSelected={(position) => this._onActionSelected(position) } />
-                <ScrollView>
-                    {thumbnail}
-                    <ReceiptForm
-                        total={this.state.total}
-                        onTotalChange={(text) => this.setState({total: text})}
-                        description={this.state.description}
-                        onDescriptionChange={(text) => this.setState({description: text})}
-                    />
-                </ScrollView>
-                <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
-            </View>
+            <Swiper
+                onLeftSwipe={() => console.log('LEFT SWIPE')}
+                onRightSwipe={() => console.log('RIGHT SWIPE')}>
+                <View style={styles.container}>
+                    <Icon.ToolbarAndroid
+                        style={styles.toolbar}
+                        title={this.props.title}
+                        navIconName="android-close"
+                        actions={[{title: 'Save', show: 'always'}]}
+                        onIconClicked={this.props.toBack}
+                        onActionSelected={(position) => this._onActionSelected(position) } />
+                    <ScrollView>
+                        {thumbnail}
+                        <ReceiptForm
+                            total={this.state.total}
+                            onTotalChange={(text) => this.setState({total: text})}
+                            description={this.state.description}
+                            onDescriptionChange={(text) => this.setState({description: text})}
+                        />
+                    </ScrollView>
+                    <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
+                </View>
+            </Swiper>
         );
     }
 }
