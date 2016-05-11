@@ -1,12 +1,11 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
     ProgressBarAndroid,
     TextInput,
+    TouchableHighlight,
     Text } from 'react-native';
-
-import { Button } from 'react-native-material-design';
 
 import ErrorView from './ErrorView';
 
@@ -52,7 +51,9 @@ class CredentialsForm extends Component {
 
         var signupButton = this.state.processing ? <ProgressBarAndroid indeterminate={true} /> :
         <View style={styles.button}>
-            <Button text={this.props.label.toUpperCase()} onPress={this.submit} raised={true} theme="dark" />
+            <TouchableHighlight onPress={this.submit}>
+                <Text>{this.props.label.toUpperCase()}</Text>
+            </TouchableHighlight>
         </View>
         var errorView = this.state.error ? <ErrorView message={this.state.error} /> : null;
 

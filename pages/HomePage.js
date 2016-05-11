@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
@@ -22,7 +22,7 @@ import ReceiptViewPage from './ReceiptViewPage';
 import ReceiptRow from '../components/ReceiptRow';
 import NavigationView from '../components/NavigationView';
 
-var Icon = require('react-native-vector-icons/Ionicons');
+var Icon = require('react-native-vector-icons/MaterialIcons');
 
 import Api from '../services/Api';
 import Receipt from '../services/Receipt';
@@ -312,7 +312,7 @@ class HomePage extends React.Component {
             <Icon.ToolbarAndroid
                 style={styles.toolbar}
                 title="Your Receipts"
-                navIconName="android-menu"
+                navIconName="menu"
                 onIconClicked={() => this.refs['DRAWER'].openDrawer()}
                 />
                 <ListView
@@ -326,7 +326,7 @@ class HomePage extends React.Component {
                         <Icon name="camera" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
                     <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary}>
-                        <Icon name="images" style={styles.actionButtonIcon} />
+                        <Icon name="collections" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
                 </ActionButton>
             </View>

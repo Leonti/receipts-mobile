@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
@@ -11,7 +11,7 @@ import Api from '../services/Api';
 import LoginPage from './LoginPage';
 import CredentialsForm from '../components/CredentialsForm';
 
-var Icon = require('react-native-vector-icons/Ionicons');
+var Icon = require('react-native-vector-icons/MaterialIcons');
 
 const propTypes = {
   resetToRoute: PropTypes.func.isRequired
@@ -41,7 +41,7 @@ class SignupPage extends React.Component {
     return (
         <View>
             <Icon.ToolbarAndroid
-                navIconName="android-arrow-back"
+                navIconName="arrow-back"
                 onIconClicked={this._navigateToLogin}
               style={styles.toolbar}
               title="Sign Up" />

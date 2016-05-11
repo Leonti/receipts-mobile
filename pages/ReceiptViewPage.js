@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
@@ -16,7 +16,7 @@ import ReceiptDetails from '../components/ReceiptDetails';
 import Spinner from '../components/Spinner';
 import Swiper from '../components/Swiper';
 
-var Icon = require('react-native-vector-icons/Ionicons');
+var Icon = require('react-native-vector-icons/MaterialIcons');
 import Receipt from '../services/Receipt';
 
 class ReceiptViewPage extends React.Component {
@@ -145,7 +145,7 @@ class ReceiptViewPage extends React.Component {
                     <Icon.ToolbarAndroid
                         style={styles.toolbar}
                         title="Receipt"
-                        navIconName="android-close"
+                        navIconName="close"
                         actions={[
                             {title: 'Edit', show: 'always'},
                             {title: 'Delete', show: 'never'}]}

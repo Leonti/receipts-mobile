@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
@@ -11,7 +11,7 @@ import ReceiptForm from '../components/ReceiptForm';
 import Spinner from '../components/Spinner';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import Swiper from '../components/Swiper';
-var Icon = require('react-native-vector-icons/Ionicons');
+var Icon = require('react-native-vector-icons/MaterialIcons');
 
 const MAX_HEIGHT = 200;
 
@@ -94,7 +94,7 @@ class ReceiptFormPage extends React.Component {
                 <Icon.ToolbarAndroid
                     style={styles.toolbar}
                     title={this.props.title}
-                    navIconName="android-close"
+                    navIconName="close"
                     actions={[{title: 'Save', show: 'always'}]}
                     onIconClicked={this.props.toBack}
                     onActionSelected={(position) => this._onActionSelected(position) } />

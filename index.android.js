@@ -1,5 +1,5 @@
 'use strict'
-import React, {Component} from "react";
+import React, {Component} from 'react';
 import Router from 'react-native-simple-router';
 import { AppRegistry, StyleSheet } from 'react-native';
 

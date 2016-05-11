@@ -1,4 +1,4 @@
-import React, {Component, PropTypes} from "react";
+import React, {Component, PropTypes} from 'react';
 import { Text, View, PanResponder, Image } from 'react-native';
 
 function calcDistance(x1, y1, x2, y2) {
