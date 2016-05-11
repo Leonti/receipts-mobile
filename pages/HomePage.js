@@ -202,12 +202,14 @@ class HomePage extends React.Component {
         });
     }
 
-    _openReceiptEditView(receipt) {
+    _openReceiptEditView(receipts, position, isFirst) {
+        let receipt = receipts[position];
 
         let imageDimensions = Receipt.receiptToImageDimensions(receipt);
         let source = Receipt.receiptToImage(receipt).then((receiptImage) => receiptImage.source);
 
-        this.props.toRoute({
+        let routeFunction = isFirst ? this.props.toRoute : this.props.replaceRoute;
+        routeFunction({
             component: ReceiptFormPage,
             passProps: {
                 onSave: (fields) => {
@@ -220,14 +222,17 @@ class HomePage extends React.Component {
                 description: receipt.description,
                 total: receipt.total === undefined ? '' : receipt.total,
                 title: 'Edit Receipt',
+                onRightSwipe: () => this._onPrevReceipt(receipts, position),
+                onLeftSwipe: () => this._onNextReceipt(receipts, position),
             }
         });
     }
 
-    _openReceiptView(receipt) {
-        console.log('OPENING RECEIPT: ', receipt);
+    _openReceiptView(receipts, position, isFirst) {
+        console.log('OPENING RECEIPT: ' + position, receipts[position]);
+        let routeFunction = isFirst ? this.props.toRoute : this.props.replaceRoute;
 
-        this.props.toRoute({
+        routeFunction({
             component: ReceiptViewPage,
             passProps: {
                 onSave: (fields) => {
@@ -238,9 +243,36 @@ class HomePage extends React.Component {
                     console.log('DELETING RECEIPT', receipt);
                     return this._deleteReceipt(receipt.id);
                 },
-                receipt: receipt
+                receipt: receipts[position],
+                onRightSwipe: () => this._onPrevReceipt(receipts, position),
+                onLeftSwipe: () => this._onNextReceipt(receipts, position),
             }
         });
+    }
+
+    _onPrevReceipt(receipts, position) {
+
+        if (position > 0) {
+            let receipt = receipts[position - 1];
+            let receiptView = this._getReceiptPageView(receipt);
+
+            receiptView(receipts, position - 1, false);
+        }
+    }
+
+    _onNextReceipt(receipts, position) {
+
+        if (position < receipts.length - 1) {
+            let receipt = receipts[position + 1];
+            let receiptView = this._getReceiptPageView(receipt);
+
+            receiptView(receipts, position + 1, false);
+        }
+    }
+
+    _getReceiptPageView(receipt) {
+        return receipt.total === undefined ? this._openReceiptEditView
+            : this._openReceiptView;
     }
 
     render() {
@@ -262,11 +294,14 @@ class HomePage extends React.Component {
 
     _renderRow(receipt) {
 
-        let receiptView = receipt.total === undefined ? this._openReceiptEditView
-            : this._openReceiptView;
+        let receiptView = this._getReceiptPageView(receipt);
 
         return (<ReceiptRow
-            onPress={() => receiptView(receipt)}
+            onPress={() => {
+                //console.log('RECEIPT POSITION', this.state.receipts.indexOf(receipt));
+                receiptView(this.state.receipts, this.state.receipts.indexOf(receipt), true)
+                }
+            }
             receipt={receipt} />);
     }
 

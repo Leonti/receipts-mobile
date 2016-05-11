@@ -139,8 +139,8 @@ class ReceiptViewPage extends React.Component {
 
         return (
             <Swiper
-                onLeftSwipe={() => console.log('LEFT SWIPE')}
-                onRightSwipe={() => console.log('RIGHT SWIPE')}>
+                onLeftSwipe={this.props.onLeftSwipe}
+                onRightSwipe={this.props.onRightSwipe}>
                 <View style={styles.container}>
                     <Icon.ToolbarAndroid
                         style={styles.toolbar}
@@ -175,6 +175,8 @@ ReceiptViewPage.propTypes = {
     onSave: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     receipt: PropTypes.object.isRequired,
+    onRightSwipe: PropTypes.func.isRequired,
+    onLeftSwipe: PropTypes.func.isRequired,
     toRoute: PropTypes.func.isRequired,
     toBack: PropTypes.func.isRequired,
 };

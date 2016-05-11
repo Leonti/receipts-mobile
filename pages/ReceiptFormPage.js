@@ -85,33 +85,44 @@ class ReceiptFormPage extends React.Component {
         );
     }
 
-    render() {
+    _renderForm() {
         let thumbnail = this.state.source != null ?
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
+            <View style={styles.container}>
+                <Icon.ToolbarAndroid
+                    style={styles.toolbar}
+                    title={this.props.title}
+                    navIconName="android-close"
+                    actions={[{title: 'Save', show: 'always'}]}
+                    onIconClicked={this.props.toBack}
+                    onActionSelected={(position) => this._onActionSelected(position) } />
+                <ScrollView>
+                    {thumbnail}
+                    <ReceiptForm
+                        total={this.state.total}
+                        onTotalChange={(text) => this.setState({total: text})}
+                        description={this.state.description}
+                        onDescriptionChange={(text) => this.setState({description: text})}
+                    />
+                </ScrollView>
+                <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
+            </View>
+        );
+    }
+
+    render() {
+
+        if (!(this.props.onLeftSwipe && this.props.onRightSwipe)) {
+            return this._renderForm();
+        }
+
+        return (
             <Swiper
-                onLeftSwipe={() => console.log('LEFT SWIPE')}
-                onRightSwipe={() => console.log('RIGHT SWIPE')}>
-                <View style={styles.container}>
-                    <Icon.ToolbarAndroid
-                        style={styles.toolbar}
-                        title={this.props.title}
-                        navIconName="android-close"
-                        actions={[{title: 'Save', show: 'always'}]}
-                        onIconClicked={this.props.toBack}
-                        onActionSelected={(position) => this._onActionSelected(position) } />
-                    <ScrollView>
-                        {thumbnail}
-                        <ReceiptForm
-                            total={this.state.total}
-                            onTotalChange={(text) => this.setState({total: text})}
-                            description={this.state.description}
-                            onDescriptionChange={(text) => this.setState({description: text})}
-                        />
-                    </ScrollView>
-                    <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
-                </View>
+                onLeftSwipe={this.props.onLeftSwipe}
+                onRightSwipe={this.props.onRightSwipe}>
+                {this._renderForm()}
             </Swiper>
         );
     }
@@ -129,6 +140,8 @@ const styles = StyleSheet.create({
 
 ReceiptFormPage.propTypes = {
     onSave: PropTypes.func.isRequired,
+    onRightSwipe: PropTypes.func,
+    onLeftSwipe: PropTypes.func,
     source: PropTypes.object.isRequired,
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
