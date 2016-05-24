@@ -33,6 +33,15 @@ class Receipt {
             height: imageDimensions.height * scale,
         };
     }
+
+    static imageToThumbnailDimensions(imageDimensions) {
+        let scale = MAX_HEIGHT / imageDimensions.height
+
+        return {
+            width: imageDimensions.width * scale,
+            height: imageDimensions.height * scale,
+        };
+    }
 }
 
 export default Receipt;

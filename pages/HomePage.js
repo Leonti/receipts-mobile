@@ -13,7 +13,6 @@ import {
     CameraRoll,
  } from 'react-native';
 
-import Loader from '../components/Loader';
 import ZoomableImage from '../components/ZoomableImage';
 import ImageViewer from '../components/ImageViewer';
 import ActionButton from 'react-native-action-button';
@@ -27,20 +26,6 @@ var Icon = require('react-native-vector-icons/MaterialIcons');
 import Api from '../services/Api';
 import Receipt from '../services/Receipt';
 import ImagePicker from '../services/ImagePicker';
-
-const propTypes = {
-  toRoute: PropTypes.func.isRequired,
-  replaceRoute: PropTypes.func.isRequired,
-  resetToRoute: PropTypes.func.isRequired
-};
-
-const imagePickerOptions = {
-    cameraType: 'back',
-    mediaType: 'photo',
-    quality: 1,
-    allowsEditing: false,
-    noData: true,
-};
 
 class HomePage extends React.Component {
 
@@ -58,21 +43,47 @@ class HomePage extends React.Component {
         this._openReceiptView = this._openReceiptView.bind(this);
         this._renderRow = this._renderRow.bind(this)
 
-        this._ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+//        this._ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
+        //let dataSource = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+        //dataSource.cloneWithRows(props.receipts)
 
         this.state = {
-            imageState: null,
-            receipts: [],
-            dataSource: this._ds,
-            userName: '',
+        //    imageState: null,
+        //    receipts: [],
+            dataSource: new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2}),
+        //    userName: '',
         }
     }
 
     componentWillMount() {
-        this._loadReceipts();
-        this._loadUserInfo();
+    //    this._loadReceipts();
+    //    this._loadUserInfo();
 
-        Api.onReceiptUploaded(() => this._loadReceipts());
+        if (this.props.receipts.length > 0) {
+            this.setState({
+              dataSource: this.state.dataSource.cloneWithRows(this.props.receipts)
+            })
+        }
+
+    //    Api.onReceiptUploaded(() => this._loadReceipts());
+    }
+
+    componentWillReceiveProps (nextProps) {
+        if (nextProps.receipts !== this.props.receipts) {
+            this.setState({
+              dataSource: this.state.dataSource.cloneWithRows(nextProps.receipts)
+            })
+        }
+
+        if (nextProps.drawerOpened !== this.props.drawerOpened) {
+            console.log('DRAWER STATE', nextProps);
+            if (nextProps.drawerOpened) {
+                this.refs['DRAWER'].openDrawer()
+            } else {
+                this.refs['DRAWER'].closeDrawer()
+            }
+        }
     }
 
     async _logout() {
@@ -84,6 +95,7 @@ class HomePage extends React.Component {
     }
 
     async _loadReceipts() {
+        /*
         try {
             let receipts = await Api.getReceipts();
 
@@ -94,7 +106,9 @@ class HomePage extends React.Component {
             console.error('EXCEPTION ON RECEIPT LOADING', e);
             ToastAndroid.show('Failed to load receipts', ToastAndroid.LONG);
         }
+        */
     }
+
 
     async _loadUserInfo() {
         let userInfo = await Api.getUserInfo();
@@ -116,7 +130,7 @@ class HomePage extends React.Component {
         });
     }
 
-    async _processImagePickerResponse(response) {
+     _processImagePickerResponse(response) {
         console.log('IMAGES', response);
 
         if (response.cancelled) {
@@ -124,19 +138,32 @@ class HomePage extends React.Component {
         }
 
         if (response.single) {
+/*
             return this._openReceiptCreateView({
                 source: {uri: response.single.uri, isStatic: true},
                 width: response.single.width,
                 height: response.single.height,
             });
+*/
+            this.props.onFileSelected({
+                source: {uri: response.single.uri, isStatic: true},
+                width: response.single.width,
+                height: response.single.height,
+            });
+
         } else if (response.multiple) {
             ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
+
+            this.props.onFilesSelected(response.multiple);
+
+            /*
             return Api.batchUpload(response.multiple).then((uploads) => {
                 console.log('UPLOAD JOBS', uploads);
             });
+            */
+        } else {
+            console.error('Unknown response from image picker!');
         }
-
-        console.error('Unknown response from image picker!');
     }
 
     async _createReceipt(imageUri, total, description) {
@@ -183,8 +210,17 @@ class HomePage extends React.Component {
         }
     }
 
-    async _openReceiptCreateView(image) {
+    _openReceiptCreateView(image) {
 
+        this.props.toCreateReceipt({
+            source: image.source,
+            imageWidth: image.width,
+            imageHeight: image.height,
+            description: '',
+            total:'',
+        });
+
+        /*
         this.props.toRoute({
             component: ReceiptFormPage,
             passProps: {
@@ -200,6 +236,7 @@ class HomePage extends React.Component {
                 title: 'New Receipt',
             }
         });
+        */
     }
 
     _openReceiptEditView(receipts, position, isFirst) {
@@ -276,9 +313,10 @@ class HomePage extends React.Component {
     }
 
     render() {
+
         let navigationView = <NavigationView
-            userName={this.state.userName}
-            onLogout={this._logout}
+            userName={this.props.userName}
+            onLogout={this.props.onLogout}
         />
 
         return (
@@ -286,6 +324,7 @@ class HomePage extends React.Component {
                         drawerWidth={250}
                         drawerPosition={DrawerLayoutAndroid.positions.Left}
                         ref={'DRAWER'}
+                        onDrawerClose={() => this.props.closeDrawer()}
                         renderNavigationView={() => navigationView}>
                         {this._renderHome()}
             </DrawerLayoutAndroid>
@@ -294,12 +333,15 @@ class HomePage extends React.Component {
 
     _renderRow(receipt) {
 
-        let receiptView = this._getReceiptPageView(receipt);
+//        let receiptView = this._getReceiptPageView(receipt);
 
         return (<ReceiptRow
             onPress={() => {
                 //console.log('RECEIPT POSITION', this.state.receipts.indexOf(receipt));
-                receiptView(this.state.receipts, this.state.receipts.indexOf(receipt), true)
+                //receiptView(this.state.receipts, this.state.receipts.indexOf(receipt), true)
+
+                    this.props.toViewReceipt(receipt);
+
                 }
             }
             receipt={receipt} />);
@@ -313,7 +355,7 @@ class HomePage extends React.Component {
                 style={styles.toolbar}
                 title="Your Receipts"
                 navIconName="menu"
-                onIconClicked={() => this.refs['DRAWER'].openDrawer()}
+                onIconClicked={() => this.props.openDrawer()} // this.refs['DRAWER'].openDrawer()
                 />
                 <ListView
                     dataSource={this.state.dataSource}
@@ -363,5 +405,19 @@ const styles = StyleSheet.create({
 
 
 
-HomePage.propTypes = propTypes;
+HomePage.propTypes = {
+  receipts: PropTypes.array.isRequired,
+  isFetching: PropTypes.bool.isRequired,
+  userName: PropTypes.string,
+  error: PropTypes.string,
+
+  openDrawer: PropTypes.func.isRequired,
+  closeDrawer: PropTypes.func.isRequired,
+  onFileSelected: PropTypes.func.isRequired,
+  onFilesSelected: PropTypes.func.isRequired,
+  onLogout: PropTypes.func.isRequired,
+  toCreateReceipt: PropTypes.func.isRequired,
+  toEditReceipt: PropTypes.func.isRequired,
+  toViewReceipt: PropTypes.func.isRequired,
+};
 export default HomePage;

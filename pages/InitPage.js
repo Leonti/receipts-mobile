@@ -5,12 +5,7 @@ import LoginPage from '../pages/LoginPage';
 import HomePage from '../pages/HomePage';
 import Api from '../services/Api';
 
-const propTypes = {
-  toRoute: PropTypes.func.isRequired,
-  replaceRoute: PropTypes.func.isRequired,
-};
-
-class Loader extends Component {
+class InitPage extends Component {
 
     constructor(props) {
         super(props);
@@ -19,10 +14,13 @@ class Loader extends Component {
     }
 
     async _setup() {
-        if (!(await Api.isLoggedIn())) {
-            this._login();
+
+        let isLoggedInt = await Api.isLoggedIn();
+
+        if ((await Api.isLoggedIn())) {
+
         } else {
-            this._start();
+
         }
     }
 
@@ -47,5 +45,8 @@ class Loader extends Component {
 
 }
 
-Loader.propTypes = propTypes;
-export default Loader;
+InitPage.propTypes =  {
+  onLoggedIn: PropTypes.func.isRequired,
+  onNotLoggedIn: PropTypes.func.isRequired,
+};
+export default InitPage;

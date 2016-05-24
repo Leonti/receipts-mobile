@@ -19,15 +19,16 @@ class ReceiptFormPage extends React.Component {
 
     constructor(props) {
         super(props);
-        let scale = MAX_HEIGHT / props.imageHeight
+    //    let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
             description: props.description,
             total: props.total !== null ? props.total.toString(): null,
-            thumbnailWidth: props.imageWidth * scale,
-            thumbnailHeight: props.imageHeight * scale,
+        //    thumbnailWidth: props.imageWidth * scale,
+        //    thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
         };
 
+/*
         if (props.source instanceof Promise) {
             props.source.then((source) => {
                 this.setState({source: source});
@@ -35,6 +36,7 @@ class ReceiptFormPage extends React.Component {
         } else {
             this.state.source = this.props.source;
         }
+        */
     }
 
     _imageViewer() {
@@ -49,6 +51,7 @@ class ReceiptFormPage extends React.Component {
     }
 
     _onActionSelected(position) {
+/*
         if (!this.props.noSpinner) {
             this.setState({spinnerVisible: true});
         }
@@ -56,37 +59,49 @@ class ReceiptFormPage extends React.Component {
         let hideSpinner = function() {
             this.setState({spinnerVisible: false});
         }.bind(this);
-
-        this.props.onSave({
+*/
+        this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
             total: this.state.total,
             description: this.state.description
-        }).then(hideSpinner, hideSpinner);
+        })//.then(hideSpinner, hideSpinner);
     }
 
     _renderThumbnail() {
-        console.log('rendering thumbnail', this.state.source);
+        //console.log('rendering thumbnail', this.state.source);
         return (
             <ReceiptThumbnail
                 onPress={() => this._imageViewer()}
-                source={this.state.source}
-                width={this.state.thumbnailWidth}
-                height={this.state.thumbnailHeight}
+                source={this.props.image.source}
+                width={this.props.thumbnail.width}
+                height={this.props.thumbnail.height}
             />
         );
     }
 
     _renderPlaceholder() {
-        console.log('rendering placeholder');
+    //    console.log('rendering placeholder');
         return (
             <ImagePlaceholder
-                width={this.state.thumbnailWidth}
-                height={this.state.thumbnailHeight}
+                width={this.props.thumbnail.width}
+                height={this.props.thumbnail.height}
             />
         );
     }
 
+    _onLeftSwipe() {
+        if (this.props.nextReceipt) {
+            this.props.toReceipt(this.props.nextReceipt);
+        }
+    }
+
+    _onRightSwipe() {
+        if (this.props.prevReceipt) {
+            this.props.toReceipt(this.props.prevReceipt);
+        }
+    }
+
     _renderForm() {
-        let thumbnail = this.state.source != null ?
+        let thumbnail = this.props.image.source != null ?
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
@@ -96,7 +111,7 @@ class ReceiptFormPage extends React.Component {
                     title={this.props.title}
                     navIconName="close"
                     actions={[{title: 'Save', show: 'always'}]}
-                    onIconClicked={this.props.toBack}
+                    onIconClicked={this.props.onClose}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 <ScrollView>
                     {thumbnail}
@@ -114,14 +129,14 @@ class ReceiptFormPage extends React.Component {
 
     render() {
 
-        if (!(this.props.onLeftSwipe && this.props.onRightSwipe)) {
+        if (!this.props.isSwipable) {
             return this._renderForm();
         }
 
         return (
             <Swiper
-                onLeftSwipe={this.props.onLeftSwipe}
-                onRightSwipe={this.props.onRightSwipe}>
+                onLeftSwipe={this._onLeftSwipe.bind(this)}
+                onRightSwipe={this._onRightSwipe.bind(this)}>
                 {this._renderForm()}
             </Swiper>
         );
@@ -139,17 +154,22 @@ const styles = StyleSheet.create({
 });
 
 ReceiptFormPage.propTypes = {
+    receiptId: PropTypes.string,
     onSave: PropTypes.func.isRequired,
-    onRightSwipe: PropTypes.func,
-    onLeftSwipe: PropTypes.func,
-    source: PropTypes.object.isRequired,
-    imageWidth: PropTypes.number.isRequired,
-    imageHeight: PropTypes.number.isRequired,
+    nextReceipt: PropTypes.object,
+    prevReceipt: PropTypes.object,
+    isSwipable: PropTypes.bool.isRequired,
+//    source: PropTypes.object.isRequired,
+//    imageWidth: PropTypes.number.isRequired,
+//    imageHeight: PropTypes.number.isRequired,
+    image: PropTypes.object.isRequired,
     description: PropTypes.string.isRequired,
-    noSpinner: PropTypes.bool,
+//    noSpinner: PropTypes.bool,
     total: PropTypes.any.isRequired,
     title: PropTypes.string.isRequired,
-    toRoute: PropTypes.func.isRequired,
-    toBack: PropTypes.func.isRequired,
+    onClose: PropTypes.func.isRequired,
+    toReceipt: PropTypes.func,
+//    toRoute: PropTypes.func.isRequired,
+//    toBack: PropTypes.func.isRequired,
 };
 export default ReceiptFormPage

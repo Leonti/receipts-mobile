@@ -12,30 +12,15 @@ import HomePage from './HomePage';
 import Api from '../services/Api';
 import CredentialsForm from '../components/CredentialsForm';
 
-const propTypes = {
-  toRoute: PropTypes.func.isRequired,
-  replaceRoute: PropTypes.func.isRequired
-};
-
 class LoginPage extends React.Component {
 
     constructor(props) {
         super(props);
-
-        this._navigateHome = this._navigateHome.bind(this);
         this._onActionSelected = this._onActionSelected.bind(this);
     }
 
-  _navigateHome() {
-      this.props.replaceRoute({
-        component: HomePage
-      });
-  }
-
   _onActionSelected(position) {
-      this.props.toRoute({
-        component: SignupPage
-      });
+      this.props.toSignup();
   }
 
   render() {
@@ -47,7 +32,11 @@ class LoginPage extends React.Component {
               actions={[{title: 'Sign Up', show: 'always'}]}
               onActionSelected={this._onActionSelected} />
               <ScrollView style={styles.form}>
-                <CredentialsForm label={'Login'} onSubmit={Api.login} onSuccess={this._navigateHome}/>
+                <CredentialsForm label={'Login'}
+                    onSubmit={this.props.onLogin}
+                    isFetching={this.props.isFetching}
+                    error={this.props.error}
+                />
               </ScrollView>
           </View>
       );
@@ -66,5 +55,12 @@ const styles = StyleSheet.create({
     }
 });
 
-LoginPage.propTypes = propTypes;
+LoginPage.propTypes = {
+  isFetching: PropTypes.bool,
+  error: PropTypes.string,
+
+  toSignup: PropTypes.func.isRequired,
+  onLogin: PropTypes.func.isRequired,
+};
+
 export default LoginPage;

@@ -1,9 +1,10 @@
 'use strict'
 import React, {Component} from 'react';
+import { Provider } from 'react-redux';
 import Router from 'react-native-simple-router';
 import { AppRegistry, StyleSheet } from 'react-native';
 
-import Loader from './components/Loader';
+import devTools from 'remote-redux-devtools';
 
 const styles = StyleSheet.create({
   header: {
@@ -12,26 +13,76 @@ const styles = StyleSheet.create({
   },
 });
 
-// TODO: consider https://github.com/aksonov/react-native-router-flux
-const firstRoute = {
-  name: 'Loader',
-  component: Loader,
-};
+import ReduxRouter from './router/ReduxRouter';
+
+import thunkMiddleware from 'redux-thunk'
+import createLogger from 'redux-logger'
+import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
+import { navigateToLogin, navigateToReceiptList } from './actions/navigation'
+import { setLoggedInUser } from './actions/user'
+import { loadReceipts } from './actions/receipt'
+import navigationReducer from './reducers/navigation'
+import userReducer from './reducers/user'
+import receiptReducer from './reducers/receipt'
+
+import Api from './services/Api';
+
+const loggerMiddleware = createLogger()
+
+const rootReducer = combineReducers({
+  navigation: navigationReducer,
+  user: userReducer,
+  receipt: receiptReducer,
+})
+
+const store = createStore(
+  rootReducer,
+  compose(
+      applyMiddleware(thunkMiddleware),
+      devTools(),
+  )
+)
+
+let unsubscribe = store.subscribe(() =>
+  console.log('CURRENT STORE STATE', store.getState())
+)
+
+async function setup() {
+
+    let isLoggedInt = await Api.isLoggedIn();
+
+    if ((await Api.isLoggedIn())) {
+        let userInfo = await Api.getUserInfo();
+        store.dispatch(setLoggedInUser(userInfo));
+        store.dispatch(loadReceipts());
+        store.dispatch(navigateToReceiptList());
+    } else {
+        store.dispatch(navigateToLogin())
+    }
+}
+
+setup();
 
 // The Router wrapper
 class ReceiptsMobile extends Component {
 
   render() {
     return (
-      <Router
-        firstRoute={firstRoute}
-        headerStyle={styles.header}
-        handleBackAndroid={true}
-        hideNavigationBar={true}
-        noStatusBar={true}
-      />
+        <Provider store={store}>
+            <ReduxRouter/>
+        </Provider>
     );
   }
 }
+
+/*
+<Router
+  firstRoute={firstRoute}
+  headerStyle={styles.header}
+  handleBackAndroid={true}
+  hideNavigationBar={true}
+  noStatusBar={true}
+/>
+*/
 
 AppRegistry.registerComponent('ReceiptsMobile', () => ReceiptsMobile);

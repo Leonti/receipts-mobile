@@ -9,12 +9,6 @@ import {
 
 import ErrorView from './ErrorView';
 
-const propTypes = {
-    label: PropTypes.any.isRequired,
-    onSubmit: PropTypes.func.isRequired,
-    onSuccess: PropTypes.func.isRequired
-};
-
 class CredentialsForm extends Component {
 
     constructor(props) {
@@ -22,13 +16,9 @@ class CredentialsForm extends Component {
         this.state = {
             username: null,
             password: null,
-            processing: false,
-            error: null
         };
-
-        this.submit = this.submit.bind(this);
     }
-
+/*
     async submit() {
         console.log('Submitting form with ' + this.state.username + ' ' + this.state.password);
 
@@ -45,17 +35,17 @@ class CredentialsForm extends Component {
             this.setState({error: e.message})
         }
     }
-
+*/
     render() {
 
 
-        var signupButton = this.state.processing ? <ProgressBarAndroid indeterminate={true} /> :
+        var signupButton = this.props.isFetching ? <ProgressBarAndroid indeterminate={true} /> :
         <View style={styles.button}>
-            <TouchableHighlight onPress={this.submit}>
+            <TouchableHighlight onPress={() => this.props.onSubmit(this.state.username, this.state.password)}>
                 <Text>{this.props.label.toUpperCase()}</Text>
             </TouchableHighlight>
         </View>
-        var errorView = this.state.error ? <ErrorView message={this.state.error} /> : null;
+        var errorView = this.props.error ? <ErrorView message={this.props.error} /> : null;
 
         return (
             <View>
@@ -83,5 +73,10 @@ const styles = StyleSheet.create({
     }
 });
 
-CredentialsForm.propTypes = propTypes;
+CredentialsForm.propTypes = {
+    onSubmit: PropTypes.func.isRequired,
+    label: PropTypes.any.isRequired,
+    isFetching: PropTypes.bool,
+    error: PropTypes.string,
+};
 export default CredentialsForm

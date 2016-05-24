@@ -13,40 +13,35 @@ import CredentialsForm from '../components/CredentialsForm';
 
 var Icon = require('react-native-vector-icons/MaterialIcons');
 
-const propTypes = {
-  resetToRoute: PropTypes.func.isRequired
-};
-
 class SignupPage extends React.Component {
 
     constructor(props) {
         super(props);
 
-        this._navigateToLogin = this._navigateToLogin.bind(this);
         this._navigateToLoginWithToast = this._navigateToLoginWithToast.bind(this);
     }
 
   _navigateToLoginWithToast() {
       ToastAndroid.show('User was created', ToastAndroid.LONG);
-      this._resetToLogin();
-  }
-
-  _navigateToLogin() {
-      this.props.resetToRoute({
-        component: LoginPage
-      });
+      this.props.toLogin();
   }
 
   render() {
     return (
-        <View>
+        <View style={{
+            flex: 1,
+        }}>
             <Icon.ToolbarAndroid
                 navIconName="arrow-back"
-                onIconClicked={this._navigateToLogin}
+                onIconClicked={this.props.toLogin}
               style={styles.toolbar}
               title="Sign Up" />
           <ScrollView style={styles.form}>
-            <CredentialsForm label={'Sign Up'} onSubmit={Api.createUser} onSuccess={this._navigateToLoginWithToast}/>
+            <CredentialsForm label={'Sign Up'}
+                onSubmit={this.props.onSignup}
+                isFetching={this.props.isFetching}
+                error={this.props.error}
+            />
           </ScrollView>
         </View>
       );
@@ -64,5 +59,11 @@ const styles = StyleSheet.create({
     }
 });
 
-SignupPage.propTypes = propTypes;
+SignupPage.propTypes = {
+  isFetching: PropTypes.bool,
+  error: PropTypes.string,
+
+  toLogin: PropTypes.func.isRequired,
+  onSignup: PropTypes.func.isRequired,
+};
 export default SignupPage;

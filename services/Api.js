@@ -30,7 +30,7 @@ class Api {
             throw new Error(result.error);
         }
 
-        return 'OK';
+        return result;
     }
 
     static async login(username, password) {
@@ -50,7 +50,7 @@ class Api {
         await Storage.set(TOKEN_STORAGE_KEY, result);
         let userInfo = await Api._fetchUserInfo(result);
         await Storage.set(USER_INFO_KEY, userInfo);
-        return 'OK';
+        return userInfo;
     }
 
     static async _fetchUserInfo(token) {
@@ -131,6 +131,9 @@ class Api {
     static async updateReceipt(receiptId, fields) {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
+
+console.log('RECEIPT ID:', receiptId);
+console.log('FIELDS:', fields);
 
         return await (await fetch(baseUrl + '/user/' + userId + '/receipt/' + receiptId, {
             method: 'PATCH',

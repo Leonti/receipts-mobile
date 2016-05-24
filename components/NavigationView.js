@@ -51,7 +51,7 @@ const styles = StyleSheet.create({
 });
 
 NavigationView.propTypes = {
-    userName: PropTypes.string.isRequired,
+    userName: PropTypes.string,
     onLogout: PropTypes.func.isRequired,
 };
 export default NavigationView

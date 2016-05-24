@@ -23,14 +23,15 @@ class ReceiptViewPage extends React.Component {
 
     constructor(props) {
         super(props);
-
+/*
         this.state = {
-            source: null,
-            receipt: props.receipt,
+        //    source: null,
+        //    receipt: props.receipt,
             spinnerVisible: false,
         }
+        */
     }
-
+/*
     componentWillMount() {
 
         let imageSourcePromise = Receipt.receiptToImage(this.props.receipt)
@@ -45,7 +46,7 @@ class ReceiptViewPage extends React.Component {
 
         this.imageSourcePromise = imageSourcePromise;
     }
-
+*/
     _openImageViewer() {
         let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
 
@@ -61,7 +62,7 @@ class ReceiptViewPage extends React.Component {
 
     _onActionSelected(position) {
         if (position === 0) {
-            this._openEditView();
+            this.props.onEdit();
         } else if (position == 1) {
             Alert.alert('Delete Receipt',
             'Are you sure you want to delete this receipt?',
@@ -78,9 +79,9 @@ class ReceiptViewPage extends React.Component {
             this.setState({spinnerVisible: false});
         }.bind(this);
 
-        this.props.onDelete().then(hideSpinner, hideSpinner);
+        this.props.onDelete(this.props.receipt.id);
     }
-
+/*
     _openEditView() {
         let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
 
@@ -108,39 +109,51 @@ class ReceiptViewPage extends React.Component {
             }
         });
     }
-
+*/
     _renderThumbnail() {
-        let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
+    //    let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
 
         return (
             <ReceiptThumbnail
                 onPress={() => this._openImageViewer()}
-                source={this.state.source}
-                width={thumbnailDimensions.width}
-                height={thumbnailDimensions.height}
+                source={this.props.image.source}
+                width={this.props.thumbnail.width}
+                height={this.props.thumbnail.height}
             />
         );
     }
 
     _renderPlaceholder() {
-        let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
+    //    let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
 
         return (
             <ImagePlaceholder
-                width={thumbnailDimensions.width}
-                height={thumbnailDimensions.height}
+                width={this.props.thumbnail.width}
+                height={this.props.thumbnail.height}
             />
         );
     }
 
+    _onLeftSwipe() {
+        if (this.props.nextReceipt) {
+            this.props.toReceipt(this.props.nextReceipt);
+        }
+    }
+
+    _onRightSwipe() {
+        if (this.props.prevReceipt) {
+            this.props.toReceipt(this.props.prevReceipt);
+        }
+    }
+
     render () {
-        let thumbnail = this.state.source != null ?
+        let thumbnail = this.props.image.source != null ?
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
             <Swiper
-                onLeftSwipe={this.props.onLeftSwipe}
-                onRightSwipe={this.props.onRightSwipe}>
+                onLeftSwipe={this._onLeftSwipe.bind(this)}
+                onRightSwipe={this._onRightSwipe.bind(this)}>
                 <View style={styles.container}>
                     <Icon.ToolbarAndroid
                         style={styles.toolbar}
@@ -149,11 +162,11 @@ class ReceiptViewPage extends React.Component {
                         actions={[
                             {title: 'Edit', show: 'always'},
                             {title: 'Delete', show: 'never'}]}
-                        onIconClicked={this.props.toBack}
+                        onIconClicked={this.props.onClose}
                         onActionSelected={(position) => this._onActionSelected(position) } />
                     {thumbnail}
-                    <ReceiptDetails receipt={this.state.receipt} />
-                    <Spinner message='Deleting receipt ...' visible={this.state.spinnerVisible} />
+                    <ReceiptDetails receipt={this.props.receipt} />
+                    <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
                 </View>
             </Swiper>
         );
@@ -172,6 +185,18 @@ const styles = StyleSheet.create({
 });
 
 ReceiptViewPage.propTypes = {
+    receipt: PropTypes.object.isRequired,
+    nextReceipt: PropTypes.object,
+    prevReceipt: PropTypes.object,
+    image: PropTypes.object.isRequired,
+    thumbnail: PropTypes.object.isRequired,
+    error: PropTypes.string,
+    onDelete: PropTypes.func.isRequired,
+    isDeleting: PropTypes.bool,
+    onClose: PropTypes.func.isRequired,
+    onEdit: PropTypes.func.isRequired,
+    toReceipt: PropTypes.func.isRequired,
+    /*
     onSave: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     receipt: PropTypes.object.isRequired,
@@ -179,5 +204,6 @@ ReceiptViewPage.propTypes = {
     onLeftSwipe: PropTypes.func.isRequired,
     toRoute: PropTypes.func.isRequired,
     toBack: PropTypes.func.isRequired,
+    */
 };
 export default ReceiptViewPage
