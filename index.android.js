@@ -1,7 +1,6 @@
 'use strict'
 import React, {Component} from 'react';
 import { Provider } from 'react-redux';
-import Router from 'react-native-simple-router';
 import { AppRegistry, StyleSheet } from 'react-native';
 
 import devTools from 'remote-redux-devtools';
