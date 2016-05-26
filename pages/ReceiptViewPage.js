@@ -8,8 +8,6 @@ import {
     Text,
 } from 'react-native';
 
-import ReceiptFormPage from './ReceiptFormPage';
-import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ImagePlaceholder from '../components/ImagePlaceholder';
 import ReceiptDetails from '../components/ReceiptDetails';
@@ -17,47 +15,11 @@ import Spinner from '../components/Spinner';
 import Swiper from '../components/Swiper';
 
 var Icon = require('react-native-vector-icons/MaterialIcons');
-import Receipt from '../services/Receipt';
 
 class ReceiptViewPage extends React.Component {
 
     constructor(props) {
         super(props);
-/*
-        this.state = {
-        //    source: null,
-        //    receipt: props.receipt,
-            spinnerVisible: false,
-        }
-        */
-    }
-/*
-    componentWillMount() {
-
-        let imageSourcePromise = Receipt.receiptToImage(this.props.receipt)
-            .then((receiptImage) => receiptImage.source);
-
-        imageSourcePromise.then((source) => {
-            this.setState({source: source});
-        }, (e) => {
-            console.error('Failed to download image', e);
-            ToastAndroid.show('Failed to download receipt image', ToastAndroid.LONG);
-        });
-
-        this.imageSourcePromise = imageSourcePromise;
-    }
-*/
-    _openImageViewer() {
-        let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
-
-        this.props.toRoute({
-            component: ImageViewer,
-            passProps: {
-                source: this.state.source,
-                imageWidth: imageDimensions.width,
-                imageHeight: imageDimensions.height,
-            }
-        });
     }
 
     _onActionSelected(position) {
@@ -81,38 +43,8 @@ class ReceiptViewPage extends React.Component {
 
         this.props.onDelete(this.props.receipt.id);
     }
-/*
-    _openEditView() {
-        let imageDimensions = Receipt.receiptToImageDimensions(this.props.receipt);
 
-        let source = this.state.source !== null ? this.state.source
-            : this.imageSourcePromise;
-
-        this.props.toRoute({
-            component: ReceiptFormPage,
-            passProps: {
-                onSave: (fields) => {
-                    let receipt = this.state.receipt;
-                    receipt.total = fields.total;
-                    receipt.description = fields.description;
-
-                    this.setState({receipt: receipt});
-
-                    return this.props.onSave(fields);
-                },
-                source: source,
-                imageWidth: imageDimensions.width,
-                imageHeight: imageDimensions.height,
-                description: this.props.receipt.description,
-                total: this.props.receipt.total === undefined ? '' : this.props.receipt.total,
-                title: 'Edit Receipt',
-            }
-        });
-    }
-*/
     _renderThumbnail() {
-    //    let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
-
         return (
             <ReceiptThumbnail
                 onPress={this.props.toImageViewer}
@@ -124,8 +56,6 @@ class ReceiptViewPage extends React.Component {
     }
 
     _renderPlaceholder() {
-    //    let thumbnailDimensions = Receipt.receiptToThumbnailDimensions(this.props.receipt);
-
         return (
             <ImagePlaceholder
                 width={this.props.thumbnail.width}
@@ -191,20 +121,12 @@ ReceiptViewPage.propTypes = {
     image: PropTypes.object.isRequired,
     thumbnail: PropTypes.object.isRequired,
     error: PropTypes.string,
-    onDelete: PropTypes.func.isRequired,
     isDeleting: PropTypes.bool,
+
+    onDelete: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     onEdit: PropTypes.func.isRequired,
     toReceipt: PropTypes.func.isRequired,
     toImageViewer: PropTypes.func.isRequired,
-    /*
-    onSave: PropTypes.func.isRequired,
-    onDelete: PropTypes.func.isRequired,
-    receipt: PropTypes.object.isRequired,
-    onRightSwipe: PropTypes.func.isRequired,
-    onLeftSwipe: PropTypes.func.isRequired,
-    toRoute: PropTypes.func.isRequired,
-    toBack: PropTypes.func.isRequired,
-    */
 };
 export default ReceiptViewPage

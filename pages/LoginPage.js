@@ -7,16 +7,12 @@ import {
     ToolbarAndroid,
     ScrollView } from 'react-native';
 
-import SignupPage from './SignupPage';
-import HomePage from './HomePage';
-import Api from '../services/Api';
 import CredentialsForm from '../components/CredentialsForm';
 
 class LoginPage extends React.Component {
 
     constructor(props) {
         super(props);
-        this._onActionSelected = this._onActionSelected.bind(this);
     }
 
   _onActionSelected(position) {

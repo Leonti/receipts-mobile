@@ -28,16 +28,8 @@ class ReduxRouter extends Component {
                 <PageToRender />
             );
         } else {
-
             return (
                 <View>
-                    <Text>Rendering scene {this.props.navigation.page}</Text>
-                    <TouchableHighlight
-                        onPress={() => {
-                            console.log('CHANGING ROUTE');
-                            this.props.onChange();
-                        }}
-                    ><Text>Change</Text></TouchableHighlight>
                 </View>
             );
         }

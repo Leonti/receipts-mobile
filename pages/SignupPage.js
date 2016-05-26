@@ -7,8 +7,6 @@ import {
     ScrollView,
     ToastAndroid } from 'react-native';
 
-import Api from '../services/Api';
-import LoginPage from './LoginPage';
 import CredentialsForm from '../components/CredentialsForm';
 
 var Icon = require('react-native-vector-icons/MaterialIcons');
@@ -17,8 +15,6 @@ class SignupPage extends React.Component {
 
     constructor(props) {
         super(props);
-
-        this._navigateToLoginWithToast = this._navigateToLoginWithToast.bind(this);
     }
 
   _navigateToLoginWithToast() {

@@ -5,7 +5,6 @@ import {
     ScrollView,
     Text } from 'react-native';
 
-import ImageViewer from '../components/ImageViewer';
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
 import ReceiptForm from '../components/ReceiptForm';
 import Spinner from '../components/Spinner';
@@ -19,57 +18,21 @@ class ReceiptFormPage extends React.Component {
 
     constructor(props) {
         super(props);
-    //    let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
             description: props.description,
             total: props.total !== null && props.total !== undefined ? props.total.toString(): null,
-        //    thumbnailWidth: props.imageWidth * scale,
-        //    thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
         };
-
-/*
-        if (props.source instanceof Promise) {
-            props.source.then((source) => {
-                this.setState({source: source});
-            }, () => console.log('Failed to resolve image promise in receipt form page'));
-        } else {
-            this.state.source = this.props.source;
-        }
-        */
     }
-
-/*
-    _imageViewer() {
-        this.props.toRoute({
-            component: ImageViewer,
-            passProps: {
-                source: this.state.source,
-                imageWidth: this.props.imageWidth,
-                imageHeight: this.props.imageHeight
-            }
-        });
-    }
-    */
 
     _onActionSelected(position) {
-/*
-        if (!this.props.noSpinner) {
-            this.setState({spinnerVisible: true});
-        }
-
-        let hideSpinner = function() {
-            this.setState({spinnerVisible: false});
-        }.bind(this);
-*/
         this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
             total: this.state.total,
             description: this.state.description
-        })//.then(hideSpinner, hideSpinner);
+        })
     }
 
     _renderThumbnail() {
-        //console.log('rendering thumbnail', this.state.source);
         return (
             <ReceiptThumbnail
                 onPress={this.props.toImageViewer}
@@ -81,7 +44,6 @@ class ReceiptFormPage extends React.Component {
     }
 
     _renderPlaceholder() {
-    //    console.log('rendering placeholder');
         return (
             <ImagePlaceholder
                 width={this.props.thumbnail.width}
@@ -157,22 +119,17 @@ const styles = StyleSheet.create({
 
 ReceiptFormPage.propTypes = {
     receiptId: PropTypes.string,
-    onSave: PropTypes.func.isRequired,
     nextReceipt: PropTypes.object,
     prevReceipt: PropTypes.object,
     isSwipable: PropTypes.bool.isRequired,
-//    source: PropTypes.object.isRequired,
-//    imageWidth: PropTypes.number.isRequired,
-//    imageHeight: PropTypes.number.isRequired,
     image: PropTypes.object.isRequired,
     description: PropTypes.string.isRequired,
-//    noSpinner: PropTypes.bool,
     total: PropTypes.number,
     title: PropTypes.string.isRequired,
+
+    onSave: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     toReceipt: PropTypes.func,
     toImageViewer: PropTypes.func.isRequired,
-//    toRoute: PropTypes.func.isRequired,
-//    toBack: PropTypes.func.isRequired,
 };
 export default ReceiptFormPage

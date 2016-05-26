@@ -75,14 +75,4 @@ class ReceiptsMobile extends Component {
   }
 }
 
-/*
-<Router
-  firstRoute={firstRoute}
-  headerStyle={styles.header}
-  handleBackAndroid={true}
-  hideNavigationBar={true}
-  noStatusBar={true}
-/>
-*/
-
 AppRegistry.registerComponent('ReceiptsMobile', () => ReceiptsMobile);
