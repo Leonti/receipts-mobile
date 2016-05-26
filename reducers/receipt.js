@@ -177,7 +177,7 @@ function newReceipt(state = {
 function openedReceipt(state = {
         receipt: null,
         image: {
-            uri: null,
+            source: null,
             width: null,
             height: null,
         },

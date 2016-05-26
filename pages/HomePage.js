@@ -340,7 +340,7 @@ class HomePage extends React.Component {
                 //console.log('RECEIPT POSITION', this.state.receipts.indexOf(receipt));
                 //receiptView(this.state.receipts, this.state.receipts.indexOf(receipt), true)
 
-                    this.props.toViewReceipt(receipt);
+                    this.props.toReceipt(receipt);
 
                 }
             }
@@ -403,8 +403,6 @@ const styles = StyleSheet.create({
     },
 });
 
-
-
 HomePage.propTypes = {
   receipts: PropTypes.array.isRequired,
   isFetching: PropTypes.bool.isRequired,
@@ -417,7 +415,6 @@ HomePage.propTypes = {
   onFilesSelected: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   toCreateReceipt: PropTypes.func.isRequired,
-  toEditReceipt: PropTypes.func.isRequired,
-  toViewReceipt: PropTypes.func.isRequired,
+  toReceipt: PropTypes.func.isRequired,
 };
 export default HomePage;

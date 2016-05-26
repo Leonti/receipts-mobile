@@ -1,49 +1,23 @@
-export const NAVIGATE_TO_INIT = 'NAVIGATE_TO_INIT';
-export const NAVIGATE_TO_LOGIN = 'NAVIGATE_TO_LOGIN';
-export const NAVIGATE_TO_SIGNUP = 'NAVIGATE_TO_SIGNUP';
-export const NAVIGATE_TO_RECEIPT_LIST = 'NAVIGATE_TO_RECEIPT_LIST';
-export const NAVIGATE_TO_RECEIPT_VIEW = 'NAVIGATE_TO_RECEIPT_VIEW';
-export const NAVIGATE_TO_RECEIPT_CREATE = 'NAVIGATE_TO_RECEIPT_CREATE';
-export const NAVIGATE_TO_RECEIPT_EDIT = 'NAVIGATE_TO_RECEIPT_EDIT';
+export const NAVIGATE_TO = 'NAVIGATE_TO';
+export const NAVIGATE_TO_AND_RESET = 'NAVIGATE_TO_AND_RESET';
+export const NAVIGATE_BACK = 'NAVIGATE_BACK';
 
-export function navigateToInit() {
+export function navigateTo(page) {
     return {
-        type: NAVIGATE_TO_INIT
+        type: NAVIGATE_TO,
+        page: page,
     };
 }
 
-export function navigateToLogin() {
+export function navigateToAndReset(page) {
     return {
-        type: NAVIGATE_TO_LOGIN
+        type: NAVIGATE_TO_AND_RESET,
+        page: page,
     };
 }
 
-export function navigateToSignup() {
+export function navigateBack() {
     return {
-        type: NAVIGATE_TO_SIGNUP
-    };
-}
-
-export function navigateToReceiptList() {
-    return {
-        type: NAVIGATE_TO_RECEIPT_LIST
-    };
-}
-
-export function navigateToReceiptCreate() {
-    return {
-        type: NAVIGATE_TO_RECEIPT_CREATE,
-    };
-}
-
-export function navigateToReceiptView() {
-    return {
-        type: NAVIGATE_TO_RECEIPT_VIEW,
-    };
-}
-
-export function navigateToReceiptEdit() {
-    return {
-        type: NAVIGATE_TO_RECEIPT_EDIT,
+        type: NAVIGATE_BACK,
     };
 }

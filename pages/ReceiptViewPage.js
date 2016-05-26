@@ -115,7 +115,7 @@ class ReceiptViewPage extends React.Component {
 
         return (
             <ReceiptThumbnail
-                onPress={() => this._openImageViewer()}
+                onPress={this.props.toImageViewer}
                 source={this.props.image.source}
                 width={this.props.thumbnail.width}
                 height={this.props.thumbnail.height}
@@ -196,6 +196,7 @@ ReceiptViewPage.propTypes = {
     onClose: PropTypes.func.isRequired,
     onEdit: PropTypes.func.isRequired,
     toReceipt: PropTypes.func.isRequired,
+    toImageViewer: PropTypes.func.isRequired,
     /*
     onSave: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,

@@ -1,11 +1,8 @@
 import { connect } from 'react-redux';
 import {
-    navigateToReceiptList,
-    navigateToSignup,
-    navigateToLogin,
-    navigateToReceiptView,
-    navigateToReceiptEdit,
-    navigateToReceiptCreate,
+    navigateTo,
+    navigateToAndReset,
+    navigateBack,
  } from '../actions/navigation'
 
 import {
@@ -31,6 +28,7 @@ import SignupPage from '../pages/SignupPage';
 import HomePage from '../pages/HomePage';
 import ReceiptViewPage from '../pages/ReceiptViewPage';
 import ReceiptFormPage from '../pages/ReceiptFormPage';
+import ImageViewer from '../components/ImageViewer';
 
 export const LoginPageContainer = connect(
     (state) => {
@@ -42,12 +40,12 @@ export const LoginPageContainer = connect(
     (dispatch) => {
         return {
             toSignup: () => {
-                dispatch(navigateToSignup())
+                dispatch(navigateTo('SIGNUP'))
             },
             onLogin: (username, password) => {
                 dispatch(login(username, password, () => {
                     dispatch(loadReceipts())
-                    dispatch(navigateToReceiptList())
+                    dispatch(navigateTo('RECEIPT_LIST'))
                 }));
             }
         }
@@ -64,11 +62,11 @@ export const SignupPageContainer = connect(
     (dispatch) => {
         return {
             toLogin: () => {
-                dispatch(navigateToLogin())
+                dispatch(navigateTo('LOGIN'))
             },
             onSignup: (username, password) => {
                 dispatch(createUser(username, password, () => {
-                    dispatch(navigateToLogin())
+                    dispatch(navigateTo('LOGIN'))
                 }));
             }
         }
@@ -92,34 +90,55 @@ export const HomePageContainer = connect(
             toCreateReceipt: (newReceiptData) => {
                 dispatch();
             },
-            toEditReceipt: () => {
-
-            },
-            toViewReceipt: (receipt) => {
+            toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt));
-                dispatch(navigateToReceiptView());
+                if (needToEdit(receipt)) {
+                    dispatch(navigateTo('RECEIPT_EDIT'))
+                } else {
+                    dispatch(navigateTo('RECEIPT_VIEW'));
+                }
             },
             onFileSelected: (image) => {
                 dispatch(setNewReceipt(image, '', ''))
-                dispatch(navigateToReceiptCreate())
+                dispatch(navigateTo('RECEIPT_CREATE'))
             },
             onFilesSelected: (imageUris) => {
                 dispatch(batchCreateReceipts(imageUris))
             },
             onLogout: () => {
                 dispatch(logout())
-                dispatch(navigateToLogin())
+                dispatch(navigateTo('LOGIN'))
             }
         }
     }
 )(HomePage)
 
+function findPrevReceipt(receipts, receipt) {
+    let index = receipts.findIndex(listReceipt => listReceipt.id === receipt.id);
+
+    return index - 1 >= 0 ? receipts[index - 1] : null;
+}
+
+function findNextReceipt(receipts, receipt) {
+    let index = receipts.findIndex(listReceipt => listReceipt.id === receipt.id);
+
+    if (index === -1) {
+        return null;
+    }
+
+    return index + 1 <= receipts.length - 1 ? receipts[index + 1] : null;
+}
+
+function needToEdit(receipt) {
+    return receipt.total === null || receipt.total === undefined;
+}
+
 export const ReceiptViewPageContainer = connect(
     (state) => {
         return {
             receipt: state.receipt.openedReceipt.receipt,
-            nextReceipt: state.receipt.openedReceipt.receipt,
-            prevReceipt: state.receipt.openedReceipt.receipt,
+            nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
+            prevReceipt: findPrevReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
             image: state.receipt.openedReceipt.image,
             thumbnail: state.receipt.openedReceipt.thumbnail,
             error: state.receipt.openedReceipt.error,
@@ -131,17 +150,23 @@ export const ReceiptViewPageContainer = connect(
             onDelete: (receiptId) => {
                 dispatch(deleteReceipt(receiptId, () => {
                     dispatch(loadReceipts())
-                    dispatch(navigateToReceiptList())
+                    dispatch(navigateTo('RECEIPT_LIST'))
                 }))
             },
             onEdit: () => {
-                dispatch(navigateToReceiptEdit())
+                dispatch(navigateTo('RECEIPT_EDIT'))
             },
             onClose: () => {
-                dispatch(navigateToReceiptList())
+                dispatch(navigateTo('RECEIPT_LIST'))
             },
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
+                if (needToEdit(receipt)) {
+                    dispatch(navigateTo('RECEIPT_EDIT'))
+                }
+            },
+            toImageViewer: () => {
+                dispatch(navigateTo('RECEIPT_IMAGE'))
             },
         }
     }
@@ -151,8 +176,8 @@ export const ReceiptEditPageContainer = connect(
     (state) => {
         return {
             receiptId: state.receipt.openedReceipt.receipt.id,
-            nextReceipt: state.receipt.openedReceipt.receipt,
-            prevReceipt: state.receipt.openedReceipt.receipt,
+            nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
+            prevReceipt: findPrevReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
             isSwipable: true,
             image: state.receipt.openedReceipt.image,
             thumbnail: state.receipt.openedReceipt.thumbnail,
@@ -170,15 +195,21 @@ export const ReceiptEditPageContainer = connect(
                     receiptData.description,
                     () => {
                         dispatch(loadReceipts())
-                        dispatch(navigateToReceiptList())
+                        dispatch(navigateTo('RECEIPT_LIST'))
                     }
                 ))
             },
             onClose: () => {
-                dispatch(navigateToReceiptList())
+                dispatch(navigateTo('RECEIPT_LIST'))
             },
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
+                if (!needToEdit(receipt)) {
+                    dispatch(navigateTo('RECEIPT_VIEW'))
+                }
+            },
+            toImageViewer: () => {
+                dispatch(navigateTo('RECEIPT_IMAGE'))
             },
         }
     }
@@ -202,14 +233,34 @@ export const ReceiptCreatePageContainer = connect(
                     receiptData.total,
                     receiptData.description,
                 ))
-                dispatch(navigateToReceiptList())
+                dispatch(navigateTo('RECEIPT_LIST'))
             },
             onClose: () => {
-                dispatch(navigateToReceiptList())
-            }
+                dispatch(navigateTo('RECEIPT_LIST'))
+            },
+            toImageViewer: () => {
+                dispatch(navigateTo('RECEIPT_IMAGE'))
+            },
         }
     }
 )(ReceiptFormPage)
+
+export const ImageViewerContainer = connect(
+    (state) => {
+        return {
+            source: state.receipt.openedReceipt.image.source,
+            imageWidth: state.receipt.openedReceipt.image.width,
+            imageHeight: state.receipt.openedReceipt.image.height,
+        }
+    },
+    (dispatch) => {
+        return {
+            onClose: () => {
+                dispatch(navigateBack())
+            },
+        }
+    }
+)(ImageViewer)
 
 const Routing = {
     LOGIN: LoginPageContainer,
@@ -218,6 +269,7 @@ const Routing = {
     RECEIPT_VIEW: ReceiptViewPageContainer,
     RECEIPT_CREATE: ReceiptCreatePageContainer,
     RECEIPT_EDIT: ReceiptEditPageContainer,
+    RECEIPT_IMAGE: ImageViewerContainer,
 };
 
 export default Routing;

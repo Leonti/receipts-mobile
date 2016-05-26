@@ -18,7 +18,7 @@ class ImageViewer extends Component {
                   imageHeight={this.props.imageHeight}
                   source={this.props.source}
                 />
-                <TouchableHighlight onPress={this.props.toBack} style={styles.closeButton}>
+                <TouchableHighlight onPress={this.props.onClose} style={styles.closeButton}>
                     <Icon name="close" size={30} color='white'/>
                 </TouchableHighlight>
             </View>
@@ -40,5 +40,7 @@ ImageViewer.propTypes = {
     source: PropTypes.object.isRequired,
     imageWidth: PropTypes.number.isRequired,
     imageHeight: PropTypes.number.isRequired,
+
+    onClose: PropTypes.func.isRequired,
 };
 export default ImageViewer;

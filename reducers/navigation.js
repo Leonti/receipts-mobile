@@ -1,48 +1,39 @@
 import {
-    NAVIGATE_TO_INIT,
-    NAVIGATE_TO_LOGIN,
-    NAVIGATE_TO_SIGNUP,
-    NAVIGATE_TO_RECEIPT_LIST,
-    NAVIGATE_TO_RECEIPT_VIEW,
-    NAVIGATE_TO_RECEIPT_CREATE,
-    NAVIGATE_TO_RECEIPT_EDIT,
+    NAVIGATE_TO,
+    NAVIGATE_TO_AND_RESET,
+    NAVIGATE_BACK,
 } from '../actions/navigation'
 
+function findPrevPage(history) {
+    if (history.length == 0) {
+        return
+    }
+    if (history.length == 1) {
+        return history[history.length - 1]
+    }
+}
+
 function navigate(state = {
-    page: 'loader',
-    data: {}
+    page: null,
+    history: []
 }, action) {
 
     switch(action.type) {
-        case NAVIGATE_TO_INIT:
+        case NAVIGATE_TO:
             return Object.assign({}, state, {
-                page: 'INIT',
+                page: action.page,
+                history: state.history.concat(action.page),
             });
-        case NAVIGATE_TO_LOGIN:
+        case NAVIGATE_TO_AND_RESET:
             return Object.assign({}, state, {
-                page: 'LOGIN',
+                page: action.page,
+                history: [action.page],
             });
-        case NAVIGATE_TO_SIGNUP:
+        case NAVIGATE_BACK:
             return Object.assign({}, state, {
-                page: 'SIGNUP',
+                page: state.history.length > 1 ? state.history[state.history.length - 2] : state.history[state.history.length - 1],
+                history: state.history.length > 1 ? state.history.slice(0, state.history.length - 2) : state.history,
             });
-        case NAVIGATE_TO_RECEIPT_LIST:
-            return Object.assign({}, state, {
-                page: 'RECEIPT_LIST',
-            });
-        case NAVIGATE_TO_RECEIPT_CREATE:
-            return Object.assign({}, state, {
-                page: 'RECEIPT_CREATE',
-            });
-        case NAVIGATE_TO_RECEIPT_VIEW:
-            return Object.assign({}, state, {
-                page: 'RECEIPT_VIEW',
-            });
-        case NAVIGATE_TO_RECEIPT_EDIT:
-            return Object.assign({}, state, {
-                page: 'RECEIPT_EDIT',
-            });
-
         default:
             return state;
     }

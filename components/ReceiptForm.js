@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
 });
 
 ReceiptForm.propTypes = {
-    total: PropTypes.string.isRequired,
+    total: PropTypes.string,
     onTotalChange: PropTypes.func.isRequired,
     description: PropTypes.string.isRequired,
     onDescriptionChange: PropTypes.func.isRequired,

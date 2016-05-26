@@ -22,7 +22,7 @@ class ReceiptFormPage extends React.Component {
     //    let scale = MAX_HEIGHT / props.imageHeight
         this.state = {
             description: props.description,
-            total: props.total !== null ? props.total.toString(): null,
+            total: props.total !== null && props.total !== undefined ? props.total.toString(): null,
         //    thumbnailWidth: props.imageWidth * scale,
         //    thumbnailHeight: props.imageHeight * scale,
             spinnerVisible: false,
@@ -39,6 +39,7 @@ class ReceiptFormPage extends React.Component {
         */
     }
 
+/*
     _imageViewer() {
         this.props.toRoute({
             component: ImageViewer,
@@ -49,6 +50,7 @@ class ReceiptFormPage extends React.Component {
             }
         });
     }
+    */
 
     _onActionSelected(position) {
 /*
@@ -70,7 +72,7 @@ class ReceiptFormPage extends React.Component {
         //console.log('rendering thumbnail', this.state.source);
         return (
             <ReceiptThumbnail
-                onPress={() => this._imageViewer()}
+                onPress={this.props.toImageViewer}
                 source={this.props.image.source}
                 width={this.props.thumbnail.width}
                 height={this.props.thumbnail.height}
@@ -165,10 +167,11 @@ ReceiptFormPage.propTypes = {
     image: PropTypes.object.isRequired,
     description: PropTypes.string.isRequired,
 //    noSpinner: PropTypes.bool,
-    total: PropTypes.any.isRequired,
+    total: PropTypes.number,
     title: PropTypes.string.isRequired,
     onClose: PropTypes.func.isRequired,
     toReceipt: PropTypes.func,
+    toImageViewer: PropTypes.func.isRequired,
 //    toRoute: PropTypes.func.isRequired,
 //    toBack: PropTypes.func.isRequired,
 };

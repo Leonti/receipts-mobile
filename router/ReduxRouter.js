@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 
 import { connect } from 'react-redux';
-import { navigateToSignup } from '../actions/navigation'
 
 import Routing from './PageContainers';
 

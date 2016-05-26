@@ -18,7 +18,7 @@ import ReduxRouter from './router/ReduxRouter';
 import thunkMiddleware from 'redux-thunk'
 import createLogger from 'redux-logger'
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
-import { navigateToLogin, navigateToReceiptList } from './actions/navigation'
+import { navigateTo } from './actions/navigation'
 import { setLoggedInUser } from './actions/user'
 import { loadReceipts } from './actions/receipt'
 import navigationReducer from './reducers/navigation'
@@ -55,9 +55,9 @@ async function setup() {
         let userInfo = await Api.getUserInfo();
         store.dispatch(setLoggedInUser(userInfo));
         store.dispatch(loadReceipts());
-        store.dispatch(navigateToReceiptList());
+        store.dispatch(navigateTo('RECEIPT_LIST'));
     } else {
-        store.dispatch(navigateToLogin())
+        store.dispatch(navigateTo('LOGIN'))
     }
 }
 
