@@ -178,6 +178,7 @@ export const ReceiptEditPageContainer = connect(
             receiptId: state.receipt.openedReceipt.receipt.id,
             nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
             prevReceipt: findPrevReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
+            isFetching: state.receipt.saveReceipt.isFetching,
             isSwipable: true,
             image: state.receipt.openedReceipt.image,
             thumbnail: state.receipt.openedReceipt.thumbnail,
@@ -193,14 +194,15 @@ export const ReceiptEditPageContainer = connect(
                     receiptId,
                     receiptData.total,
                     receiptData.description,
-                    () => {
+                    (receipt) => {
+                        dispatch(openReceipt(receipt))
+                        dispatch(navigateTo('RECEIPT_VIEW'))
                         dispatch(loadReceipts())
-                        dispatch(navigateTo('RECEIPT_LIST'))
                     }
                 ))
             },
             onClose: () => {
-                dispatch(navigateTo('RECEIPT_LIST'))
+                dispatch(navigateBack())
             },
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))

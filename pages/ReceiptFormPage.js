@@ -21,7 +21,6 @@ class ReceiptFormPage extends React.Component {
         this.state = {
             description: props.description,
             total: props.total !== null && props.total !== undefined ? props.total.toString(): null,
-            spinnerVisible: false,
         };
     }
 
@@ -86,7 +85,7 @@ class ReceiptFormPage extends React.Component {
                         onDescriptionChange={(text) => this.setState({description: text})}
                     />
                 </ScrollView>
-                <Spinner message='Saving receipt ...' visible={this.state.spinnerVisible} />
+                <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
             </View>
         );
     }
@@ -109,7 +108,7 @@ class ReceiptFormPage extends React.Component {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
     },
     toolbar: {
         backgroundColor: '#e9eaed',
@@ -119,6 +118,7 @@ const styles = StyleSheet.create({
 
 ReceiptFormPage.propTypes = {
     receiptId: PropTypes.string,
+    isFetching: PropTypes.bool,
     nextReceipt: PropTypes.object,
     prevReceipt: PropTypes.object,
     isSwipable: PropTypes.bool.isRequired,

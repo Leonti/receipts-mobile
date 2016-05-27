@@ -86,7 +86,7 @@ export function saveReceipt(receiptId, total, description, postSaveAction) {
                     type: SAVE_RECEIPT_RESULT,
                     result,
                 })
-                postSaveAction()
+                postSaveAction(result)
         }, error => {
             dispatch({
                 type: SAVE_RECEIPT_REQUEST_FAILURE,
