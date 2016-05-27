@@ -10,7 +10,7 @@ import {
     ToastAndroid,
     DrawerLayoutAndroid,
     RecyclerViewBackedScrollView,
-    CameraRoll,
+    RefreshControl,
  } from 'react-native';
 
 import ActionButton from 'react-native-action-button';
@@ -90,17 +90,6 @@ class HomePage extends React.Component {
         }
     }
 
-    _openReceiptCreateView(image) {
-
-        this.props.toCreateReceipt({
-            source: image.source,
-            imageWidth: image.width,
-            imageHeight: image.height,
-            description: '',
-            total:'',
-        });
-    }
-
     render() {
 
         let navigationView = <NavigationView
@@ -140,8 +129,9 @@ class HomePage extends React.Component {
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow.bind(this)}
-                    renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
+                //    renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
                     renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
+                    refreshControl={ <RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} /> }
                 />
                 <ActionButton buttonColor="#F44336">
                     <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
@@ -193,8 +183,8 @@ HomePage.propTypes = {
   closeDrawer: PropTypes.func.isRequired,
   onFileSelected: PropTypes.func.isRequired,
   onFilesSelected: PropTypes.func.isRequired,
+  onRefresh: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
-  toCreateReceipt: PropTypes.func.isRequired,
   toReceipt: PropTypes.func.isRequired,
 };
 export default HomePage;

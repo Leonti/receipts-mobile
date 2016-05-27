@@ -87,9 +87,6 @@ export const HomePageContainer = connect(
         return {
             openDrawer: () => dispatch(openDrawer()),
             closeDrawer: () => dispatch(closeDrawer()),
-            toCreateReceipt: (newReceiptData) => {
-                dispatch();
-            },
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt));
                 if (needToEdit(receipt)) {
@@ -108,6 +105,9 @@ export const HomePageContainer = connect(
             onLogout: () => {
                 dispatch(logout())
                 dispatch(navigateTo('LOGIN'))
+            },
+            onRefresh: () => {
+                dispatch(loadReceipts())
             }
         }
     }

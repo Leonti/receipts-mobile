@@ -45,7 +45,7 @@ function receiptList(state = {
         case RECEIPT_LIST_RESULT:
             return Object.assign({}, state, {
                 isFetching: false,
-                receipts: action.result.slice(0, 5),
+                receipts: action.result.slice(0, 20),
             });
         case RECEIPT_LIST_REQUEST_FAILURE:
             return Object.assign({}, state, {
