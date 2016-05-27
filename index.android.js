@@ -58,6 +58,10 @@ async function setup() {
     } else {
         store.dispatch(navigateTo('LOGIN'))
     }
+
+    Api.onReceiptUploaded(() => {
+        store.dispatch(loadReceipts());
+    });
 }
 
 setup();

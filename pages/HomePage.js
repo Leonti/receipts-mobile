@@ -57,13 +57,13 @@ class HomePage extends React.Component {
     }
 
     _showCamera() {
-        ImagePicker.takePhoto().then(this._processImagePickerResponse, () => {
+        ImagePicker.takePhoto().then(this._processImagePickerResponse.bind(this), () => {
             ToastAndroid.show('Failed to choose receipt', ToastAndroid.LONG);
         });
     }
 
     _showImageLibrary() {
-        ImagePicker.pick().then(this._processImagePickerResponse, () => {
+        ImagePicker.pick().then(this._processImagePickerResponse.bind(this), () => {
             ToastAndroid.show('Failed to choose receipt', ToastAndroid.LONG);
         });
     }
@@ -72,6 +72,7 @@ class HomePage extends React.Component {
         console.log('IMAGES', response);
 
         if (response.cancelled) {
+            console.log('CANCELLED INAMGE PICKER RESPONSE');
             return;
         }
 
@@ -134,10 +135,10 @@ class HomePage extends React.Component {
                     refreshControl={ <RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} /> }
                 />
                 <ActionButton buttonColor="#F44336">
-                    <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera}>
+                    <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera.bind(this)}>
                         <Icon name="camera" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
-                    <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary}>
+                    <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary.bind(this)}>
                         <Icon name="collections" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
                 </ActionButton>

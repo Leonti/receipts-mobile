@@ -206,32 +206,15 @@ console.log('FIELDS:', fields);
 
         Api._uploadCallbacks.push(callback);
     }
-
-/*
-    static async _addToCache(receiptId, fileId, fileExt, fileUri) {
-        let userId = await Api._getUserId();
-        let url = baseUrl + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt;
-
-        return NetworkFiles.addToCache({
-            url: url,
-            file: fileUri
-        });
-    }
-    */
 }
 
 DeviceEventEmitter.addListener('receiptUploaded', function(event) {  // handle event.
     console.log('RECEIPT UPLOADED EVENT JS', event);
+    Api._uploadCallbacks.forEach(callback => callback(event));
 
-//    let addToCachePromise = Api._addToCache(event.receiptId, event.fileId, event.ext, event.uri);
-
-    //addToCachePromise.then(() => {
-        Api._uploadCallbacks.forEach(callback => callback(event));
-
-        ReceiptsUploader.currentUploads().then((uploads) => {
-            console.log(uploads);
-        }, (e) => console.log(e));
-    //}, (e) => console.log('FAILED TO ADD TO CACHE', e));
+    ReceiptsUploader.currentUploads().then((uploads) => {
+        console.log(uploads);
+    }, (e) => console.log(e));
 });
 
 function toTotalValue(total) {
