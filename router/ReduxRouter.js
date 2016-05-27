@@ -34,10 +34,11 @@ class ReduxRouter extends Component {
             );
         }
     }
-
+// '#2196f3'
     render() {
         return (
           <View style={{ flex: 1 }}>
+          <StatusBar backgroundColor='#2196f3' />
             <Navigator
               ref="navigator"
               initialRoute={{name: 'My First Scene', index: 0}}
