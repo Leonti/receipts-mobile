@@ -124,7 +124,7 @@ ReceiptFormPage.propTypes = {
     isSwipable: PropTypes.bool.isRequired,
     image: PropTypes.object.isRequired,
     description: PropTypes.string.isRequired,
-    total: PropTypes.string,
+    total: PropTypes.any,
     title: PropTypes.string.isRequired,
 
     onSave: PropTypes.func.isRequired,
