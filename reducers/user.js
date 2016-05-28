@@ -5,11 +5,14 @@ import {
     LOGIN_REQUEST,
     LOGIN_RESULT,
     LOGIN_REQUEST_FAILURE,
+    LOGIN_CLEAR,
     LOGOUT,
 
     CREATE_USER_REQUEST,
     CREATE_USER_RESULT,
     CREATE_USER_REQUEST_FAILURE,
+    CREATE_USER_CLEAR,
+
 } from '../actions/user'
 
 function login(state = {
@@ -42,6 +45,12 @@ function login(state = {
             return Object.assign({}, state, {
               user: {},
             })
+        case LOGIN_CLEAR:
+            return Object.assign({}, state, {
+              user: {},
+              isFetching: false,
+              error: null,
+            })
         default:
             return state
     }
@@ -53,24 +62,30 @@ function createUser(state = {
     error: null,
 }, action) {
     switch (action.type) {
-      case CREATE_USER_REQUEST:
-        return Object.assign({}, state, {
-            user: {},
-            isFetching: true,
-            error: null,
-        })
-      case CREATE_USER_RESULT:
-        return Object.assign({}, state, {
-          isFetching: false,
-          user: action.result,
-        })
-      case CREATE_USER_REQUEST_FAILURE:
-        return Object.assign({}, state, {
-          isFetching: false,
-          error: action.error,
-        })
-      default:
-        return state
+        case CREATE_USER_REQUEST:
+            return Object.assign({}, state, {
+                user: {},
+                isFetching: true,
+                error: null,
+            })
+        case CREATE_USER_RESULT:
+            return Object.assign({}, state, {
+              isFetching: false,
+              user: action.result,
+            })
+        case CREATE_USER_REQUEST_FAILURE:
+            return Object.assign({}, state, {
+              isFetching: false,
+              error: action.error,
+            })
+        case CREATE_USER_CLEAR:
+            return Object.assign({}, state, {
+              user: {},
+              isFetching: false,
+              error: null,
+            })
+        default:
+            return state
     }
 }
 

@@ -21,6 +21,8 @@ import {
     login,
     logout,
     createUser,
+    clearLogin,
+    clearCreateUser,
 } from '../actions/user'
 
 import LoginPage from '../pages/LoginPage';
@@ -40,6 +42,7 @@ export const LoginPageContainer = connect(
     (dispatch) => {
         return {
             toSignup: () => {
+                dispatch(clearCreateUser())
                 dispatch(navigateTo('SIGNUP'))
             },
             onLogin: (username, password) => {
@@ -62,6 +65,7 @@ export const SignupPageContainer = connect(
     (dispatch) => {
         return {
             toLogin: () => {
+                dispatch(clearLogin())
                 dispatch(navigateTo('LOGIN'))
             },
             onSignup: (username, password) => {

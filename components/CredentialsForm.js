@@ -7,6 +7,8 @@ import {
     TouchableHighlight,
     Text } from 'react-native';
 
+import Button from './third-party/mrn/Button'
+
 import ErrorView from './ErrorView';
 
 class CredentialsForm extends Component {
@@ -21,12 +23,10 @@ class CredentialsForm extends Component {
 
     render() {
 
-        var signupButton = this.props.isFetching ? <ProgressBarAndroid indeterminate={true} /> :
-        <View style={styles.button}>
-            <TouchableHighlight onPress={() => this.props.onSubmit(this.state.username, this.state.password)}>
-                <Text>{this.props.label.toUpperCase()}</Text>
-            </TouchableHighlight>
-        </View>
+        var button = this.props.isFetching ? <ProgressBarAndroid indeterminate={true} /> :
+            <Button value={this.props.label.toUpperCase()} raised={true} theme="dark" color="paperBrown"
+                onPress={() => this.props.onSubmit(this.state.username, this.state.password)}
+            />
         var errorView = this.props.error ? <ErrorView message={this.props.error} /> : null;
 
         return (
@@ -34,13 +34,15 @@ class CredentialsForm extends Component {
                 <Text style={styles.label}>Email</Text>
                 <TextInput
                     style={styles.textfield}
-                    onChangeText={(text) => this.setState({username: text})} value={this.state.username} />
+                    onChangeText={(text) => this.setState({username: text})}
+                    value={this.state.username} />
                 <Text style={styles.label}>Password</Text>
                 <TextInput
                     style={styles.textfield}
-                    onChangeText={(text) => this.setState({password: text})} value={this.state.password} secureTextEntry={true}/>
-                {signupButton}
-                {errorView}
+                    onChangeText={(text) => this.setState({password: text})}
+                    value={this.state.password} secureTextEntry={true}/>
+                {button}
+                <View style={styles.errorView}>{errorView}</View>
             </View>
         );
     }
@@ -48,10 +50,17 @@ class CredentialsForm extends Component {
 
 const styles = StyleSheet.create({
 
-    button: {
-        flex: 1,
-        flexDirection: 'column',
-        alignItems: 'flex-end'
+    label: {
+        fontSize: 20,
+    },
+
+    textfield: {
+        fontSize: 20,
+        marginBottom: 15,
+    },
+
+    errorView: {
+        marginTop: 15,
     }
 });
 

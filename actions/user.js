@@ -4,11 +4,13 @@ export const SET_LOGGED_IN_USER = 'SET_LOGGED_IN_USER';
 export const LOGIN_REQUEST = 'LOGIN_REQUEST';
 export const LOGIN_RESULT = 'LOGIN_RESULT';
 export const LOGIN_REQUEST_FAILURE = 'LOGIN_REQUEST_FAILURE';
+export const LOGIN_CLEAR = 'LOGIN_CLEAR';
 export const LOGOUT = 'LOGOUT';
 
 export const CREATE_USER_REQUEST = 'CREATE_USER_REQUEST';
 export const CREATE_USER_RESULT = 'CREATE_USER_RESULT';
 export const CREATE_USER_REQUEST_FAILURE = 'CREATE_USER_REQUEST_FAILURE';
+export const CREATE_USER_CLEAR = 'CREATE_USER_CLEAR';
 
 export function setLoggedInUser(user) {
     return {
@@ -40,6 +42,12 @@ export function login(username, password, postLoginAction) {
     }
 }
 
+export function clearLogin() {
+    return {
+        type: LOGIN_CLEAR
+    }
+}
+
 export function logout() {
     Api.logout();
     return {
@@ -68,5 +76,11 @@ export function createUser(username, password, postSignupAction) {
                 error: error.message,
             });
         });
+    }
+}
+
+export function clearCreateUser() {
+    return {
+        type: CREATE_USER_CLEAR
     }
 }

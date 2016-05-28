@@ -26,7 +26,7 @@ class LoginPage extends React.Component {
               style={styles.toolbar}
               title="Login"
               actions={[{title: 'Sign Up', show: 'always'}]}
-              onActionSelected={this._onActionSelected} />
+              onActionSelected={this._onActionSelected.bind(this)} />
               <ScrollView style={styles.form}>
                 <CredentialsForm label={'Login'}
                     onSubmit={this.props.onLogin}
