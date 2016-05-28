@@ -3,7 +3,7 @@ import React, {Component} from 'react';
 import { Provider } from 'react-redux';
 import { AppRegistry, StyleSheet } from 'react-native';
 
-import devTools from 'remote-redux-devtools';
+//import devTools from 'remote-redux-devtools';
 
 const styles = StyleSheet.create({
   header: {
@@ -38,7 +38,7 @@ const store = createStore(
   rootReducer,
   compose(
       applyMiddleware(thunkMiddleware),
-      devTools(),
+//      devTools(),
   )
 )
 

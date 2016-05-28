@@ -210,7 +210,7 @@ function openedReceipt(state = {
                 image: {
                     source: action.source,
                     width: state.image.width,
-                    height: state.image.width,
+                    height: state.image.height,
                 }
             });
         case SET_OPENED_RECEIPT_URI_FAILURE:
