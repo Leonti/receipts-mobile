@@ -153,7 +153,6 @@ export const ReceiptViewPageContainer = connect(
         return {
             onDelete: (receiptId) => {
                 dispatch(deleteReceipt(receiptId, () => {
-                    dispatch(loadReceipts())
                     dispatch(navigateTo('RECEIPT_LIST'))
                 }))
             },
@@ -183,6 +182,7 @@ export const ReceiptEditPageContainer = connect(
             nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
             prevReceipt: findPrevReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
             isFetching: state.receipt.saveReceipt.isFetching,
+            isDeleting: state.receipt.deleteReceipt.isFetching,
             isSwipable: true,
             image: state.receipt.openedReceipt.image,
             thumbnail: state.receipt.openedReceipt.thumbnail,
@@ -201,13 +201,17 @@ export const ReceiptEditPageContainer = connect(
                     (receipt) => {
                         dispatch(openReceipt(receipt))
                         dispatch(navigateTo('RECEIPT_VIEW'))
-                        dispatch(loadReceipts())
                     }
                 ))
             },
             onClose: () => {
                 dispatch(navigateBack())
             },
+            onDelete: (receiptId) => {
+                dispatch(deleteReceipt(receiptId, () => {
+                    dispatch(navigateTo('RECEIPT_LIST'))
+                }))
+            },            
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
                 if (!needToEdit(receipt)) {

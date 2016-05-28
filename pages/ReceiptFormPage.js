@@ -3,6 +3,7 @@ import {
     StyleSheet,
     View,
     ScrollView,
+    Alert,
     Text } from 'react-native';
 
 import ReceiptThumbnail from '../components/ReceiptThumbnail';
@@ -25,10 +26,19 @@ class ReceiptFormPage extends React.Component {
     }
 
     _onActionSelected(position) {
-        this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
-            total: this.state.total,
-            description: this.state.description
-        })
+        if (position === 0) {
+            this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
+                total: this.state.total,
+                description: this.state.description
+            })
+        } else if (position == 1) {
+            Alert.alert('Delete Receipt',
+            'Are you sure you want to delete this receipt?',
+             [
+                 {text: 'Cancel', onPress: () => console.log('Cancel Pressed!')},
+                 {text: 'OK', onPress: () => this.props.onDelete(this.props.receiptId)},
+             ]);
+        }
     }
 
     _renderThumbnail() {
@@ -73,7 +83,10 @@ class ReceiptFormPage extends React.Component {
                     style={styles.toolbar}
                     title={this.props.title}
                     navIconName="close"
-                    actions={[{title: 'Save', show: 'always'}]}
+                    actions={[
+                        {title: 'Save', show: 'always'},
+                        {title: 'Delete', show: 'never'}
+                    ]}
                     onIconClicked={this.props.onClose}
                     onActionSelected={(position) => this._onActionSelected(position) } />
                 <ScrollView>
@@ -86,6 +99,7 @@ class ReceiptFormPage extends React.Component {
                     />
                 </ScrollView>
                 <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
+                <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
             </View>
         );
     }

@@ -45,12 +45,21 @@ function receiptList(state = {
         case RECEIPT_LIST_RESULT:
             return Object.assign({}, state, {
                 isFetching: false,
-                receipts: action.result.slice(0, 10),
+                receipts: action.result,
             });
         case RECEIPT_LIST_REQUEST_FAILURE:
             return Object.assign({}, state, {
                 isFetching: false,
                 error: action.error,
+            });
+        case SAVE_RECEIPT_RESULT:
+            return Object.assign({}, state, {
+                receipts: updateReceipt(state.receipts, action.result),
+            });
+        case DELETE_RECEIPT_REQUEST:
+            console.log('DELETE_RECEIPT_REQUEST in RECEIPT LIST');
+            return Object.assign({}, state, {
+                receipts: state.receipts.filter(receipt => receipt.id != action.receiptId),
             });
         case OPEN_DRAWER:
             return Object.assign({}, state, {
@@ -63,6 +72,15 @@ function receiptList(state = {
         default:
           return state
     }
+}
+
+function updateReceipt(receipts, receipt) {
+    return receipts.map(r => {
+        if (r.id == receipt.id) {
+            return receipt;
+        }
+        return r;
+    });
 }
 
 function createReceipt(state = {
@@ -126,20 +144,6 @@ function deleteReceipt(state = {
     }, action) {
 
         switch (action.type) {
-            case DELETE_RECEIPT_CONFIRMATION:
-                return Object.assign({}, state, {
-                    isAskingConfirmation: true,
-                });
-            case DELETE_RECEIPT_CONFIRMATION_OK:
-                return Object.assign({}, state, {
-                    isAskingConfirmation: false,
-                    confirmationResult: 'OK',
-                });
-            case DELETE_RECEIPT_CONFIRMATION_CANCEL:
-                return Object.assign({}, state, {
-                    isAskingConfirmation: false,
-                    confirmationResult: 'CANCEL',
-                });
             case DELETE_RECEIPT_REQUEST:
                 return Object.assign({}, state, {
                     isFetching: true,

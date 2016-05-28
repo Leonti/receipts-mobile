@@ -42,9 +42,9 @@ const store = createStore(
   )
 )
 
-let unsubscribe = store.subscribe(() =>
-  console.log('CURRENT STORE STATE', store.getState())
-)
+//let unsubscribe = store.subscribe(() =>
+//  console.log('CURRENT STORE STATE', store.getState())
+//)
 
 async function setup() {
 

@@ -30,18 +30,9 @@ class ReceiptViewPage extends React.Component {
             'Are you sure you want to delete this receipt?',
              [
                  {text: 'Cancel', onPress: () => console.log('Cancel Pressed!')},
-                 {text: 'OK', onPress: () => this._onDeleteReceipt()},
+                 {text: 'OK', onPress: () => this.props.onDelete(this.props.receipt.id)},
              ]);
         }
-    }
-
-    _onDeleteReceipt() {
-        this.setState({spinnerVisible: true});
-        let hideSpinner = function() {
-            this.setState({spinnerVisible: false});
-        }.bind(this);
-
-        this.props.onDelete(this.props.receipt.id);
     }
 
     _renderThumbnail() {

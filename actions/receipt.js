@@ -16,9 +16,6 @@ export const DELETE_RECEIPT_REQUEST_FAILURE = 'DELETE_RECEIPT_REQUEST_FAILURE';
 export const RECEIPT_LIST_REQUEST = 'RECEIPT_LIST_REQUEST';
 export const RECEIPT_LIST_RESULT = 'RECEIPT_LIST_RESULT';
 export const RECEIPT_LIST_REQUEST_FAILURE = 'RECEIPT_LIST_REQUEST_FAILURE';
-export const DELETE_RECEIPT_CONFIRMATION = 'DELETE_RECEIPT_CONFIRMATION';
-export const DELETE_RECEIPT_CONFIRMATION_OK = 'DELETE_RECEIPT_CONFIRMATION_OK';
-export const DELETE_RECEIPT_CONFIRMATION_CANCEL = 'DELETE_RECEIPT_CONFIRMATION_CANCEL';
 
 export const SET_NEW_RECEIPT = 'SET_NEW_RECEIPT';
 
@@ -101,6 +98,7 @@ export function deleteReceipt(receiptId, postDeleteAction) {
     return function(dispatch) {
         dispatch({
             type: DELETE_RECEIPT_REQUEST,
+            receiptId: receiptId,
         });
 
         return Api.deleteReceipt(receiptId).then(result => {
@@ -115,18 +113,6 @@ export function deleteReceipt(receiptId, postDeleteAction) {
                 error,
             });
         });
-    }
-}
-
-export function deleteReceiptConfirmation() {
-    return {
-        type: DELETE_RECEIPT_CONFIRMATION,
-    }
-}
-
-export function deleteReceiptConfirmationResult(isOk) {
-    return {
-        type: isOk ? DELETE_RECEIPT_CONFIRMATION_OK : DELETE_RECEIPT_CONFIRMATION_CANCEL
     }
 }
 
