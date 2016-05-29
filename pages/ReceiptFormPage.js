@@ -78,6 +78,33 @@ class ReceiptFormPage extends React.Component {
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
+                <View>
+                    <ScrollView>
+                        {thumbnail}
+                        <ReceiptForm
+                            total={this.state.total}
+                            onTotalChange={(text) => this.setState({total: text})}
+                            description={this.state.description}
+                            onDescriptionChange={(text) => this.setState({description: text})}
+                        />
+                    </ScrollView>
+                    <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
+                    <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
+                </View>
+        );
+    }
+
+    render() {
+
+        let form = this.props.isSwipable ?
+            <Swiper
+                onLeftSwipe={this._onLeftSwipe.bind(this)}
+                onRightSwipe={this._onRightSwipe.bind(this)}>
+                {this._renderForm()}
+            </Swiper> :
+            this._renderForm();
+
+        return (
             <View style={styles.container}>
                 <Icon.ToolbarAndroid
                     style={styles.toolbar}
@@ -89,33 +116,8 @@ class ReceiptFormPage extends React.Component {
                     ]}
                     onIconClicked={this.props.onClose}
                     onActionSelected={(position) => this._onActionSelected(position) } />
-                <ScrollView>
-                    {thumbnail}
-                    <ReceiptForm
-                        total={this.state.total}
-                        onTotalChange={(text) => this.setState({total: text})}
-                        description={this.state.description}
-                        onDescriptionChange={(text) => this.setState({description: text})}
-                    />
-                </ScrollView>
-                <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
-                <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
+                {form}
             </View>
-        );
-    }
-
-    render() {
-
-        if (!this.props.isSwipable) {
-            return this._renderForm();
-        }
-
-        return (
-            <Swiper
-                onLeftSwipe={this._onLeftSwipe.bind(this)}
-                onRightSwipe={this._onRightSwipe.bind(this)}>
-                {this._renderForm()}
-            </Swiper>
         );
     }
 }

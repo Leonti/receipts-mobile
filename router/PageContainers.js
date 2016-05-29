@@ -211,7 +211,7 @@ export const ReceiptEditPageContainer = connect(
                 dispatch(deleteReceipt(receiptId, () => {
                     dispatch(navigateTo('RECEIPT_LIST'))
                 }))
-            },            
+            },
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
                 if (!needToEdit(receipt)) {
@@ -231,6 +231,7 @@ export const ReceiptCreatePageContainer = connect(
             image: state.receipt.newReceipt.image,
             thumbnail: state.receipt.newReceipt.thumbnail,
             isSwipable: false,
+            isDeleting: false,
             description: state.receipt.newReceipt.description,
             total: state.receipt.newReceipt.total,
             title: 'New Receipt'

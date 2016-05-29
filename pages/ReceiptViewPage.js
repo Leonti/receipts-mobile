@@ -72,9 +72,7 @@ class ReceiptViewPage extends React.Component {
             this._renderThumbnail() : this._renderPlaceholder();
 
         return (
-            <Swiper
-                onLeftSwipe={this._onLeftSwipe.bind(this)}
-                onRightSwipe={this._onRightSwipe.bind(this)}>
+
                 <View style={styles.container}>
                     <Icon.ToolbarAndroid
                         style={styles.toolbar}
@@ -85,11 +83,15 @@ class ReceiptViewPage extends React.Component {
                             {title: 'Delete', show: 'never'}]}
                         onIconClicked={this.props.onClose}
                         onActionSelected={(position) => this._onActionSelected(position) } />
-                    {thumbnail}
-                    <ReceiptDetails receipt={this.props.receipt} />
-                    <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
+                    <Swiper
+                        onLeftSwipe={this._onLeftSwipe.bind(this)}
+                        onRightSwipe={this._onRightSwipe.bind(this)}>
+                        {thumbnail}
+                        <ReceiptDetails receipt={this.props.receipt} />
+                        <Spinner message='Deleting receipt ...' visible={this.props.isDeleting} />
+                    </Swiper>
                 </View>
-            </Swiper>
+
         );
     }
 

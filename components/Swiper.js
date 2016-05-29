@@ -21,7 +21,6 @@ class Swiper extends React.Component {
             onMoveShouldSetPanResponderCapture: (evt, gestureState) => false,
             onPanResponderGrant: (evt, gestureState) => {},
             onPanResponderMove: (evt, gestureState) => {
-                console.log('SWIPER MOVE');
                 this.setState({
                     left: gestureState.dx
                 });

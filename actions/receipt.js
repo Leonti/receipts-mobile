@@ -128,6 +128,8 @@ export function loadReceipts() {
                 type: RECEIPT_LIST_RESULT,
                 result,
             });
+
+            result.forEach(receipt => Receipt.receiptToImage(receipt));        
         }, error => {
             dispatch({
                 type: RECEIPT_LIST_REQUEST_FAILURE,

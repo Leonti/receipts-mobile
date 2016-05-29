@@ -21,7 +21,7 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     private static String TAG = "NetworkFilesModule";
 
-    private ExecutorService executor = Executors.newCachedThreadPool();
+    private ExecutorService executor = Executors.newFixedThreadPool(4);
 
     @Override
     public String getName() {
@@ -74,35 +74,28 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-
-            try {
-                FileDownloader downloader = new FileDownloader(new DownloadParams(
-                        new URL(url),
-                        readableMapToMap(headers),
-                        dst,
-                        new DownloadParams.OnDownloadCompleted() {
-                            @Override
-                            public void onDownloadCompleted(DownloadResult res) {
-                                if (res.exception != null) {
-                                    promise.reject(res.exception);
-                                } else {
-                                    WritableMap result = Arguments.createMap();
-                                    result.putString("file", dst.getAbsolutePath());
-                                    result.putInt("length", Long.valueOf(res.bytesWritten).intValue());
-                                    result.putInt("statusCode", res.statusCode);
-                                    result.putBoolean("wasCached", true);
-                                    promise.resolve(result);
-                                }
+            FileDownloader downloader = new FileDownloader(new DownloadParams(
+                    new URL(url),
+                    readableMapToMap(headers),
+                    dst,
+                    new DownloadParams.OnDownloadCompleted() {
+                        @Override
+                        public void onDownloadCompleted(DownloadResult res) {
+                            if (res.exception != null) {
+                                promise.reject(res.exception);
+                            } else {
+                                WritableMap result = Arguments.createMap();
+                                result.putString("file", dst.getAbsolutePath());
+                                result.putInt("length", Long.valueOf(res.bytesWritten).intValue());
+                                result.putInt("statusCode", res.statusCode);
+                                result.putBoolean("wasCached", true);
+                                promise.resolve(result);
                             }
                         }
-                ));
+                    }
+            ));
 
-
-                executor.submit(downloader);
-            } finally {
-                executor.shutdown();
-            }
+            executor.submit(downloader);
         } catch (Exception e) {
             promise.reject(e);
         }
