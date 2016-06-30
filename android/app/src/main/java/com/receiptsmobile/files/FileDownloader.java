@@ -1,13 +1,10 @@
 package com.receiptsmobile.files;
 
 import java.io.*;
-import java.net.HttpURLConnection;
-import android.os.AsyncTask;
+
 import android.util.Log;
 import com.facebook.react.modules.network.OkHttpClientProvider;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.Response;
+import okhttp3.*;
 import okio.BufferedSink;
 import okio.Okio;
 
@@ -31,15 +28,15 @@ public class FileDownloader implements Runnable {
                 builder.addHeader(key, params.headers.get(key));
             }
 
-            client.newCall(builder.build()).enqueue(new com.squareup.okhttp.Callback() {
+            client.newCall(builder.build()).enqueue(new okhttp3.Callback() {
 
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(Call call, IOException e) {
                     params.onDownloadCompleted.onDownloadCompleted(DownloadResult.error(e));
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(Call call, Response response) throws IOException {
                     File tmpDst = new File(params.dst.getAbsolutePath() + ".part");
 
                     BufferedSink sink = Okio.buffer(Okio.sink(tmpDst));

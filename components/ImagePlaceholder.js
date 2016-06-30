@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
-    ProgressBarAndroid,
+    ActivityIndicator,
 } from 'react-native';
 
 const ImagePlaceholder = (props) => (
@@ -14,7 +14,7 @@ const ImagePlaceholder = (props) => (
             alignItems: 'center',
             justifyContent: 'center',
         }}>
-            <ProgressBarAndroid styleAttr='Large'/>
+            <ActivityIndicator size="large" />
         </View>
     </View>
 );

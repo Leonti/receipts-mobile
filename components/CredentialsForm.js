@@ -2,7 +2,7 @@ import React, {Component, PropTypes} from 'react';
 import {
     StyleSheet,
     View,
-    ProgressBarAndroid,
+    ActivityIndicator,
     TextInput,
     TouchableHighlight,
     Text } from 'react-native';
@@ -23,7 +23,7 @@ class CredentialsForm extends Component {
 
     render() {
 
-        var button = this.props.isFetching ? <ProgressBarAndroid indeterminate={true} /> :
+        var button = this.props.isFetching ? <ActivityIndicator size="large" /> :
             <Button value={this.props.label.toUpperCase()} raised={true} theme="dark" color="paperBrown"
                 onPress={() => this.props.onSubmit(this.state.username, this.state.password)}
             />

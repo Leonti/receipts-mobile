@@ -1,7 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {
     View,
-    ProgressBarAndroid,
+    ActivityIndicator,
     Text } from 'react-native';
 
 var Spinner = (props) => {
@@ -21,7 +21,7 @@ var Spinner = (props) => {
                 justifyContent: 'center',
                 alignItems: 'center',
             }}>
-                <ProgressBarAndroid styleAttr='Large'/>
+                <ActivityIndicator size="large" />
                 <Text style={{
                     fontSize: 22,
                 }}>{props.message}</Text>

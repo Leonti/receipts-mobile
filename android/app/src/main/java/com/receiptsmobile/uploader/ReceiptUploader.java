@@ -6,7 +6,7 @@ import android.net.Uri;
 import android.provider.OpenableColumns;
 import android.util.Log;
 import com.facebook.react.modules.network.OkHttpClientProvider;
-import com.squareup.okhttp.*;
+import okhttp3.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -70,8 +70,8 @@ public class ReceiptUploader implements Runnable {
 
             OkHttpClient client = OkHttpClientProvider.getOkHttpClient();
 
-            MultipartBuilder requestBuilder = new MultipartBuilder()
-                    .type(MultipartBuilder.FORM)
+            MultipartBody.Builder requestBuilder = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
                     .addFormDataPart("receipt", file.getName(), RequestBody.create(MediaType.parse("image/jpeg"), file));
 
             for (String key : job.fields.keySet()) {
@@ -84,15 +84,15 @@ public class ReceiptUploader implements Runnable {
                     .post(requestBuilder.build())
                     .build();
 
-            client.newCall(request).enqueue(new com.squareup.okhttp.Callback() {
+            client.newCall(request).enqueue(new okhttp3.Callback() {
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(Call call, IOException e) {
                     Log.e(TAG, "Exception uploading a receipt (onFailure) " + e, e);
                     callback.onDone(Result.failure());
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(Call call, Response response) throws IOException {
                     String responseBody = response.body().string();
                     Log.i(TAG, responseBody);
 
