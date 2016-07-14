@@ -40,5 +40,5 @@ buck-out/
 android/app/libs
 android/keystores/debug.keystore
 
-android/app/my-release-key.keystore
 android/app/google-services.json
+android/app/my-release-key.keystore
