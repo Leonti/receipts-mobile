@@ -1,5 +1,6 @@
 package com.receiptsmobile;
 
+import co.apptailor.googlesignin.RNGoogleSigninPackage;
 import com.facebook.react.ReactActivity;
 import com.oblador.vectoricons.VectorIconsPackage;
 import com.facebook.react.ReactPackage;
@@ -43,7 +44,8 @@ public class MainActivity extends ReactActivity {
                 new VectorIconsPackage(),
                 new ImagePickerPackage(),
                 new NetworkFilesPackage(),
-                new UploaderPackage()
+                new UploaderPackage(),
+                new RNGoogleSigninPackage()
         );
     }
 }
