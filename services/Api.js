@@ -5,8 +5,8 @@ import { DeviceEventEmitter } from 'react-native';
 
 var Buffer = require('buffer/').Buffer
 
-//const baseUrl = 'http://10.0.2.2:9000';
-const baseUrl = 'https://api.receipts.leonti.me';
+const baseUrl = 'http://10.0.2.2:9000';
+//const baseUrl = 'https://api.receipts.leonti.me';
 
 const TOKEN_STORAGE_KEY = 'TOKEN'
 const USER_INFO_KEY = 'USER_INFO'
@@ -41,6 +41,28 @@ class Api {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
             }
+        })).json();
+
+        if (!result.access_token) {
+            throw new Error('Invalid credentials');
+        }
+
+        await Storage.set(TOKEN_STORAGE_KEY, result);
+        let userInfo = await Api._fetchUserInfo(result);
+        await Storage.set(USER_INFO_KEY, userInfo);
+        return userInfo;
+    }
+
+    static async loginWithGoogle(idToken) {
+        let result = await (await fetch(baseUrl + '/oauth/google-id-token', {
+            method: 'POST',
+            headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              token: idToken
+            })
         })).json();
 
         if (!result.access_token) {

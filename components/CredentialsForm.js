@@ -23,11 +23,11 @@ class CredentialsForm extends Component {
 
     render() {
 
-        var button = this.props.isFetching ? <ActivityIndicator size="large" /> :
+        let button = this.props.isFetching ? <ActivityIndicator size="large" /> :
             <Button value={this.props.label.toUpperCase()} raised={true} theme="dark" color="paperBrown"
                 onPress={() => this.props.onSubmit(this.state.username, this.state.password)}
             />
-        var errorView = this.props.error ? <ErrorView message={this.props.error} /> : null;
+        let errorView = this.props.error ? <ErrorView message={this.props.error} /> : null;
 
         return (
             <View>

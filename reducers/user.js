@@ -3,6 +3,7 @@ import {
     SET_LOGGED_IN_USER,
 
     LOGIN_REQUEST,
+    LOGIN_WITH_GOOGLE_REQUEST,
     LOGIN_RESULT,
     LOGIN_REQUEST_FAILURE,
     LOGIN_CLEAR,
@@ -17,6 +18,7 @@ import {
 
 function login(state = {
     isFetching: false,
+    isFetchingGoogle: false,
     user: {},
     error: null,
 }, action) {
@@ -31,14 +33,22 @@ function login(state = {
                 isFetching: true,
                 error: null,
             })
+        case LOGIN_WITH_GOOGLE_REQUEST:
+            return Object.assign({}, state, {
+                user: {},
+                isFetchingGoogle: true,
+                error: null,
+            })
         case LOGIN_RESULT:
             return Object.assign({}, state, {
               isFetching: false,
+              isFetchingGoogle: false,
               user: action.result,
             })
         case LOGIN_REQUEST_FAILURE:
             return Object.assign({}, state, {
               isFetching: false,
+              isFetchingGoogle: false,
               error: action.error,
             })
         case LOGOUT:
@@ -49,6 +59,7 @@ function login(state = {
             return Object.assign({}, state, {
               user: {},
               isFetching: false,
+              isFetchingGoogle: false,
               error: null,
             })
         default:

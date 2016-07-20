@@ -19,6 +19,7 @@ import {
 
 import {
     login,
+    loginWithGoogle,
     logout,
     createUser,
     clearLogin,
@@ -32,10 +33,15 @@ import ReceiptViewPage from '../pages/ReceiptViewPage';
 import ReceiptFormPage from '../pages/ReceiptFormPage';
 import ImageViewer from '../components/ImageViewer';
 
+import {GoogleSignin} from 'react-native-google-signin';
+
+const GOOGLE_WEB_CLIENT_ID = '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com';
+
 export const LoginPageContainer = connect(
     (state) => {
         return {
             isFetching: state.user.login.isFetching,
+            isFetchingGoogle: state.user.login.isFetchingGoogle,
             error: state.user.login.error,
         }
     },
@@ -50,7 +56,24 @@ export const LoginPageContainer = connect(
                     dispatch(loadReceipts())
                     dispatch(navigateTo('RECEIPT_LIST'))
                 }));
-            }
+            },
+            onGoogleLogin: () => {
+                GoogleSignin.hasPlayServices({ autoResolve: true }).then(() => {
+                    GoogleSignin.configure({
+                        webClientId: GOOGLE_WEB_CLIENT_ID,
+                    }).then(() => {
+                      GoogleSignin.signIn().then((user) => {
+                          console.log('USER', user);
+                          dispatch(loginWithGoogle(user.idToken, () => {
+                              dispatch(loadReceipts())
+                              dispatch(navigateTo('RECEIPT_LIST'))
+                          }));
+                      }, error => {
+                          console.log('WRONG SIGN IN', error);
+                      });
+                    });
+                }, err => console.log("Play services error", err.code, err.message));
+            },
         }
     }
 )(LoginPage)
