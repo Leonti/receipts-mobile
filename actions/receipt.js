@@ -26,6 +26,8 @@ export const SET_OPENED_RECEIPT = 'SET_OPENED_RECEIPT';
 export const SET_OPENED_RECEIPT_URI = 'SET_OPENED_RECEIPT_URI';
 export const SET_OPENED_RECEIPT_URI_FAILURE = 'SET_OPENED_RECEIPT_URI_FAILED';
 
+export const SET_IMAGE_VIEWER_IMAGE = 'SET_IMAGE_VIEWER_IMAGE';
+
 export function createReceipt(imageUri, total, description) {
 
     return function(dispatch) {
@@ -129,7 +131,7 @@ export function loadReceipts() {
                 result,
             });
 
-            result.forEach(receipt => Receipt.receiptToImage(receipt));        
+            result.forEach(receipt => Receipt.receiptToImage(receipt));
         }, error => {
             dispatch({
                 type: RECEIPT_LIST_REQUEST_FAILURE,
@@ -184,5 +186,16 @@ export function openReceipt(receipt) {
                 error,
             });
         });
+    }
+}
+
+export function setImageViewerImage(source, width, height) {
+    return {
+        type: SET_IMAGE_VIEWER_IMAGE,
+        data: {
+            source: source,
+            width: width,
+            height: height,
+        }
     }
 }

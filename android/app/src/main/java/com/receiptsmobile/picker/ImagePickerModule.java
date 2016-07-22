@@ -56,7 +56,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @ReactMethod
     public void takePhoto(Promise promise) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        takePictureIntent.setAction("IMAGE_PICKER");
 
         File path = getCurrentActivity().getExternalCacheDir();
         File dst = new File(path, "image-" + UUID.randomUUID().toString() + ".jpg");
@@ -82,10 +81,10 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode != PICKER_CODE && requestCode != PHOTO_CODE) {
+            return;
+        }
 
-        Log.i("IMAGE PICKER", "package - on activity result: " + data.getPackage());
-        Log.i("IMAGE PICKER", "action - on activity result: " + data.getAction());
-/*
         if (resultCode != Activity.RESULT_OK) {
             Log.i(TAG, "Activity resultCode is not OK (" + resultCode + ")");
             WritableMap result = Arguments.createMap();
@@ -116,7 +115,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             Log.i("IMAGE PICKER", "photo: " + dstUri);
             currentPromise.resolve(result);
         }
-        */
     }
 
     private void processImagesAsync(final Promise promise, final ClipData clipData) {

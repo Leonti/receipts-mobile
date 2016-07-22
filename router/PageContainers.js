@@ -282,9 +282,9 @@ export const ReceiptCreatePageContainer = connect(
 export const ImageViewerContainer = connect(
     (state) => {
         return {
-            source: state.receipt.openedReceipt.image.source,
-            imageWidth: state.receipt.openedReceipt.image.width,
-            imageHeight: state.receipt.openedReceipt.image.height,
+            source: state.receipt.openedReceiptImage.source,
+            imageWidth: state.receipt.openedReceiptImage.width,
+            imageHeight: state.receipt.openedReceiptImage.height,
         }
     },
     (dispatch) => {

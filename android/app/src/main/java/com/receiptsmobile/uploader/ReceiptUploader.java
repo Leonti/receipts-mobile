@@ -62,7 +62,7 @@ public class ReceiptUploader implements Runnable {
     public void run() {
 
         try {
-            Log.i(TAG, "Converting uri into a file");
+            Log.i(TAG, "Converting uri into a file " + job.fileUri);
             final File file = contentUriToFile(context, job.fileUri);
 
             // http://stackoverflow.com/questions/24279563/uploading-a-large-file-in-multipart-using-okhttp
@@ -126,13 +126,21 @@ public class ReceiptUploader implements Runnable {
         Cursor cursor = null;
         try {
 
+            if (uri.toString().startsWith("file://")) {
+                return filePathToExtension(uri.toString().replace("file://", ""));
+            }
+
             cursor = context.getContentResolver().query(uri, null, null, null, null);
+
+            if (cursor == null) {
+                Log.w(TAG, "Returning default 'jpg' for " + uri);
+                return "jpg";
+            }
+
             cursor.moveToFirst();
             int nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
 
-            String fileName = cursor.getString(nameIndex);
-            String[] splitted = fileName.split("\\.");
-            return splitted.length > 0 ? splitted[splitted.length -1] : "";
+            return filePathToExtension(cursor.getString(nameIndex));
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -140,6 +148,11 @@ public class ReceiptUploader implements Runnable {
                 cursor.close();
             }
         }
+    }
+
+    private static String filePathToExtension(String filePath) {
+        String[] splitted = filePath.split("\\.");
+        return splitted.length > 0 ? splitted[splitted.length -1] : "";
     }
 
     private static File contentUriToFile(Context context, Uri uri) {

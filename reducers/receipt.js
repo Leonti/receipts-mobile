@@ -28,6 +28,8 @@ import {
     SET_OPENED_RECEIPT,
     SET_OPENED_RECEIPT_URI,
     SET_OPENED_RECEIPT_URI_FAILURE,
+
+    SET_IMAGE_VIEWER_IMAGE,
 } from '../actions/receipt'
 
 function receiptList(state = {
@@ -222,6 +224,29 @@ function openedReceipt(state = {
     }
 }
 
+function openedReceiptImage(state = {
+        source: null,
+        width: null,
+        height: null,
+    }, action) {
+
+        switch (action.type) {
+            case SET_OPENED_RECEIPT:
+                return Object.assign({}, state, {
+                    width: action.imageDimensions.width,
+                    height: action.imageDimensions.height,
+                });
+            case SET_OPENED_RECEIPT_URI:
+                return Object.assign({}, state, {
+                    source: action.source
+                });
+            case SET_NEW_RECEIPT:
+                return Object.assign({}, state, action.data.image);
+            default:
+              return state
+        }
+}
+
 const rootReducer = combineReducers({
     receiptList,
     createReceipt,
@@ -229,6 +254,7 @@ const rootReducer = combineReducers({
     deleteReceipt,
     newReceipt,
     openedReceipt,
+    openedReceiptImage,
 })
 
 export default rootReducer

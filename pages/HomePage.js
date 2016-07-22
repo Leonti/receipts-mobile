@@ -57,7 +57,8 @@ class HomePage extends React.Component {
     }
 
     _showCamera() {
-        ImagePicker.takePhoto().then(this._processImagePickerResponse.bind(this), () => {
+        ImagePicker.takePhoto().then(this._processImagePickerResponse.bind(this), error => {
+            console.log('image picker error', error);
             ToastAndroid.show('Failed to choose receipt', ToastAndroid.LONG);
         });
     }
