@@ -35,7 +35,13 @@ import ImageViewer from '../components/ImageViewer';
 
 import {GoogleSignin} from 'react-native-google-signin';
 
-const GOOGLE_WEB_CLIENT_ID = '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com';
+if (__DEV__) {
+    const GOOGLE_WEB_CLIENT_ID =
+        '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com';
+} else {
+    const GOOGLE_WEB_CLIENT_ID =
+        '891724629535-lstp1kbo82l831dai475ignir9phcgog.apps.googleusercontent.com'; // production
+}
 
 export const LoginPageContainer = connect(
     (state) => {

@@ -5,8 +5,11 @@ import { DeviceEventEmitter } from 'react-native';
 
 var Buffer = require('buffer/').Buffer
 
-//const baseUrl = 'http://10.0.2.2:9000';
-const baseUrl = 'https://api.receipts.leonti.me';
+if (__DEV__) {
+    const baseUrl = 'http://10.0.2.2:9000';
+} else {
+    const baseUrl = 'https://api.receipts.leonti.me';
+}
 
 const TOKEN_STORAGE_KEY = 'TOKEN'
 const USER_INFO_KEY = 'USER_INFO'
