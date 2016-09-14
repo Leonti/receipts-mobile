@@ -37,6 +37,10 @@ npm-debug.log
 # BUCK
 buck-out/
 \.buckd/
+
+#react-native
+.flowconfig
+
 android/app/libs
 android/keystores/debug.keystore
 
