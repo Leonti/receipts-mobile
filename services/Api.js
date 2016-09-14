@@ -5,10 +5,8 @@ import { DeviceEventEmitter } from 'react-native';
 
 var Buffer = require('buffer/').Buffer
 
-if (__DEV__) {
-    const baseUrl = 'http://10.0.2.2:9000';
-} else {
-    const baseUrl = 'https://api.receipts.leonti.me';
+function baseUrl() {
+    return __DEV__ ? 'http://10.0.2.2:9000' : 'https://api.receipts.leonti.me';
 }
 
 const TOKEN_STORAGE_KEY = 'TOKEN'
@@ -17,7 +15,7 @@ const USER_INFO_KEY = 'USER_INFO'
 class Api {
 
     static async createUser(username, password) {
-        let result = await (await fetch(baseUrl + '/user/create', {
+        let result = await (await fetch(baseUrl() + '/user/create', {
               method: 'POST',
               headers: {
                 'Accept': 'application/json',
@@ -37,7 +35,7 @@ class Api {
     }
 
     static async login(username, password) {
-        let result = await (await fetch(baseUrl + '/token/create', {
+        let result = await (await fetch(baseUrl() + '/token/create', {
             method: 'GET',
             headers: {
             'Authorization': 'Basic ' + new Buffer(username + ':' + password).toString('base64'),
@@ -57,7 +55,7 @@ class Api {
     }
 
     static async loginWithGoogle(idToken) {
-        let result = await (await fetch(baseUrl + '/oauth/google-id-token', {
+        let result = await (await fetch(baseUrl() + '/oauth/google-id-token', {
             method: 'POST',
             headers: {
             'Accept': 'application/json',
@@ -79,7 +77,7 @@ class Api {
     }
 
     static async _fetchUserInfo(token) {
-        return await (await fetch(baseUrl + '/user/info', {
+        return await (await fetch(baseUrl() + '/user/info', {
               method: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + token.access_token,
@@ -106,7 +104,7 @@ class Api {
         let userId = await Api._getUserId();
 
         let result = await NetworkFiles.download({
-            url: baseUrl + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt,
+            url: baseUrl() + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt,
             headers: {'Authorization': 'Bearer ' + token}
         });
 
@@ -119,7 +117,7 @@ class Api {
 
         return (await ReceiptsUploader.submit({
             token: token,
-            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+            uploadUrl: baseUrl() + '/user/' + userId + '/receipt',
             receipts: [
                 {
                     uri: fileUri,
@@ -140,7 +138,7 @@ class Api {
 
         return (await ReceiptsUploader.submit({
             token: token,
-            uploadUrl: baseUrl + '/user/' + userId + '/receipt',
+            uploadUrl: baseUrl() + '/user/' + userId + '/receipt',
             receipts: files.map(file => {
                 return {
                     uri: file,
@@ -160,7 +158,7 @@ class Api {
 console.log('RECEIPT ID:', receiptId);
 console.log('FIELDS:', fields);
 
-        return await (await fetch(baseUrl + '/user/' + userId + '/receipt/' + receiptId, {
+        return await (await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
             method: 'PATCH',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -184,7 +182,7 @@ console.log('FIELDS:', fields);
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-        return await fetch(baseUrl + '/user/' + userId + '/receipt/' + receiptId, {
+        return await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
             method: 'DELETE',
             headers: {
                 'Authorization': 'Bearer ' + token,
@@ -213,7 +211,7 @@ console.log('FIELDS:', fields);
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-        return await (await fetch(baseUrl + '/user/' + userId + '/receipt', {
+        return await (await fetch(baseUrl() + '/user/' + userId + '/receipt', {
               method: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + token,

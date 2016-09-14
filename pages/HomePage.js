@@ -131,7 +131,7 @@ class HomePage extends React.Component {
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow.bind(this)}
-                //    renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
+                    renderScrollComponent={props => <RecyclerViewBackedScrollView {...props} />}
                     renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
                     refreshControl={ <RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} /> }
                 />

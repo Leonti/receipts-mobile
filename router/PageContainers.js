@@ -35,12 +35,9 @@ import ImageViewer from '../components/ImageViewer';
 
 import {GoogleSignin} from 'react-native-google-signin';
 
-if (__DEV__) {
-    const GOOGLE_WEB_CLIENT_ID =
-        '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com';
-} else {
-    const GOOGLE_WEB_CLIENT_ID =
-        '891724629535-lstp1kbo82l831dai475ignir9phcgog.apps.googleusercontent.com'; // production
+function googleWebClientId() {
+    return __DEV__ ? '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com':
+        '891724629535-lstp1kbo82l831dai475ignir9phcgog.apps.googleusercontent.com';
 }
 
 export const LoginPageContainer = connect(
@@ -66,7 +63,7 @@ export const LoginPageContainer = connect(
             onGoogleLogin: () => {
                 GoogleSignin.hasPlayServices({ autoResolve: true }).then(() => {
                     GoogleSignin.configure({
-                        webClientId: GOOGLE_WEB_CLIENT_ID,
+                        webClientId: googleWebClientId(),
                     }).then(() => {
                       GoogleSignin.signIn().then((user) => {
                           console.log('USER', user);

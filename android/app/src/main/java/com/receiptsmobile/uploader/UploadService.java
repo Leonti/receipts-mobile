@@ -187,7 +187,7 @@ public class UploadService extends Service {
     public void onCreate() {
         Log.i(TAG, "ON CREATE COMMAND");
 
-        executor = Executors.newSingleThreadExecutor();
+        executor = Executors.newFixedThreadPool(4);
         uploadJobsStorage = new UploadJobsStorage(this);
     }
 
@@ -228,7 +228,7 @@ public class UploadService extends Service {
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setContentTitle("Receipts upload")
-                .setContentText("Receipts (" + total + "/" + done + ") are being uploaded")
+                .setContentText("Receipts (" + done + "/" + total + ") are being uploaded")
                 .setProgress(100, progressPercent, false)
                 .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));

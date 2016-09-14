@@ -84,38 +84,32 @@ public class ReceiptUploader implements Runnable {
                     .post(requestBuilder.build())
                     .build();
 
-            client.newCall(request).enqueue(new okhttp3.Callback() {
-                @Override
-                public void onFailure(Call call, IOException e) {
-                    Log.e(TAG, "Exception uploading a receipt (onFailure) " + e, e);
+            try {
+                Response response = client.newCall(request).execute();
+                String responseBody = response.body().string();
+                Log.i(TAG, responseBody);
+
+                try {
+                    if (response.isSuccessful()) {
+
+                        JSONObject json = new JSONObject(responseBody);
+
+                        JSONArray files = json.getJSONArray("files");
+                        JSONObject jsonFile = files.getJSONObject(0);
+
+                        callback.onDone(Result.success(json.getString("id"), jsonFile.getString("id"), file));
+                    } else {
+                        callback.onDone(Result.failure());
+                        Log.i(TAG, "Invalid response " + response.code());
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception uploading a receipt (decoding JSON)" + e, e);
                     callback.onDone(Result.failure());
                 }
-
-                @Override
-                public void onResponse(Call call, Response response) throws IOException {
-                    String responseBody = response.body().string();
-                    Log.i(TAG, responseBody);
-
-                    try {
-                        if (response.isSuccessful()) {
-
-                            JSONObject json = new JSONObject(responseBody);
-
-                            JSONArray files = json.getJSONArray("files");
-                            JSONObject jsonFile = files.getJSONObject(0);
-
-                            callback.onDone(Result.success(json.getString("id"), jsonFile.getString("id"), file));
-                        } else {
-                            callback.onDone(Result.failure());
-                            Log.i(TAG, "Invalid response " + response.code());
-                        }
-                    } catch (Exception e) {
-                        Log.e(TAG, "Exception uploading a receipt (decoding JSON)" + e, e);
-                        callback.onDone(Result.failure());
-                    }
-
-                }
-            });
+            } catch (IOException e) {
+                Log.e(TAG, "Exception uploading a receipt (onFailure) " + e, e);
+                callback.onDone(Result.failure());
+            }
         } catch (Exception e) {
             Log.e(TAG, "Exception uploading a receipt (general)" + e, e);
             callback.onDone(Result.failure());
