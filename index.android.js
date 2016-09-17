@@ -60,7 +60,7 @@ async function setup() {
     }
 
     Api.onReceiptUploaded(() => {
-        store.dispatch(loadReceipts());
+//        store.dispatch(loadReceipts());
     });
 }
 

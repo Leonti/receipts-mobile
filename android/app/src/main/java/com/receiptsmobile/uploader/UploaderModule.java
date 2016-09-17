@@ -92,7 +92,6 @@ public class UploaderModule extends ReactContextBaseJavaModule {
 
                 if (status == ReceiptUploader.Result.Status.SUCCESS) {
                     params.putString("receiptId", bundle.getString(UploadService.RECEIPT_ID));
-                    params.putString("fileId", bundle.getString(UploadService.FILE_ID));
                     params.putString("ext", bundle.getString(UploadService.FILE_EXT));
                 }
 

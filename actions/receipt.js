@@ -131,7 +131,10 @@ export function loadReceipts() {
                 result,
             });
 
-            result.forEach(receipt => Receipt.receiptToImage(receipt));
+            // just to force file download - should be done in a batch
+            result.receipts
+                .filter(receipt => receipt.files.length > 0)
+                .forEach(receipt => Receipt.receiptToImage(receipt));
         }, error => {
             dispatch({
                 type: RECEIPT_LIST_REQUEST_FAILURE,

@@ -26,21 +26,20 @@ public class UploadService extends Service {
     private Set<ReceiptUploader.UploadJob> processing = Collections.newSetFromMap(new ConcurrentHashMap<ReceiptUploader.UploadJob, Boolean>());
     private ExecutorService executor;
     private UploadJobsStorage uploadJobsStorage;
-    private int total = 0;
     private static int MAX_RETRIES = 3;
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
     public static String UPLOAD_JOB_ID = "uploadJobId";
     public static String UPLOAD_JOB_STATUS = "uploadJobStatus";
     public static String RECEIPT_ID = "receiptId";
     public static String FILE_EXT = "ext";
-    public static String FILE_ID = "fileId";
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
         List<ReceiptUploader.UploadJob> toUpload = uploadJobsStorage.getUploadJobs();
 
-        total += calculateNewTotal(uploadJobsStorage);
+        long pendingCount = uploadJobsStorage.getPendingCount();
+        long completedCount = uploadJobsStorage.getCompletedCount();
 
         Log.i(TAG, "FILES TO UPLOAD");
 
@@ -54,23 +53,14 @@ public class UploadService extends Service {
         }
 
         startForeground(42, createProgressNotification(this, 0, uploadJobsStorage.getUploadJobs().size(), 0));
-        updateProgress();
+        updateProgress(pendingCount, completedCount);
 
         return Service.START_STICKY;
-    }
-
-    private int calculateNewTotal(UploadJobsStorage storage) {
-        List<ReceiptUploader.UploadJob> toUpload = storage.getUploadJobs();
-        toUpload.removeAll(processing);
-        return toUpload.size();
     }
 
     private void submitFile(final ReceiptUploader.UploadJob job, final int retry) {
         Log.i(TAG, "Submitting job for upload (" + job + "), retrying " + retry);
 
-        Map<String, String> fields = new HashMap<>();
-        fields.put("total", "");
-        fields.put("description", "");
         executor.submit(new ReceiptUploader(
                 this,
                 job,
@@ -79,8 +69,11 @@ public class UploadService extends Service {
                     public void onDone(final ReceiptUploader.Result result) {
 
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
-                            removeUpload(job);
+                            removeUpload(job.id);
+                            notifyReceiptResult(job.id, result);
+                            showProgressOrFinish();
 
+                            /*
                             String fileUrl = appendSlash(job.uploadUrl) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
                             cacheFile(UploadService.this, fileUrl, job.fileUri, new FileCacher.Callback() {
                                 @Override
@@ -96,6 +89,8 @@ public class UploadService extends Service {
                                 }
                             });
 
+                            */
+
                         } else {
                             Log.i(TAG, "File upload is finished (" + job + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
@@ -104,7 +99,7 @@ public class UploadService extends Service {
                                 scheduleDelayed(job, retry + 1);
                             } else {
                                 Log.i(TAG, "Max retries reached (" + job + "), not retrying");
-                                removeUpload(job);
+                                removeUpload(job.id);
                                 notifyReceiptResult(job.id, result);
                                 showProgressOrFinish();
                             }
@@ -134,7 +129,6 @@ public class UploadService extends Service {
             intent.putExtra(UPLOAD_JOB_ID, uploadJobId.toString());
             intent.putExtra(RECEIPT_ID, result.receiptId);
             intent.putExtra(FILE_EXT, toExt(result.file));
-            intent.putExtra(FILE_ID, result.fileId);
         } else {
             intent.putExtra(UPLOAD_JOB_STATUS, result.status.toString());
             intent.putExtra(UPLOAD_JOB_ID, uploadJobId.toString());
@@ -163,9 +157,8 @@ public class UploadService extends Service {
 
     }
 
-    private void removeUpload(ReceiptUploader.UploadJob job) {
-        processing.remove(job);
-        uploadJobsStorage.removeUpload(job);
+    private void removeUpload(UUID jobId) {
+        uploadJobsStorage.markAsCompleted(jobId);
     }
 
     public Set<ReceiptUploader.UploadJob> getCurrentJobs() {
@@ -174,13 +167,17 @@ public class UploadService extends Service {
 
     private void showProgressOrFinish() {
 
-        if (processing.size() == 0) {
+        long pendingCount = uploadJobsStorage.getPendingCount();
+        long completedCount = uploadJobsStorage.getCompletedCount();
+
+        if (pendingCount == 0) {
+            uploadJobsStorage.removeCompleted();
             notifyFinished(this);
             stopSelf();
             return;
         }
 
-        updateProgress();
+        updateProgress(pendingCount, completedCount);
     }
 
     @Override
@@ -206,30 +203,32 @@ public class UploadService extends Service {
         getNotificationManager().notify(42, builder.build());
     }
 
-    private void updateProgress() {
-        int done = total - processing.size();
-        int progressPercent = (done * 100) / total;
+    private void updateProgress(long pendingCount, long completedCount) {
+        long total = pendingCount + completedCount;
 
-        getNotificationManager().notify(42, createProgressNotification(this, progressPercent, total, done));
+        long progressPercent = (completedCount * 100) / total;
+
+        getNotificationManager().notify(42, createProgressNotification(this, progressPercent, total, completedCount));
     }
 
     @Override
     public void onDestroy() {
         Log.i(TAG, "Destroying the service");
         executor.shutdown();
+        uploadJobsStorage.close();
     }
 
     private NotificationManager getNotificationManager() {
         return (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    private static Notification createProgressNotification(Context context, int progressPercent, int total, int done) {
+    private static Notification createProgressNotification(Context context, long progressPercent, long total, long done) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setContentTitle("Receipts upload")
                 .setContentText("Receipts (" + done + "/" + total + ") are being uploaded")
-                .setProgress(100, progressPercent, false)
+                .setProgress(100, (int) progressPercent, false)
                 .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 

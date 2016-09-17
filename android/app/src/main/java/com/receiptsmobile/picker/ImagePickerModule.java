@@ -79,44 +79,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode != PICKER_CODE && requestCode != PHOTO_CODE) {
-            return;
-        }
-
-        if (resultCode != Activity.RESULT_OK) {
-            Log.i(TAG, "Activity resultCode is not OK (" + resultCode + ")");
-            WritableMap result = Arguments.createMap();
-            result.putBoolean("cancelled", true);
-            currentPromise.resolve(result);
-            return;
-        }
-
-        if (requestCode == PICKER_CODE) {
-
-            ClipData clipData = data.getClipData();
-
-            if (clipData != null) {
-                processImagesAsync(currentPromise, clipData);
-            } else {
-                Uri photoUri = data.getData();
-                WritableMap result = Arguments.createMap();
-                result.putMap("single", toImageInfo(photoUri));
-                Log.i("IMAGE PICKER", "photo: " + photoUri);
-                currentPromise.resolve(result);
-            }
-        } else if (requestCode == PHOTO_CODE) {
-
-            Log.i(TAG, "data " + data);
-
-            WritableMap result = Arguments.createMap();
-            result.putMap("single", toImageInfo(dstUri));
-            Log.i("IMAGE PICKER", "photo: " + dstUri);
-            currentPromise.resolve(result);
-        }
-    }
-
     private void processImagesAsync(final Promise promise, final ClipData clipData) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -157,6 +119,44 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return image;
         } catch(Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+        if (requestCode != PICKER_CODE && requestCode != PHOTO_CODE) {
+            return;
+        }
+
+        if (resultCode != Activity.RESULT_OK) {
+            Log.i(TAG, "Activity resultCode is not OK (" + resultCode + ")");
+            WritableMap result = Arguments.createMap();
+            result.putBoolean("cancelled", true);
+            currentPromise.resolve(result);
+            return;
+        }
+
+        if (requestCode == PICKER_CODE) {
+
+            ClipData clipData = data.getClipData();
+
+            if (clipData != null) {
+                processImagesAsync(currentPromise, clipData);
+            } else {
+                Uri photoUri = data.getData();
+                WritableMap result = Arguments.createMap();
+                result.putMap("single", toImageInfo(photoUri));
+                Log.i("IMAGE PICKER", "photo: " + photoUri);
+                currentPromise.resolve(result);
+            }
+        } else if (requestCode == PHOTO_CODE) {
+
+            Log.i(TAG, "data " + data);
+
+            WritableMap result = Arguments.createMap();
+            result.putMap("single", toImageInfo(dstUri));
+            Log.i("IMAGE PICKER", "photo: " + dstUri);
+            currentPromise.resolve(result);
         }
     }
 

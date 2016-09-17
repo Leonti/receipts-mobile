@@ -155,9 +155,6 @@ class Api {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
-console.log('RECEIPT ID:', receiptId);
-console.log('FIELDS:', fields);
-
         return await (await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
             method: 'PATCH',
             headers: {
@@ -208,10 +205,10 @@ console.log('FIELDS:', fields);
     }
 
     static async getReceipts() {
-        let token = await Api._getAccessToken();
-        let userId = await Api._getUserId();
+        const token = await Api._getAccessToken();
+        const userId = await Api._getUserId();
 
-        return await (await fetch(baseUrl() + '/user/' + userId + '/receipt', {
+        const receipts = await (await fetch(baseUrl() + '/user/' + userId + '/receipt', {
               method: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + token,
@@ -219,6 +216,20 @@ console.log('FIELDS:', fields);
                 'Content-Type': 'application/json',
               }
           })).json()
+
+        const pendingFiles = await (await fetch(baseUrl() + '/user/' + userId + '/pending-file', {
+              method: 'GET',
+              headers: {
+                'Authorization': 'Bearer ' + token,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+              }
+          })).json()
+
+         return {
+             receipts: receipts,
+             pendingFiles: pendingFiles
+         }
     }
 
     static _uploadCallbacks = [];
@@ -235,9 +246,11 @@ DeviceEventEmitter.addListener('receiptUploaded', function(event) {  // handle e
     console.log('RECEIPT UPLOADED EVENT JS', event);
     Api._uploadCallbacks.forEach(callback => callback(event));
 
+/*
     ReceiptsUploader.currentUploads().then((uploads) => {
         console.log(uploads);
     }, (e) => console.log(e));
+*/
 });
 
 function toTotalValue(total) {

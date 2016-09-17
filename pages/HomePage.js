@@ -118,6 +118,14 @@ class HomePage extends React.Component {
             receipt={receipt} />);
     }
 
+    _pendingReceiptsView(pendingCount) {
+        return pendingCount ?
+            <Text
+                style={styles.pendingFiles}
+                >{pendingCount} receipts are being processed</Text>
+            : null;
+    }
+
     _renderHome() {
 
         return (
@@ -128,6 +136,7 @@ class HomePage extends React.Component {
                 navIconName="menu"
                 onIconClicked={() => this.props.openDrawer()}
                 />
+                {this._pendingReceiptsView(this.props.pendingCount)}
                 <ListView
                     dataSource={this.state.dataSource}
                     renderRow={this._renderRow.bind(this)}
@@ -150,6 +159,13 @@ class HomePage extends React.Component {
 }
 
 const styles = StyleSheet.create({
+    pendingFiles: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        padding: 10,
+        backgroundColor: '#F6F6F6',
+        fontSize: 18
+    },
     actionButtonIcon: {
         fontSize: 20,
         height: 22,
@@ -177,6 +193,7 @@ const styles = StyleSheet.create({
 
 HomePage.propTypes = {
   receipts: PropTypes.array.isRequired,
+  pendingCount: PropTypes.number.isRequired,
   isFetching: PropTypes.bool.isRequired,
   userName: PropTypes.string,
   error: PropTypes.string,

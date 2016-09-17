@@ -32,9 +32,15 @@ import {
     SET_IMAGE_VIEWER_IMAGE,
 } from '../actions/receipt'
 
+function doneReceipts(allReceipts, pendingFiles) {
+    const pendingReceiptsIds = pendingFiles.map(pendingFile => pendingFile.receiptId);
+    return allReceipts.filter(receipt => !pendingReceiptsIds.includes(receipt.id));
+}
+
 function receiptList(state = {
         isFetching: false,
         receipts: [],
+        pendingFiles: [],
         drawerOpened: false,
         error: null,
     }, action) {
@@ -47,7 +53,8 @@ function receiptList(state = {
         case RECEIPT_LIST_RESULT:
             return Object.assign({}, state, {
                 isFetching: false,
-                receipts: action.result,
+                receipts: doneReceipts(action.result.receipts, action.result.pendingFiles),
+                pendingFiles: action.result.pendingFiles,
             });
         case RECEIPT_LIST_REQUEST_FAILURE:
             return Object.assign({}, state, {

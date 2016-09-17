@@ -1,93 +1,136 @@
 package com.receiptsmobile.uploader;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.util.Log;
+import com.receiptsmobile.db.UploadJobEntryDbHelper;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import com.receiptsmobile.db.UploadJobEntryContract.*;
 
 import java.util.*;
 
-public class UploadJobsStorage {
-    private static final String SHARED_PREFERENCES_NAME= "UPLOADS";
-    private static final String UPLOAD_JOBS= "UPLOAD_JOBS";
-
-    private final Context context;
+public class UploadJobsStorage implements AutoCloseable {
+    private final SQLiteDatabase db;
 
     public UploadJobsStorage(Context context) {
-        this.context = context;
+        db = new UploadJobEntryDbHelper(context).getWritableDatabase();
     }
 
     public void submitUploads(List<ReceiptUploader.UploadJob> jobs) {
 
-        Log.i("UploadJobsStorage", "UploadJobs to submit: ");
+        long start = System.currentTimeMillis();
+		db.beginTransaction();
         for (ReceiptUploader.UploadJob job : jobs) {
-            Log.i("UploadJobsStorage", "" + job);
+            Log.i("UploadJobsStorage", "Submitting: " + job.id);
+            db.insert(UploadJobEntry.TABLE_NAME, null, toContentValues(job));
         }
+		db.setTransactionSuccessful();
+		db.endTransaction();
 
-        List<ReceiptUploader.UploadJob> existingJobs = getUploadJobs();
-        existingJobs.addAll(jobs);
+        long end = System.currentTimeMillis();
 
-        List<ReceiptUploader.UploadJob> toUpload = new LinkedList<>(new LinkedHashSet<>(existingJobs));
+        Log.i("UploadJobsStorage", "Time taken to submit jobs: " + ((end - start)/1000) + "s");
 
-        saveUploads(toUpload);
     }
 
     public List<ReceiptUploader.UploadJob> getUploadJobs() {
-        return fromJsonString(getSharedPreferences().getString(UPLOAD_JOBS, "[]"));
-    }
 
-    public void removeUpload(ReceiptUploader.UploadJob job) {
+        String[] projection = {
+                UploadJobEntry.COLUMN_NAME_UPLOAD_JOB,
+                UploadJobEntry.COLUMN_NAME_IS_COMPLETED
+        };
 
-        List<ReceiptUploader.UploadJob> uploads = getUploadJobs();
-        uploads.remove(job);
-        saveUploads(uploads);
-    }
+        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+        String[] selectionArgs = { "0" };
 
-    private void saveUploads(List<ReceiptUploader.UploadJob> uploads) {
-        SharedPreferences.Editor editor = getSharedPreferences().edit();
-        editor.putString(UPLOAD_JOBS, toJsonString(uploads));
-        editor.commit();
-    }
+        String sortOrder =
+                UploadJobEntry.COLUMN_NAME_TIMESTAMP + " ASC";
 
-    private SharedPreferences getSharedPreferences() {
-        return context.getSharedPreferences(SHARED_PREFERENCES_NAME, 0);
-    }
+        Cursor cursor = db.query(
+                UploadJobEntry.TABLE_NAME,
+                projection,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
 
-    private List<ReceiptUploader.UploadJob> fromJsonString(String jsonString) {
-        List<ReceiptUploader.UploadJob> jobs = new LinkedList<>();
+        List<ReceiptUploader.UploadJob> uploadJobs = new LinkedList<>();
 
         try {
-            JSONArray json = new JSONArray(jsonString);
-
-
-            for (int i = 0; i < json.length(); i++) {
-                jobs.add(toUploadJob(json.getJSONObject(i)));
+            while (cursor.moveToNext()) {
+                uploadJobs.add(cursorToUploadJob(cursor));
             }
 
-            return jobs;
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+            return uploadJobs;
+        } finally {
+            cursor.close();
         }
     }
 
-    private String toJsonString(List<ReceiptUploader.UploadJob> jobs) {
-        JSONArray json = new JSONArray();
+    public long getCompletedCount() {
+        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+        String[] selectionArgs = { "1" };
+        return DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+    }
 
-        for (ReceiptUploader.UploadJob job : jobs) {
-            json.put(toJsonObject(job));
-        }
+    public long getPendingCount() {
+        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+        String[] selectionArgs = { "0" };
+        return DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+    }
 
-        try {
-            return json.toString(4);
-        } catch (JSONException e) {
-            throw new RuntimeException(e);
+    public void removeCompleted() {
+
+        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+        String[] selectionArgs = { "1" };
+
+        db.delete(UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+    }
+
+    public void markAsCompleted(UUID jobId) {
+
+        ContentValues values = new ContentValues();
+        values.put(UploadJobEntry.COLUMN_NAME_IS_COMPLETED, "1");
+
+        String selection = UploadJobEntry.COLUMN_NAME_UPLOAD_JOB_ID + " = ?";
+        String[] selectionArgs = { jobId.toString() };
+
+        int count = db.update(
+                UploadJobEntry.TABLE_NAME,
+                values,
+                selection,
+                selectionArgs);
+
+        if (count == 0) {
+            throw new RuntimeException("Upload job with id '" + jobId + "' wasn't updated");
         }
     }
 
-    private JSONObject toJsonObject(ReceiptUploader.UploadJob job) {
+    private ReceiptUploader.UploadJob cursorToUploadJob(Cursor cursor) {
+        String jobAsString = cursor.getString(cursor.getColumnIndexOrThrow(UploadJobEntry.COLUMN_NAME_UPLOAD_JOB));
+        return toUploadJob(jobAsString);
+    }
+
+    private ContentValues toContentValues(ReceiptUploader.UploadJob uploadJob) {
+        ContentValues values = new ContentValues();
+
+        values.put(UploadJobEntry.COLUMN_NAME_UPLOAD_JOB_ID, uploadJob.id.toString());
+        values.put(UploadJobEntry.COLUMN_NAME_UPLOAD_JOB, toJsonString(uploadJob));
+        values.put(UploadJobEntry.COLUMN_NAME_TIMESTAMP, System.currentTimeMillis());
+
+        return values;
+    }
+
+    private String toJsonString(ReceiptUploader.UploadJob job) {
 
         JSONObject json = new JSONObject();
         try {
@@ -97,14 +140,17 @@ public class UploadJobsStorage {
             json.put("fileUri", job.fileUri.toString());
             json.put("fields", new JSONObject(job.fields));
 
-            return json;
+            return json.toString(4);
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private ReceiptUploader.UploadJob toUploadJob(JSONObject json) {
+    private ReceiptUploader.UploadJob toUploadJob(String asString) {
         try {
+
+            JSONObject json = new JSONObject(asString);
+
             return new ReceiptUploader.UploadJob(
                     UUID.fromString(json.getString("id")),
                     json.getString("uploadUrl"),
@@ -132,5 +178,10 @@ public class UploadJobsStorage {
         } catch (JSONException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void close() {
+        db.close();
     }
 }
