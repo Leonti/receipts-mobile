@@ -204,11 +204,12 @@ class Api {
         await Storage.remove(USER_INFO_KEY);
     }
 
-    static async getReceipts() {
+    static async getReceipts(lastModified) {
         const token = await Api._getAccessToken();
         const userId = await Api._getUserId();
 
-        const receipts = await (await fetch(baseUrl() + '/user/' + userId + '/receipt', {
+        const receipts = await (await fetch(
+            baseUrl() + '/user/' + userId + '/receipt?last-modified=' + lastModified, {
               method: 'GET',
               headers: {
                 'Authorization': 'Bearer ' + token,
