@@ -19,7 +19,7 @@ import createLogger from 'redux-logger'
 import { createStore, combineReducers, applyMiddleware, compose } from 'redux'
 import { navigateTo } from './actions/navigation'
 import { setLoggedInUser } from './actions/user'
-import { loadReceipts } from './actions/receipt'
+import { loadReceipts, loadCachedReceipts } from './actions/receipt'
 import navigationReducer from './reducers/navigation'
 import userReducer from './reducers/user'
 import receiptReducer from './reducers/receipt'
@@ -53,7 +53,7 @@ async function setup() {
     if ((await Api.isLoggedIn())) {
         let userInfo = await Api.getUserInfo();
         store.dispatch(setLoggedInUser(userInfo));
-        store.dispatch(loadReceipts());
+        store.dispatch(loadCachedReceipts());
         store.dispatch(navigateTo('RECEIPT_LIST'));
     } else {
         store.dispatch(navigateTo('LOGIN'))

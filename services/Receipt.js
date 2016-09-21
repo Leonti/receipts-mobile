@@ -1,6 +1,26 @@
 import Api from './Api';
+import ReceiptCache from '../services/ReceiptCache';
 
 const MAX_HEIGHT = 200;
+
+function doneReceipts(allReceipts, pendingFiles) {
+    const pendingReceiptsIds = pendingFiles.map(pendingFile => pendingFile.receiptId);
+    return allReceipts.filter(receipt => !pendingReceiptsIds.includes(receipt.id));
+}
+
+function combinedWithoutDuplicates(cachedReceipts, serverReceipts) {
+    const updatedCached = cachedReceipts.map(cachedReceipt => {
+        const updatedReceipt = serverReceipts
+            .find(serverReceipt => serverReceipt.id === cachedReceipt.id)
+        return updatedReceipt || cachedReceipt
+    })
+
+    const onlyNewServer = serverReceipts
+        .filter(receipt => !updatedCached
+                                .find(cachedReceipt => receipt.id === cachedReceipt.id));
+
+    return updatedCached.concat(onlyNewServer);
+}
 
 class Receipt {
 
@@ -41,6 +61,39 @@ class Receipt {
             width: imageDimensions.width * scale,
             height: imageDimensions.height * scale,
         };
+    }
+
+    static async combinedReceipts() {
+        const cachedReceipts = await ReceiptCache.getCachedReceipts();
+        const lastModified = cachedReceipts.length > 0 ?
+            cachedReceipts.sort((a, b) => b.lastModified - a.lastModified)[0].lastModified : 0;
+
+        console.log('last modified is', lastModified);
+
+        const serverResult = await Api.getReceipts(lastModified);
+
+        console.log('server result', serverResult);
+
+        // just to force file download - should be done in a batch
+        serverResult.receipts
+            .filter(receipt => receipt.files.length > 0)
+            .forEach(receipt => Receipt.receiptToImage(receipt));
+
+        const combinedReceipts =
+            doneReceipts(combinedWithoutDuplicates(cachedReceipts, serverResult.receipts),
+                serverResult.pendingFiles)
+            .sort((a, b) => b.transactionTime - a.transactionTime);
+
+        await ReceiptCache.cacheReceipts(combinedReceipts);
+
+        return {
+            receipts: combinedReceipts,
+            pendingFiles: serverResult.pendingFiles
+        };
+    }
+
+    static cachedReceipts() {
+        return ReceiptCache.getCachedReceipts();
     }
 }
 

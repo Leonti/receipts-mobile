@@ -1,6 +1,5 @@
 import Api from '../services/Api';
 import Receipt from '../services/Receipt';
-import ReceiptCache from '../services/ReceiptCache';
 
 export const CREATE_RECEIPT_REQUEST = 'CREATE_RECEIPT_REQUEST';
 export const CREATE_RECEIPT_RESULT = 'CREATE_RECEIPT_RESULT';
@@ -119,52 +118,21 @@ export function deleteReceipt(receiptId, postDeleteAction) {
     }
 }
 
-function doneReceipts(allReceipts, pendingFiles) {
-    const pendingReceiptsIds = pendingFiles.map(pendingFile => pendingFile.receiptId);
-    return allReceipts.filter(receipt => !pendingReceiptsIds.includes(receipt.id));
-}
+export function loadCachedReceipts() {
 
-function combinedWithoutDuplicates(cachedReceipts, serverReceipts) {
-    const updatedCached = cachedReceipts.map(cachedReceipt => {
-        const updatedReceipt = serverReceipts
-            .find(serverReceipt => serverReceipt.id === cachedReceipt.id)
-        return updatedReceipt || cachedReceipt
-    })
+    return function(dispatch) {
+        Receipt.cachedReceipts()
+            .then(receipts => {
+                dispatch({
+                    type: RECEIPT_LIST_RESULT,
+                    result: {
+                        receipts: receipts,
+                        pendingFiles: []
+                    }
+                });
+            })
+    }
 
-    const onlyNewServer = serverReceipts
-        .filter(receipt => !updatedCached
-                                .find(cachedReceipt => receipt.id === cachedReceipt.id));
-
-    return updatedCached.concat(onlyNewServer);
-}
-
-async function combinedReceipts() {
-    const cachedReceipts = await ReceiptCache.getCachedReceipts();
-    const lastModified = cachedReceipts.length > 0 ?
-        cachedReceipts.sort((a, b) => b.lastModified - a.lastModified)[0].lastModified : 0;
-
-    console.log('last modified is', lastModified);
-
-    const serverResult = await Api.getReceipts(lastModified);
-
-    console.log('server result', serverResult);
-
-    // just to force file download - should be done in a batch
-    serverResult.receipts
-        .filter(receipt => receipt.files.length > 0)
-        .forEach(receipt => Receipt.receiptToImage(receipt));
-
-    const combinedReceipts =
-        doneReceipts(combinedWithoutDuplicates(cachedReceipts, serverResult.receipts),
-            serverResult.pendingFiles)
-        .sort((a, b) => b.transactionTime - a.transactionTime);
-
-    await ReceiptCache.cacheReceipts(combinedReceipts);
-
-    return {
-        receipts: combinedReceipts,
-        pendingFiles: serverResult.pendingFiles
-    };
 }
 
 export function loadReceipts() {
@@ -174,12 +142,11 @@ export function loadReceipts() {
             type: RECEIPT_LIST_REQUEST,
         });
 
-        return combinedReceipts().then(result => {
+        return Receipt.combinedReceipts().then(result => {
             dispatch({
                 type: RECEIPT_LIST_RESULT,
                 result,
             });
-
 
         }, error => {
             console.log('error fetching receipts', error);
