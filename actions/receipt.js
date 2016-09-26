@@ -16,6 +16,9 @@ export const DELETE_RECEIPT_REQUEST_FAILURE = 'DELETE_RECEIPT_REQUEST_FAILURE';
 export const RECEIPT_LIST_REQUEST = 'RECEIPT_LIST_REQUEST';
 export const RECEIPT_LIST_RESULT = 'RECEIPT_LIST_RESULT';
 export const RECEIPT_LIST_REQUEST_FAILURE = 'RECEIPT_LIST_REQUEST_FAILURE';
+export const RECEIPT_LIST_MANUAL_REFRESH = 'RECEIPT_LIST_MANUAL_REFRESH';
+export const RECEIPT_INTERVAL_REFRESH_START = 'RECEIPT_INTERVAL_REFRESH_START';
+export const RECEIPT_INTERVAL_REFRESH_STOP = 'RECEIPT_INTERVAL_REFRESH_STOP';
 
 export const SET_NEW_RECEIPT = 'SET_NEW_RECEIPT';
 
@@ -135,12 +138,19 @@ export function loadCachedReceipts() {
 
 }
 
-export function loadReceipts() {
+export function refeshReceiptListManually() {
+    return refreshReceiptList(RECEIPT_LIST_MANUAL_REFRESH);
+}
 
+export function loadReceipts() {
+    return refreshReceiptList(RECEIPT_LIST_REQUEST);
+}
+
+function refreshReceiptList(onStartActionType) {
     return function(dispatch) {
         dispatch({
-            type: RECEIPT_LIST_REQUEST,
-        });
+            type: onStartActionType,
+        })
 
         return Receipt.combinedReceipts().then(result => {
             dispatch({
@@ -155,6 +165,18 @@ export function loadReceipts() {
                 error,
             });
         });
+    }
+}
+
+export function receiptIntervalRefreshStart() {
+    return {
+        type: RECEIPT_INTERVAL_REFRESH_START
+    }
+}
+
+export function receiptIntervalRefreshStop() {
+    return {
+        type: RECEIPT_INTERVAL_REFRESH_STOP
     }
 }
 

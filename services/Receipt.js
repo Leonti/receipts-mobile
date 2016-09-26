@@ -64,6 +64,7 @@ class Receipt {
     }
 
     static async combinedReceipts() {
+
         const cachedReceipts = await ReceiptCache.getCachedReceipts();
         const lastModified = cachedReceipts.length > 0 ?
             cachedReceipts.sort((a, b) => b.lastModified - a.lastModified)[0].lastModified : 0;

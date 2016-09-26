@@ -5,6 +5,8 @@ import {
     navigateBack,
  } from '../actions/navigation'
 
+//import ReceiptRefresher from '../services/ReceiptRefresher'
+
 import {
     openDrawer,
     closeDrawer,
@@ -15,6 +17,9 @@ import {
     saveReceipt,
     createReceipt,
     batchCreateReceipts,
+    refeshReceiptListManually,
+    receiptIntervalRefreshStart,
+    receiptIntervalRefreshStop,
 } from '../actions/receipt'
 
 import {
@@ -107,7 +112,7 @@ export const HomePageContainer = connect(
     (state) => {
         return {
             receipts: state.receipt.receiptList.receipts,
-            pendingCount: state.receipt.receiptList.pendingFiles.length, 
+            pendingCount: state.receipt.receiptList.pendingFiles.length,
             isFetching: state.receipt.receiptList.isFetching,
             drawerOpened: state.receipt.receiptList.drawerOpened,
             error: state.receipt.receiptList.error,
@@ -115,6 +120,9 @@ export const HomePageContainer = connect(
         }
     },
     (dispatch) => {
+
+        //const receiptRefresher = new ReceiptRefresher(dispatch)
+
         return {
             openDrawer: () => dispatch(openDrawer()),
             closeDrawer: () => dispatch(closeDrawer()),
@@ -138,7 +146,13 @@ export const HomePageContainer = connect(
                 dispatch(navigateTo('LOGIN'))
             },
             onRefresh: () => {
-                dispatch(loadReceipts())
+                dispatch(refeshReceiptListManually())
+            },
+            onMount: () => {
+                dispatch(receiptIntervalRefreshStart())
+            },
+            onUnmount: () => {
+                dispatch(receiptIntervalRefreshStop())
             }
         }
     }

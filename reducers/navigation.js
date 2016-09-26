@@ -31,8 +31,8 @@ function navigate(state = {
             });
         case NAVIGATE_BACK:
             return Object.assign({}, state, {
-                page: state.history.length > 1 ? state.history[state.history.length - 2] : state.history[state.history.length - 1],
-                history: state.history.length > 1 ? state.history.slice(0, state.history.length - 2) : state.history,
+                page: state.history.length >= 1 ? state.history[state.history.length - 2] : state.history[state.history.length - 1],
+                history: state.history.length > 1 ? state.history.slice(0, state.history.length - 1) : state.history,
             });
         default:
             return state;

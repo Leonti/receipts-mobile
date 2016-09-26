@@ -19,6 +19,9 @@ import {
     RECEIPT_LIST_REQUEST,
     RECEIPT_LIST_RESULT,
     RECEIPT_LIST_REQUEST_FAILURE,
+    RECEIPT_LIST_MANUAL_REFRESH,
+    RECEIPT_INTERVAL_REFRESH_START,
+    RECEIPT_INTERVAL_REFRESH_STOP,
 
     SET_NEW_RECEIPT,
 
@@ -43,12 +46,21 @@ function receiptList(state = {
         pendingFiles: [],
         drawerOpened: false,
         error: null,
+        isRefreshInterval: false,
     }, action) {
 
     switch (action.type) {
-        case RECEIPT_LIST_REQUEST:
+        case RECEIPT_LIST_MANUAL_REFRESH:
             return Object.assign({}, state, {
                 isFetching: true,
+            });
+        case RECEIPT_INTERVAL_REFRESH_START:
+            return Object.assign({}, state, {
+                isRefreshInterval: true,
+            });
+        case RECEIPT_INTERVAL_REFRESH_STOP:
+            return Object.assign({}, state, {
+                isRefreshInterval: false,
             });
         case RECEIPT_LIST_RESULT:
             return Object.assign({}, state, {

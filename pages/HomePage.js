@@ -30,6 +30,10 @@ class HomePage extends React.Component {
         }
     }
 
+    componentDidMount() {
+        this.props.onMount()
+    }
+
     componentWillMount() {
 
         if (this.props.receipts.length > 0) {
@@ -37,6 +41,10 @@ class HomePage extends React.Component {
               dataSource: this.state.dataSource.cloneWithRows(this.props.receipts)
             })
         }
+    }
+
+    componentWillUnmount() {
+        this.props.onUnmount();
     }
 
     componentWillReceiveProps (nextProps) {
@@ -47,7 +55,6 @@ class HomePage extends React.Component {
         }
 
         if (nextProps.drawerOpened !== this.props.drawerOpened) {
-            console.log('DRAWER STATE', nextProps);
             if (nextProps.drawerOpened) {
                 this.refs['DRAWER'].openDrawer()
             } else {
@@ -205,5 +212,7 @@ HomePage.propTypes = {
   onRefresh: PropTypes.func.isRequired,
   onLogout: PropTypes.func.isRequired,
   toReceipt: PropTypes.func.isRequired,
+  onMount: PropTypes.func.isRequired,
+  onUnmount: PropTypes.func.isRequired,
 };
 export default HomePage;
