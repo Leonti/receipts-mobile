@@ -153,6 +153,14 @@ function refreshReceiptList(onStartActionType) {
         })
 
         return Receipt.combinedReceipts().then(result => {
+
+            if (result.pendingFiles.length > 0) {
+                setTimeout(() => {
+                    console.log('refreshing receipts automatically until done');
+                    dispatch(loadReceipts());
+                }, 30 * 1000)
+            }
+
             dispatch({
                 type: RECEIPT_LIST_RESULT,
                 result,
