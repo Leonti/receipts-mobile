@@ -8,7 +8,7 @@ import {
     ScrollView } from 'react-native';
 
 import CredentialsForm from '../components/CredentialsForm';
-//import GoogleLogin from '../components/GoogleLogin';
+import GoogleLogin from '../components/GoogleLogin';
 
 class LoginPage extends React.Component {
 
@@ -34,18 +34,16 @@ class LoginPage extends React.Component {
                     isFetching={this.props.isFetching}
                     error={this.props.error}
                 />
-
+                <GoogleLogin
+                    isFetching={this.props.isFetchingGoogle}
+                    onLogin={this.props.onGoogleLogin}
+                />
               </ScrollView>
           </View>
       );
   }
 
 }
-
-/*<GoogleLogin
-    isFetching={this.props.isFetchingGoogle}
-    onLogin={this.props.onGoogleLogin}
-/>*/
 
 const styles = StyleSheet.create({
     toolbar: {

@@ -113,7 +113,7 @@ public class UploaderModule extends ReactContextBaseJavaModule {
         String authToken = payload.getString("token");
         String uploadUrl = payload.getString("uploadUrl");
 
-        List<ReceiptUploader.UploadJob> uploads = new LinkedList<>();
+        Set<ReceiptUploader.UploadJob> uploads = new LinkedHashSet<>();
         ReadableArray receipts = payload.getArray("receipts");
 
         for (int i = 0; i < receipts.size(); i++) {
@@ -149,6 +149,10 @@ public class UploaderModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void currentUploads(Promise promise) {
+        Context context = getCurrentActivity();
+        Intent intent = new Intent(context, UploadService.class);
+        context.startService(intent);
+            
         Set<ReceiptUploader.UploadJob> currentJobs = uploadService.getCurrentJobs();
 
         WritableMap result = Arguments.createMap();

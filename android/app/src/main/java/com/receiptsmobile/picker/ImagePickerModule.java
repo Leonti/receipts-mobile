@@ -40,7 +40,8 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     @ReactMethod
     public void pick(Promise promise) {
 
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true);
 
@@ -144,6 +145,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 processImagesAsync(currentPromise, clipData);
             } else {
                 Uri photoUri = data.getData();
+
                 WritableMap result = Arguments.createMap();
                 result.putMap("single", toImageInfo(photoUri));
                 Log.i("IMAGE PICKER", "photo: " + photoUri);

@@ -5,8 +5,6 @@ import {
     navigateBack,
  } from '../actions/navigation'
 
-//import ReceiptRefresher from '../services/ReceiptRefresher'
-
 import {
     openDrawer,
     closeDrawer,
@@ -38,7 +36,7 @@ import ReceiptViewPage from '../pages/ReceiptViewPage';
 import ReceiptFormPage from '../pages/ReceiptFormPage';
 import ImageViewer from '../components/ImageViewer';
 
-//import {GoogleSignin} from 'react-native-google-signin';
+import {GoogleSignin} from 'react-native-google-signin';
 
 function googleWebClientId() {
     return __DEV__ ? '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com':
@@ -120,8 +118,6 @@ export const HomePageContainer = connect(
         }
     },
     (dispatch) => {
-
-        //const receiptRefresher = new ReceiptRefresher(dispatch)
 
         return {
             openDrawer: () => dispatch(openDrawer()),

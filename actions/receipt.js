@@ -1,5 +1,6 @@
 import Api from '../services/Api';
 import Receipt from '../services/Receipt';
+import ReceiptsUploader from '../services/ReceiptsUploader';
 
 export const CREATE_RECEIPT_REQUEST = 'CREATE_RECEIPT_REQUEST';
 export const CREATE_RECEIPT_RESULT = 'CREATE_RECEIPT_RESULT';
@@ -147,20 +148,25 @@ export function loadReceipts() {
 }
 
 function refreshReceiptList(onStartActionType) {
+
     return function(dispatch) {
         dispatch({
             type: onStartActionType,
         })
 
-        return Receipt.combinedReceipts().then(result => {
+        ReceiptsUploader.currentUploads().then((uploads) => {
+            console.log(uploads);
+        }, (e) => console.log(e));
 
+        return Receipt.combinedReceipts().then(result => {
+/*
             if (result.pendingFiles.length > 0) {
                 setTimeout(() => {
-                    console.log('refreshing receipts automatically until done');
-                    dispatch(loadReceipts());
+                    console.log('refreshing receipts automatically until done')
+                    dispatch(loadReceipts())
                 }, 30 * 1000)
             }
-
+*/
             dispatch({
                 type: RECEIPT_LIST_RESULT,
                 result,

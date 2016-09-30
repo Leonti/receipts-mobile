@@ -36,12 +36,25 @@ public class UploadService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
-        List<ReceiptUploader.UploadJob> toUpload = uploadJobsStorage.getUploadJobs();
+
+        if (!Connectivity.isConnected(getApplicationContext())) {
+            Log.i(TAG, "There is no connectivity, not processing jobs");
+            return Service.START_NOT_STICKY;
+        }
+
+        if (!Connectivity.isConnectedWifi(getApplicationContext())) {
+            Log.i(TAG, "There is no WiFi connection, not processing jobs");
+            return Service.START_NOT_STICKY;
+        }
+
+        Set<ReceiptUploader.UploadJob> toUpload = uploadJobsStorage.getUploadJobs();
+        Log.i(TAG, "GOT UPLOAD JOBS " + toUpload.size());
 
         long pendingCount = uploadJobsStorage.getPendingCount();
         long completedCount = uploadJobsStorage.getCompletedCount();
+        long total = pendingCount + completedCount;
 
-        Log.i(TAG, "FILES TO UPLOAD");
+        Log.i(TAG, "FILES TO UPLOAD pending: " + pendingCount + ", completedCount: " + completedCount);
 
         for (ReceiptUploader.UploadJob job : toUpload) {
 
@@ -52,8 +65,10 @@ public class UploadService extends Service {
             Log.i(TAG, job.toString());
         }
 
-        startForeground(42, createProgressNotification(this, 0, uploadJobsStorage.getUploadJobs().size(), 0));
-        updateProgress(pendingCount, completedCount);
+        if (total > 0) {
+            startForeground(42, createProgressNotification(this, 0, uploadJobsStorage.getUploadJobs().size(), 0));
+            updateProgress(pendingCount, completedCount);
+        }
 
         return Service.START_STICKY;
     }
@@ -110,6 +125,8 @@ public class UploadService extends Service {
 
         if (!processing.contains(job)) {
             processing.add(job);
+        } else {
+            Log.i(TAG, "Skipping job - already on the list");
         }
     }
 
@@ -206,9 +223,10 @@ public class UploadService extends Service {
     private void updateProgress(long pendingCount, long completedCount) {
         long total = pendingCount + completedCount;
 
-        long progressPercent = (completedCount * 100) / total;
-
-        getNotificationManager().notify(42, createProgressNotification(this, progressPercent, total, completedCount));
+        if (total > 0) {
+            long progressPercent = (completedCount * 100) / total;
+            getNotificationManager().notify(42, createProgressNotification(this, progressPercent, total, completedCount));
+        }
     }
 
     @Override

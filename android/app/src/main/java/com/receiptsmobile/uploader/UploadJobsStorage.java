@@ -23,7 +23,7 @@ public class UploadJobsStorage implements AutoCloseable {
         db = new UploadJobEntryDbHelper(context).getWritableDatabase();
     }
 
-    public void submitUploads(List<ReceiptUploader.UploadJob> jobs) {
+    public void submitUploads(Set<ReceiptUploader.UploadJob> jobs) {
 
         long start = System.currentTimeMillis();
 		db.beginTransaction();
@@ -40,8 +40,8 @@ public class UploadJobsStorage implements AutoCloseable {
 
     }
 
-    public List<ReceiptUploader.UploadJob> getUploadJobs() {
-
+    public Set<ReceiptUploader.UploadJob> getUploadJobs() {
+Log.i("UploadJobsStorage", "Getting upload jobs");
         String[] projection = {
                 UploadJobEntry.COLUMN_NAME_UPLOAD_JOB,
                 UploadJobEntry.COLUMN_NAME_IS_COMPLETED
@@ -62,14 +62,15 @@ public class UploadJobsStorage implements AutoCloseable {
                 null,
                 sortOrder
         );
-
-        List<ReceiptUploader.UploadJob> uploadJobs = new LinkedList<>();
+Log.i("UploadJobsStorage", "Query finished");
+        Set<ReceiptUploader.UploadJob> uploadJobs = new LinkedHashSet<>();
 
         try {
+
             while (cursor.moveToNext()) {
                 uploadJobs.add(cursorToUploadJob(cursor));
             }
-
+Log.i("UploadJobsStorage", "Cursor processed");
             return uploadJobs;
         } finally {
             cursor.close();
