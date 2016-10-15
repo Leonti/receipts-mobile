@@ -14,9 +14,10 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import com.receiptsmobile.db.UploadJobEntryContract.*;
 
+import java.io.Closeable;
 import java.util.*;
 
-public class UploadJobsStorage implements AutoCloseable {
+public class UploadJobsStorage implements Closeable {
     private final SQLiteDatabase db;
 
     public UploadJobsStorage(Context context) {
@@ -41,7 +42,7 @@ public class UploadJobsStorage implements AutoCloseable {
     }
 
     public Set<ReceiptUploader.UploadJob> getUploadJobs() {
-Log.i("UploadJobsStorage", "Getting upload jobs");
+
         String[] projection = {
                 UploadJobEntry.COLUMN_NAME_UPLOAD_JOB,
                 UploadJobEntry.COLUMN_NAME_IS_COMPLETED
@@ -62,7 +63,7 @@ Log.i("UploadJobsStorage", "Getting upload jobs");
                 null,
                 sortOrder
         );
-Log.i("UploadJobsStorage", "Query finished");
+
         Set<ReceiptUploader.UploadJob> uploadJobs = new LinkedHashSet<>();
 
         try {
@@ -70,7 +71,6 @@ Log.i("UploadJobsStorage", "Query finished");
             while (cursor.moveToNext()) {
                 uploadJobs.add(cursorToUploadJob(cursor));
             }
-Log.i("UploadJobsStorage", "Cursor processed");
             return uploadJobs;
         } finally {
             cursor.close();

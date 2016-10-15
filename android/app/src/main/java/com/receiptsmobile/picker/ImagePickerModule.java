@@ -80,7 +80,7 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
-    private void processImagesAsync(final Promise promise, final ClipData clipData) {
+    private void processImagesAsync(final Promise promise, final ClipData clipData, final Context context, final int takeFlags) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         executor.submit(new Runnable() {
@@ -89,8 +89,12 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
 
                 WritableMap result = Arguments.createMap();
                 WritableArray images = Arguments.createArray();
+
                 for (int i = 0; i < clipData.getItemCount(); i++) {
                     Uri photoUri = clipData.getItemAt(i).getUri();
+
+                   // persistUriPermissions(context, photoUri, takeFlags);
+
                     images.pushString(photoUri.toString());
 
                     Log.i("IMAGE PICKER", "photo: " + photoUri);
@@ -123,6 +127,11 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
+    // ,make sure permissions persist after restart
+    private void persistUriPermissions(Context context, Uri uri, int takeFlags) {
+        context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
+    }
+
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
         if (requestCode != PICKER_CODE && requestCode != PHOTO_CODE) {
@@ -137,14 +146,20 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
+        final int takeFlags = data.getFlags()
+                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
         if (requestCode == PICKER_CODE) {
 
             ClipData clipData = data.getClipData();
 
             if (clipData != null) {
-                processImagesAsync(currentPromise, clipData);
+                processImagesAsync(currentPromise, clipData, activity, takeFlags);
             } else {
                 Uri photoUri = data.getData();
+
+              //  persistUriPermissions(activity, photoUri, takeFlags);
 
                 WritableMap result = Arguments.createMap();
                 result.putMap("single", toImageInfo(photoUri));

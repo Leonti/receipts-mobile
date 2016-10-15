@@ -93,6 +93,9 @@ class HomePage extends React.Component {
 
         } else if (response.multiple) {
             ToastAndroid.show('Uploading multiple receipts', ToastAndroid.LONG);
+
+            response.multiple.forEach(image => console.log('URI: ' + image))
+
             this.props.onFilesSelected(response.multiple);
         } else {
             console.error('Unknown response from image picker!');

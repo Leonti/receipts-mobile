@@ -13,7 +13,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.receiptsmobile.MainActivity;
 import com.receiptsmobile.R;
-import com.receiptsmobile.files.FileCacher;
 
 import java.io.File;
 import java.util.*;
@@ -25,6 +24,7 @@ public class UploadService extends Service {
     private static String TAG = "UploadService";
     private Set<ReceiptUploader.UploadJob> processing = Collections.newSetFromMap(new ConcurrentHashMap<ReceiptUploader.UploadJob, Boolean>());
     private ExecutorService executor;
+    private ScheduledExecutorService delayedJobsExecutor = Executors.newSingleThreadScheduledExecutor();
     private UploadJobsStorage uploadJobsStorage;
     private static int MAX_RETRIES = 3;
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
@@ -37,22 +37,26 @@ public class UploadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
 
-        if (!Connectivity.isConnected(getApplicationContext())) {
-            Log.i(TAG, "There is no connectivity, not processing jobs");
-            return Service.START_NOT_STICKY;
-        }
-
-        if (!Connectivity.isConnectedWifi(getApplicationContext())) {
-            Log.i(TAG, "There is no WiFi connection, not processing jobs");
-            return Service.START_NOT_STICKY;
-        }
-
         Set<ReceiptUploader.UploadJob> toUpload = uploadJobsStorage.getUploadJobs();
         Log.i(TAG, "GOT UPLOAD JOBS " + toUpload.size());
 
         long pendingCount = uploadJobsStorage.getPendingCount();
         long completedCount = uploadJobsStorage.getCompletedCount();
         long total = pendingCount + completedCount;
+
+        Connectivity.ConnectionStatus connectionStatus = Connectivity.getStatus(this);
+
+        if (!connectionStatus.isConnected && pendingCount > 0) {
+            Log.i(TAG, "There is no connectivity, not processing jobs");
+            startForeground(42, createPausedNotification(this, false));
+            return Service.START_STICKY;
+        }
+
+        if (!connectionStatus.isConnectedWiFi && pendingCount > 0) {
+            Log.i(TAG, "There is no WiFi connection, not processing jobs ");
+            startForeground(42, createPausedNotification(this, true));
+            return Service.START_STICKY;
+        }
 
         Log.i(TAG, "FILES TO UPLOAD pending: " + pendingCount + ", completedCount: " + completedCount);
 
@@ -76,7 +80,7 @@ public class UploadService extends Service {
     private void submitFile(final ReceiptUploader.UploadJob job, final int retry) {
         Log.i(TAG, "Submitting job for upload (" + job + "), retrying " + retry);
 
-        executor.submit(new ReceiptUploader(
+        final Runnable uploadTask = new ReceiptUploader(
                 this,
                 job,
                 new ReceiptUploader.Callback() {
@@ -84,28 +88,9 @@ public class UploadService extends Service {
                     public void onDone(final ReceiptUploader.Result result) {
 
                         if (result.status == ReceiptUploader.Result.Status.SUCCESS) {
-                            removeUpload(job.id);
+                            markAsCompleted(job.id);
                             notifyReceiptResult(job.id, result);
                             showProgressOrFinish();
-
-                            /*
-                            String fileUrl = appendSlash(job.uploadUrl) + result.receiptId + "/file/" + result.fileId + "." + toExt(result.file);
-                            cacheFile(UploadService.this, fileUrl, job.fileUri, new FileCacher.Callback() {
-                                @Override
-                                public void onResult(Uri uri) {
-                                    notifyReceiptResult(job.id, result);
-                                    showProgressOrFinish();
-                                }
-
-                                @Override
-                                public void onError(Throwable t) {
-                                    notifyReceiptResult(job.id, result);
-                                    showProgressOrFinish();
-                                }
-                            });
-
-                            */
-
                         } else {
                             Log.i(TAG, "File upload is finished (" + job + "), but upload failed on retry " + retry);
                             if (retry < MAX_RETRIES) {
@@ -114,28 +99,49 @@ public class UploadService extends Service {
                                 scheduleDelayed(job, retry + 1);
                             } else {
                                 Log.i(TAG, "Max retries reached (" + job + "), not retrying");
-                                removeUpload(job.id);
+                                markAsCompleted(job.id);
                                 notifyReceiptResult(job.id, result);
                                 showProgressOrFinish();
                             }
 
                         }
                     }
-                }));
+                });
+
+        executor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+
+                    Connectivity.ConnectionStatus connectionStatus = Connectivity.getStatus(UploadService.this);
+
+                    if (!connectionStatus.isConnected) {
+                        Log.i(TAG, "There is no connectivity, not processing jobs");
+                        processing.remove(job);
+                        getNotificationManager().notify(42, createPausedNotification(UploadService.this, false));
+                        return;
+                    }
+
+                    if (!connectionStatus.isConnectedWiFi) {
+                        Log.i(TAG, "There is no WiFi connection, not processing jobs");
+                        processing.remove(job);
+                        getNotificationManager().notify(42, createPausedNotification(UploadService.this, true));
+                        return;
+                    }
+
+                    uploadTask.run();
+                } catch (Exception e) {
+                    Log.e(TAG, "Error while uploading a receipt " + e, e);
+                }
+
+            }
+        });
 
         if (!processing.contains(job)) {
             processing.add(job);
         } else {
             Log.i(TAG, "Skipping job - already on the list");
         }
-    }
-
-    private void cacheFile(Context context, String url, Uri srcFileUri, FileCacher.Callback callback) {
-        new FileCacher(context, url, srcFileUri, callback).run();
-    }
-
-    private static String appendSlash(String url) {
-        return url.lastIndexOf("/") == url.length() - 1 ? url : url + "/";
     }
 
     private void notifyReceiptResult(UUID uploadJobId, ReceiptUploader.Result result) {
@@ -160,21 +166,16 @@ public class UploadService extends Service {
 
     private void scheduleDelayed(final ReceiptUploader.UploadJob job, final int retry) {
 
-        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        try {
-            executor.schedule(new Runnable() {
-                @Override
-                public void run() {
-                    submitFile(job, retry);
-                }
-            }, 30, TimeUnit.SECONDS);
-        } finally {
-            executor.shutdown();
-        }
+        delayedJobsExecutor.schedule(new Runnable() {
+            @Override
+            public void run() {
+                submitFile(job, retry);
+            }
+        }, 30, TimeUnit.SECONDS);
 
     }
 
-    private void removeUpload(UUID jobId) {
+    private void markAsCompleted(UUID jobId) {
         uploadJobsStorage.markAsCompleted(jobId);
     }
 
@@ -233,6 +234,7 @@ public class UploadService extends Service {
     public void onDestroy() {
         Log.i(TAG, "Destroying the service");
         executor.shutdown();
+        delayedJobsExecutor.shutdown();
         uploadJobsStorage.close();
     }
 
@@ -247,6 +249,21 @@ public class UploadService extends Service {
                 .setContentTitle("Receipts upload")
                 .setContentText("Receipts (" + done + "/" + total + ") are being uploaded")
                 .setProgress(100, (int) progressPercent, false)
+                .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
+                .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
+
+        return builder.build();
+    }
+
+    private static Notification createPausedNotification(Context context, boolean isWiFi) {
+
+        String message = isWiFi ? "waiting for WiFi connection" : "waiting for internet connection";
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContentTitle("Receipts upload")
+                .setContentText("Receipts upload is paused - " + message)
                 .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 

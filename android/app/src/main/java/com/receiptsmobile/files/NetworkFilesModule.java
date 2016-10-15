@@ -1,35 +1,124 @@
 package com.receiptsmobile.files;
 
+import android.content.*;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
+import com.facebook.common.internal.Sets;
 import com.facebook.react.bridge.*;
+import com.receiptsmobile.uploader.ReceiptUploader;
+import com.receiptsmobile.uploader.UploadService;
 
 import java.io.*;
-import java.math.BigInteger;
 import java.net.URL;
-import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import static com.receiptsmobile.InputStreamToFile.streamToFile;
 
 class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     private static String TAG = "NetworkFilesModule";
 
-    private ExecutorService executor = Executors.newFixedThreadPool(4);
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private static class PromiseHolder {
+        public final String dst;
+        public final Promise promise;
+
+        PromiseHolder(String dst, Promise promise) {
+            this.dst = dst;
+            this.promise = promise;
+        }
+    }
+
+    private final Set<PromiseHolder> promises = Collections.newSetFromMap(new ConcurrentHashMap<PromiseHolder, Boolean>());
 
     @Override
     public String getName() {
         return "NetworkFiles";
     }
 
+    private final BroadcastReceiver receiver = createReceiver();
+    private DownloadService downloadService = null;
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            DownloadService.DownloadServiceBinder binder = (DownloadService.DownloadServiceBinder) iBinder;
+            downloadService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            downloadService = null;
+        }
+    };
+
     NetworkFilesModule(ReactApplicationContext reactContext) {
         super(reactContext);
+
+        IntentFilter intentFilter = new IntentFilter(DownloadService.FILE_DOWNLOADED);
+        getReactApplicationContext().registerReceiver(receiver, intentFilter);
+
+        getReactApplicationContext().addLifecycleEventListener(new LifecycleEventListener() {
+            @Override
+            public void onHostResume() {
+
+                Intent intent= new Intent(getReactApplicationContext(), DownloadService.class);
+                getReactApplicationContext().bindService(intent, serviceConnection,
+                        Context.BIND_AUTO_CREATE);
+
+                IntentFilter intentFilter = new IntentFilter(DownloadService.FILE_DOWNLOADED);
+                getReactApplicationContext().registerReceiver(receiver, intentFilter);
+            }
+
+            @Override
+            public void onHostPause() {
+                getReactApplicationContext().unbindService(serviceConnection);
+                getReactApplicationContext().unregisterReceiver(receiver);
+            }
+
+            @Override
+            public void onHostDestroy() {
+
+            }
+        });
+    }
+
+    private BroadcastReceiver createReceiver() {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive (Context context, Intent intent){
+                Bundle bundle = intent.getExtras();
+                String dst =  bundle.getString(DownloadService.FILE_DST);
+                DownloadService.DownloadStatus status = DownloadService.DownloadStatus.valueOf(bundle.getString(DownloadService.FILE_DOWNLOADED_STATUS));
+                Log.i(TAG, "BROADCAST RECEIVED " + dst + " " + status);
+
+                Set<PromiseHolder> toDelete = Sets.newHashSet();
+
+                for (PromiseHolder promiseHolder : promises) {
+                    if (promiseHolder.dst.equals(dst)) {
+                        toDelete.add(promiseHolder);
+
+                        WritableMap result = Arguments.createMap();
+                        if (status == DownloadService.DownloadStatus.SUCCESS) {
+                            result.putString("file", dst);
+                          //  result.putInt("length", Long.valueOf(bundle.getString(DownloadService.FILE_SIZE)).intValue());
+                            result.putBoolean("wasCached", false);
+
+                            promiseHolder.promise.resolve(result);
+                        } else {
+                            promiseHolder.promise.reject(new RuntimeException("File for '" + dst + "' failed to download"));
+                            Log.i(TAG, "File for '" + dst + "' failed to download");
+                        }
+                    }
+                }
+
+                promises.removeAll(toDelete);
+            }
+        };
     }
 
     private String getCacheDir() {
@@ -51,6 +140,7 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void download(ReadableMap parameters, final Promise promise) {
+        Context context = getCurrentActivity();
 
         try {
 
@@ -74,57 +164,19 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                 return;
             }
 
-            FileDownloader downloader = new FileDownloader(new DownloadParams(
-                    new URL(url),
+            Intent intent = new Intent(context, DownloadService.class);
+            context.startService(intent);
+
+            promises.add(new PromiseHolder(dst.getAbsolutePath(), promise));
+
+            DownloadJob downloadJob = new DownloadJob(
+                    UUID.randomUUID(),
+                    url,
                     readableMapToMap(headers),
-                    dst,
-                    new DownloadParams.OnDownloadCompleted() {
-                        @Override
-                        public void onDownloadCompleted(DownloadResult res) {
-                            if (res.exception != null) {
-                                promise.reject(res.exception);
-                            } else {
-                                WritableMap result = Arguments.createMap();
-                                result.putString("file", dst.getAbsolutePath());
-                                result.putInt("length", Long.valueOf(res.bytesWritten).intValue());
-                                result.putInt("statusCode", res.statusCode);
-                                result.putBoolean("wasCached", true);
-                                promise.resolve(result);
-                            }
-                        }
-                    }
-            ));
+                    dst.getAbsolutePath()
+            );
 
-            executor.submit(downloader);
-        } catch (Exception e) {
-            promise.reject(e);
-        }
-    }
-
-    @ReactMethod
-    public void addToCache(ReadableMap parameters, final Promise promise) {
-
-        try {
-
-            String url = parameters.getString("url");
-            Uri fileUri = Uri.parse(parameters.getString("file"));
-
-            Log.i(TAG, "Adding file to cache " + url + " " + fileUri);
-
-            executor.submit(new FileCacher(getCurrentActivity(), url, fileUri, new FileCacher.Callback() {
-
-                @Override
-                public void onResult(Uri uri) {
-                    WritableMap result = Arguments.createMap();
-                    result.putString("uri", uri.toString());
-                    promise.resolve(result);
-                }
-
-                @Override
-                public void onError(Throwable t) {
-                    promise.reject(t);
-                }
-            }));
+            downloadService.download(downloadJob);
         } catch (Exception e) {
             promise.reject(e);
         }

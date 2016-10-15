@@ -9,7 +9,6 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 import com.facebook.react.bridge.*;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
-import com.receiptsmobile.files.FileCacher;
 
 import java.io.File;
 import java.io.InputStream;
@@ -130,7 +129,12 @@ public class UploaderModule extends ReactContextBaseJavaModule {
             uploads.add(job);
         }
 
-        new UploadJobsStorage(context).submitUploads(uploads);
+        UploadJobsStorage uploadJobsStorage = new UploadJobsStorage(getCurrentActivity());
+        try {
+            uploadJobsStorage.submitUploads(uploads);
+        } finally {
+            uploadJobsStorage.close();
+        }
 
         Intent intent = new Intent(context, UploadService.class);
         context.startService(intent);

@@ -27,6 +27,7 @@
       </activity>
       <activity android:name="com.facebook.react.devsupport.DevSettingsActivity" />
       <service android:name="com.receiptsmobile.uploader.UploadService" android:enabled="true"/>
+      <service android:name="com.receiptsmobile.files.DownloadService" android:enabled="true"/>
     </application>
 
 </manifest>
