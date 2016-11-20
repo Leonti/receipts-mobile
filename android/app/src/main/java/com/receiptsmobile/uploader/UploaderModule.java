@@ -129,15 +129,10 @@ public class UploaderModule extends ReactContextBaseJavaModule {
             uploads.add(job);
         }
 
-        UploadJobsStorage uploadJobsStorage = new UploadJobsStorage(getCurrentActivity());
-        try {
-            uploadJobsStorage.submitUploads(uploads);
-        } finally {
-            uploadJobsStorage.close();
-        }
-
         Intent intent = new Intent(context, UploadService.class);
         context.startService(intent);
+
+        uploadService.upload(uploads);
 
         WritableMap result = Arguments.createMap();
         WritableArray ids = Arguments.createArray();

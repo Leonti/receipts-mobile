@@ -132,7 +132,7 @@ class HomePage extends React.Component {
         return pendingCount ?
             <Text
                 style={styles.pendingFiles}
-                >{pendingCount} receipts are being processed</Text>
+                >Receipts are being processed</Text>
             : null;
     }
 

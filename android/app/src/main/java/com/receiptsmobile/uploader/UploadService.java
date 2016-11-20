@@ -11,6 +11,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import com.facebook.common.internal.Sets;
 import com.receiptsmobile.MainActivity;
 import com.receiptsmobile.R;
 
@@ -18,14 +19,21 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
 
+import com.receiptsmobile.files.DownloadJob;
+import com.receiptsmobile.uploader.UploadJobsStorage.Count;
+import com.receiptsmobile.uploader.ReceiptUploader.UploadJob;
+
 public class UploadService extends Service {
 
+    public static final int NOTIFICATION_ID = 42;
     private final IBinder binder = new UploadServiceBinder();
     private static String TAG = "UploadService";
     private Set<ReceiptUploader.UploadJob> processing = Collections.newSetFromMap(new ConcurrentHashMap<ReceiptUploader.UploadJob, Boolean>());
     private ExecutorService executor;
+    private ExecutorService submitJobsExecutor;
     private ScheduledExecutorService delayedJobsExecutor = Executors.newSingleThreadScheduledExecutor();
     private UploadJobsStorage uploadJobsStorage;
+    private boolean isCreated = false;
     private static int MAX_RETRIES = 3;
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
     public static String UPLOAD_JOB_ID = "uploadJobId";
@@ -34,31 +42,45 @@ public class UploadService extends Service {
     public static String FILE_EXT = "ext";
 
     @Override
+    public void onCreate() {
+        Log.i(TAG, "ON CREATE COMMAND");
+
+        isCreated = false;
+        executor = Executors.newFixedThreadPool(4);
+        submitJobsExecutor = Executors.newSingleThreadExecutor();
+        uploadJobsStorage = new UploadJobsStorage(this);
+    }
+
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
+
+        if (isCreated) {
+            Log.i(TAG, "SERVICE IS ALREADY STARTED NOT RESTARTING");
+            return Service.START_STICKY;
+        }
+
+        isCreated = true;
 
         Set<ReceiptUploader.UploadJob> toUpload = uploadJobsStorage.getUploadJobs();
         Log.i(TAG, "GOT UPLOAD JOBS " + toUpload.size());
 
-        long pendingCount = uploadJobsStorage.getPendingCount();
-        long completedCount = uploadJobsStorage.getCompletedCount();
-        long total = pendingCount + completedCount;
-
+        UploadJobsStorage.Count count = uploadJobsStorage.getCount();
         Connectivity.ConnectionStatus connectionStatus = Connectivity.getStatus(this);
 
-        if (!connectionStatus.isConnected && pendingCount > 0) {
+        if (!connectionStatus.isConnected && count.pending > 0) {
             Log.i(TAG, "There is no connectivity, not processing jobs");
-            startForeground(42, createPausedNotification(this, false));
+            startForeground(NOTIFICATION_ID, createPausedNotification(this, false));
             return Service.START_STICKY;
         }
 
-        if (!connectionStatus.isConnectedWiFi && pendingCount > 0) {
+        if (!connectionStatus.isConnectedWiFi && count.pending > 0) {
             Log.i(TAG, "There is no WiFi connection, not processing jobs ");
-            startForeground(42, createPausedNotification(this, true));
+            startForeground(NOTIFICATION_ID, createPausedNotification(this, true));
             return Service.START_STICKY;
         }
 
-        Log.i(TAG, "FILES TO UPLOAD pending: " + pendingCount + ", completedCount: " + completedCount);
+        Log.i(TAG, "FILES TO UPLOAD pending: " + count.pending + ", completedCount: " + count.completed);
 
         for (ReceiptUploader.UploadJob job : toUpload) {
 
@@ -69,12 +91,42 @@ public class UploadService extends Service {
             Log.i(TAG, job.toString());
         }
 
-        if (total > 0) {
-            startForeground(42, createProgressNotification(this, 0, uploadJobsStorage.getUploadJobs().size(), 0));
-            updateProgress(pendingCount, completedCount);
+        if (count.total > 0) {
+            long progressPercent = (count.completed * 100) / count.total;
+            startForeground(NOTIFICATION_ID, createProgressNotification(this, progressPercent, uploadJobsStorage.getUploadJobs().size(), 0));
+            updateProgress(count);
         }
 
         return Service.START_STICKY;
+    }
+
+    public void upload(final Set<UploadJob> toUpload) {
+
+        submitJobsExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Set<UploadJob> newJobs = new HashSet<>();
+                    Set<UploadJob> existingJobs = uploadJobsStorage.getUploadJobs();
+                    for (UploadJob job : toUpload) {
+                        if (!existingJobs.contains(job)) {
+                            newJobs.add(job);
+                        }
+                    }
+                    uploadJobsStorage.submitUploads(newJobs);
+
+                    for (UploadJob job : newJobs) {
+
+                        Log.i(TAG, "Submitting a new upload job" + job.toString());
+                        submitFile(job, 0);
+                    }
+
+                    showProgressOrFinish();
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception submitting a job " + e, e);
+                }
+            }
+        });
     }
 
     private void submitFile(final ReceiptUploader.UploadJob job, final int retry) {
@@ -118,14 +170,14 @@ public class UploadService extends Service {
                     if (!connectionStatus.isConnected) {
                         Log.i(TAG, "There is no connectivity, not processing jobs");
                         processing.remove(job);
-                        getNotificationManager().notify(42, createPausedNotification(UploadService.this, false));
+                        getNotificationManager().notify(NOTIFICATION_ID, createPausedNotification(UploadService.this, false));
                         return;
                     }
 
                     if (!connectionStatus.isConnectedWiFi) {
                         Log.i(TAG, "There is no WiFi connection, not processing jobs");
                         processing.remove(job);
-                        getNotificationManager().notify(42, createPausedNotification(UploadService.this, true));
+                        getNotificationManager().notify(NOTIFICATION_ID, createPausedNotification(UploadService.this, true));
                         return;
                     }
 
@@ -184,26 +236,16 @@ public class UploadService extends Service {
     }
 
     private void showProgressOrFinish() {
+        Count count = uploadJobsStorage.getCount();
 
-        long pendingCount = uploadJobsStorage.getPendingCount();
-        long completedCount = uploadJobsStorage.getCompletedCount();
-
-        if (pendingCount == 0) {
+        if (count.pending == 0) {
             uploadJobsStorage.removeCompleted();
             notifyFinished(this);
             stopSelf();
             return;
         }
 
-        updateProgress(pendingCount, completedCount);
-    }
-
-    @Override
-    public void onCreate() {
-        Log.i(TAG, "ON CREATE COMMAND");
-
-        executor = Executors.newFixedThreadPool(4);
-        uploadJobsStorage = new UploadJobsStorage(this);
+        updateProgress(count);
     }
 
     private void notifyFinished(Context context) {
@@ -218,15 +260,14 @@ public class UploadService extends Service {
                 .setSmallIcon(R.drawable.ic_done_all_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 
-        getNotificationManager().notify(42, builder.build());
+        getNotificationManager().notify(NOTIFICATION_ID, builder.build());
     }
 
-    private void updateProgress(long pendingCount, long completedCount) {
-        long total = pendingCount + completedCount;
+    private void updateProgress(Count count) {
 
-        if (total > 0) {
-            long progressPercent = (completedCount * 100) / total;
-            getNotificationManager().notify(42, createProgressNotification(this, progressPercent, total, completedCount));
+        if (count.total > 0) {
+            long progressPercent = (count.completed * 100) / count.total;
+            getNotificationManager().notify(NOTIFICATION_ID, createProgressNotification(this, progressPercent, count.total, count.completed));
         }
     }
 
@@ -234,6 +275,7 @@ public class UploadService extends Service {
     public void onDestroy() {
         Log.i(TAG, "Destroying the service");
         executor.shutdown();
+        submitJobsExecutor.shutdown();
         delayedJobsExecutor.shutdown();
         uploadJobsStorage.close();
     }

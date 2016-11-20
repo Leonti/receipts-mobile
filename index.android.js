@@ -62,6 +62,23 @@ async function setup() {
     Api.onReceiptUploaded(() => {
         store.dispatch(loadReceipts());
     });
+
+    var timeoutId = null;
+
+    store.subscribe(() => {
+        const storeState = store.getState();
+        const pendingFiles = storeState.receipt.receiptList.pendingFiles;
+
+        if (pendingFiles.length === 0) {
+            timeoutId = null;
+        } else if (pendingFiles.length > 0 && timeoutId === null) {
+            console.log('refreshing receipts on timeout');
+            timeoutId = setTimeout(() => {
+                store.dispatch(loadReceipts());
+                timeoutId = null;
+            }, 30 * 1000)
+        }
+    });
 }
 
 setup();

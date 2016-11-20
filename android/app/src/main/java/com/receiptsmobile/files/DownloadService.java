@@ -8,24 +8,20 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Binder;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import com.facebook.common.internal.Sets;
-import com.facebook.react.bridge.Arguments;
-import com.facebook.react.bridge.WritableMap;
 import com.receiptsmobile.MainActivity;
 import com.receiptsmobile.R;
 import com.receiptsmobile.uploader.Connectivity;
-import com.receiptsmobile.uploader.ReceiptUploader;
-import com.receiptsmobile.uploader.UploadJobsStorage;
-import com.receiptsmobile.uploader.UploadService;
 
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
+import com.receiptsmobile.files.DownloadJobsStorage.Count;
+import com.receiptsmobile.files.DownloadJobsStorage.Jobs;
 
 public class DownloadService extends Service {
 
@@ -33,8 +29,10 @@ public class DownloadService extends Service {
     private static String TAG = "DownloadService";
     private Set<DownloadJob> processing = Collections.newSetFromMap(new ConcurrentHashMap<DownloadJob, Boolean>());
     private ExecutorService executor;
+    private ExecutorService submitJobsExecutor;
     private ScheduledExecutorService delayedJobsExecutor = Executors.newSingleThreadScheduledExecutor();
     private DownloadJobsStorage downloadJobsStorage;
+    private boolean isCreated = false;
     private static int MAX_RETRIES = 3;
 
     private static int NOTIFICATION_ID = 43;
@@ -50,7 +48,9 @@ public class DownloadService extends Service {
     public void onCreate() {
         Log.i(TAG, "ON CREATE COMMAND");
 
+        isCreated = false;
         executor = Executors.newFixedThreadPool(4);
+        submitJobsExecutor = Executors.newSingleThreadExecutor();
         downloadJobsStorage = new DownloadJobsStorage(this);
     }
 
@@ -58,28 +58,33 @@ public class DownloadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
 
-        Set<DownloadJob> toDownload = downloadJobsStorage.getUploadJobs();
+        if (isCreated) {
+            Log.i(TAG, "SERVICE IS ALREADY STARTED NOT RESTARTING");
+            return Service.START_STICKY;
+        }
+
+        isCreated = true;
+
+        Set<DownloadJob> toDownload = downloadJobsStorage.getJobs().pending;
         Log.i(TAG, "GOT DOWNLOAD JOBS " + toDownload.size());
 
-        long pendingCount = downloadJobsStorage.getPendingCount();
-        long completedCount = downloadJobsStorage.getCompletedCount();
-        long total = pendingCount + completedCount;
+        Count count = downloadJobsStorage.getCount();
 
         Connectivity.ConnectionStatus connectionStatus = Connectivity.getStatus(this);
 
-        if (!connectionStatus.isConnected && pendingCount > 0) {
+        if (!connectionStatus.isConnected && count.pending > 0) {
             Log.i(TAG, "There is no connectivity, not processing jobs");
             startForeground(NOTIFICATION_ID, createPausedNotification(this, false));
             return Service.START_STICKY;
         }
 
-        if (!connectionStatus.isConnectedWiFi && pendingCount > 0) {
+        if (!connectionStatus.isConnectedWiFi && count.pending > 0) {
             Log.i(TAG, "There is no WiFi connection, not processing jobs ");
             startForeground(NOTIFICATION_ID, createPausedNotification(this, true));
             return Service.START_STICKY;
         }
 
-        Log.i(TAG, "FILES TO UPLOAD pending: " + pendingCount + ", completedCount: " + completedCount);
+        Log.i(TAG, "FILES TO DOWNLOAD pending: " + count.pending + ", completedCount: " + count.completed);
 
         for (DownloadJob job : toDownload) {
 
@@ -90,9 +95,10 @@ public class DownloadService extends Service {
             Log.i(TAG, job.toString());
         }
 
-        if (total > 0) {
-            startForeground(NOTIFICATION_ID, createProgressNotification(this, 0, downloadJobsStorage.getUploadJobs().size(), 0));
-            updateProgress(pendingCount, completedCount);
+        if (count.total > 0) {
+            long progressPercent = (count.completed * 100) / count.total;
+            startForeground(NOTIFICATION_ID, createProgressNotification(this, progressPercent, count.pending, 0));
+            updateProgress(count);
         }
 
         return Service.START_STICKY;
@@ -102,24 +108,44 @@ public class DownloadService extends Service {
         download(Sets.newHashSet(toDownload));
     }
 
-    public void download(Set<DownloadJob> toDownload) {
+    public void download(final Set<DownloadJob> toDownload) {
 
-        Set<DownloadJob> newJobs = new HashSet<>();
-        Set<DownloadJob> existingJobs = downloadJobsStorage.getUploadJobs();
-        for (DownloadJob job : toDownload) {
-            if (!existingJobs.contains(job)) {
-                newJobs.add(job);
+        submitJobsExecutor.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Set<DownloadJob> newJobs = new HashSet<>();
+                    Jobs jobs = downloadJobsStorage.getJobs();
+
+                    for (DownloadJob job : toDownload) {
+
+                        if (new File(job.dst + ".part").exists()) {
+                            Log.i(TAG, "File is already being downloaded " + job.dst);
+                        } else if (new File(job.dst).exists()) {
+                            Log.i(TAG, "Dst already exists " + job.dst);
+                        } else if (jobs.completed.contains(job)) {
+                            Log.i(TAG, "Job is in completed!");
+                        } else if (jobs.pending.contains(job)) {
+                            Log.i(TAG, "Job is in pending!");
+                        } else {
+                            newJobs.add(job);
+                        }
+                    }
+
+                    downloadJobsStorage.submitUploads(newJobs);
+
+                    for (DownloadJob job : newJobs) {
+
+                        Log.i(TAG, "Submitting a new download job" + job.toString());
+                        submitJob(job, 0);
+                    }
+
+                    showProgressOrFinish();
+                } catch (Exception e) {
+                    Log.e(TAG, "Exception submitting a job " + e, e);
+                }
             }
-        }
-        downloadJobsStorage.submitUploads(newJobs);
-
-        for (DownloadJob job : newJobs) {
-            submitJob(job, 0);
-
-            Log.i(TAG, "Submitting a new download job" + job.toString());
-        }
-
-        showProgressOrFinish();
+        });
     }
 
     private void submitJob(final DownloadJob job, final int retry) {
@@ -133,6 +159,7 @@ public class DownloadService extends Service {
                     @Override
                     public void onDownloadCompleted(DownloadResult result) {
                         if (result.exception == null) {
+                            Log.i(TAG, "Job completed " + job.dst);
                             markAsCompleted(job.id);
                             notifyJobResult(job.id, result, job.dst);
                             showProgressOrFinish();
@@ -229,29 +256,29 @@ public class DownloadService extends Service {
 
     private void showProgressOrFinish() {
 
-        long pendingCount = downloadJobsStorage.getPendingCount();
-        long completedCount = downloadJobsStorage.getCompletedCount();
+        Count count = downloadJobsStorage.getCount();
 
-        if (pendingCount == 0) {
+        Log.i(TAG, "Show progress or finish, pending: " + count.pending + ", completed " + count.completed);
+
+        if (count.pending == 0) {
             downloadJobsStorage.removeCompleted();
             notifyFinished(this);
             stopSelf();
             return;
         }
 
-        updateProgress(pendingCount, completedCount);
+        updateProgress(count);
     }
 
     private void notifyFinished(Context context) {
+        getNotificationManager().cancel(NOTIFICATION_ID);
         stopForeground(true);
     }
 
-    private void updateProgress(long pendingCount, long completedCount) {
-        long total = pendingCount + completedCount;
-
-        if (total > 0) {
-            long progressPercent = (completedCount * 100) / total;
-            getNotificationManager().notify(NOTIFICATION_ID, createProgressNotification(this, progressPercent, total, completedCount));
+    private void updateProgress(Count count) {
+        if (count.total > 0) {
+            long progressPercent = (count.completed * 100) / count.total;
+            getNotificationManager().notify(NOTIFICATION_ID, createProgressNotification(this, progressPercent, count.total, count.completed));
         }
     }
 
@@ -259,6 +286,7 @@ public class DownloadService extends Service {
     public void onDestroy() {
         Log.i(TAG, "Destroying the service");
         executor.shutdown();
+        submitJobsExecutor.shutdown();
         delayedJobsExecutor.shutdown();
         downloadJobsStorage.close();
     }
@@ -274,7 +302,7 @@ public class DownloadService extends Service {
                 .setContentTitle("Receipts download")
                 .setContentText("Receipts (" + done + "/" + total + ") are being downloaded")
                 .setProgress(100, (int) progressPercent, false)
-               // .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
+                .setSmallIcon(R.drawable.ic_file_download_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 
         return builder.build();
@@ -289,7 +317,7 @@ public class DownloadService extends Service {
                 .setOngoing(true)
                 .setContentTitle("Receipts download")
                 .setContentText("Receipts download is paused - " + message)
-                .setSmallIcon(R.drawable.ic_file_upload_white_24dp)
+                .setSmallIcon(R.drawable.ic_file_download_white_24dp)
                 .setContentIntent(PendingIntent.getActivity(context, 1, new Intent(context, MainActivity.class), 0));
 
         return builder.build();

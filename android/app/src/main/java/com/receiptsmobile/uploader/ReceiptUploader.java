@@ -103,6 +103,8 @@ public class ReceiptUploader implements Runnable {
             } catch (IOException e) {
                 Log.e(TAG, "Exception uploading a receipt (onFailure) " + e, e);
                 callback.onDone(Result.failure());
+            } finally {
+                file.delete();
             }
         } catch (Exception e) {
             Log.e(TAG, "Exception uploading a receipt (general)" + e, e);

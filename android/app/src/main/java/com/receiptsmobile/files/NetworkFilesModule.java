@@ -21,8 +21,6 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     private static String TAG = "NetworkFilesModule";
 
-    private ExecutorService executor = Executors.newSingleThreadExecutor();
-
     private static class PromiseHolder {
         public final String dst;
         public final Promise promise;
@@ -108,6 +106,7 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
                           //  result.putInt("length", Long.valueOf(bundle.getString(DownloadService.FILE_SIZE)).intValue());
                             result.putBoolean("wasCached", false);
 
+                            Log.i(TAG, "Resolving a promise " + dst);
                             promiseHolder.promise.resolve(result);
                         } else {
                             promiseHolder.promise.reject(new RuntimeException("File for '" + dst + "' failed to download"));
@@ -140,6 +139,8 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
 
     @ReactMethod
     public void download(ReadableMap parameters, final Promise promise) {
+        long start = System.currentTimeMillis();
+
         Context context = getCurrentActivity();
 
         try {
@@ -180,6 +181,10 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
         } catch (Exception e) {
             promise.reject(e);
         }
+
+        long end = System.currentTimeMillis();
+
+        Log.i(TAG, "Took " + (end - start) + "ms to submit a job");
     }
 
 }

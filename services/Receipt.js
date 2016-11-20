@@ -25,7 +25,7 @@ function combinedWithoutDuplicates(cachedReceipts, serverReceipts) {
 class Receipt {
 
     static async receiptToImage(receipt) {
-        let file = receipt.files[0];
+        let file = receipt.files.filter(file => file.parentId !== null)[0];
 
         return {
             source: {
@@ -36,7 +36,7 @@ class Receipt {
     }
 
     static receiptToImageDimensions(receipt) {
-        let file = receipt.files[0];
+        let file = receipt.files.filter(file => file.parentId !== null)[0];
 
         return {
             width: file.metaData.width,

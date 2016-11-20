@@ -16,103 +16,130 @@ import com.receiptsmobile.db.UploadJobEntryContract.*;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class UploadJobsStorage implements Closeable {
+
+    public static class Count {
+        public final long completed;
+        public final long pending;
+        public final long total;
+
+        public Count(long completed, long pending) {
+            this.completed = completed;
+            this.pending = pending;
+            this.total = completed + pending;
+        }
+    }
+
     private final SQLiteDatabase db;
+    private final Lock lock = new ReentrantLock();
 
     public UploadJobsStorage(Context context) {
         db = new UploadJobEntryDbHelper(context).getWritableDatabase();
     }
 
     public void submitUploads(Set<ReceiptUploader.UploadJob> jobs) {
+        lock.lock();
+        try {
+            long start = System.currentTimeMillis();
+            db.beginTransaction();
+            for (ReceiptUploader.UploadJob job : jobs) {
+                Log.i("UploadJobsStorage", "Submitting: " + job.id);
+                db.insert(UploadJobEntry.TABLE_NAME, null, toContentValues(job));
+            }
+            db.setTransactionSuccessful();
+            db.endTransaction();
 
-        long start = System.currentTimeMillis();
-		db.beginTransaction();
-        for (ReceiptUploader.UploadJob job : jobs) {
-            Log.i("UploadJobsStorage", "Submitting: " + job.id);
-            db.insert(UploadJobEntry.TABLE_NAME, null, toContentValues(job));
+            long end = System.currentTimeMillis();
+
+            Log.i("UploadJobsStorage", "Time taken to submit jobs: " + ((end - start)/1000) + "s");
+        } finally {
+            lock.unlock();
         }
-		db.setTransactionSuccessful();
-		db.endTransaction();
-
-        long end = System.currentTimeMillis();
-
-        Log.i("UploadJobsStorage", "Time taken to submit jobs: " + ((end - start)/1000) + "s");
-
     }
 
     public Set<ReceiptUploader.UploadJob> getUploadJobs() {
-
-        String[] projection = {
-                UploadJobEntry.COLUMN_NAME_UPLOAD_JOB,
-                UploadJobEntry.COLUMN_NAME_IS_COMPLETED
-        };
-
-        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "0" };
-
-        String sortOrder =
-                UploadJobEntry.COLUMN_NAME_TIMESTAMP + " ASC";
-
-        Cursor cursor = db.query(
-                UploadJobEntry.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                sortOrder
-        );
-
-        Set<ReceiptUploader.UploadJob> uploadJobs = new LinkedHashSet<>();
-
+        lock.lock();
         try {
+            String[] projection = {
+                    UploadJobEntry.COLUMN_NAME_UPLOAD_JOB,
+                    UploadJobEntry.COLUMN_NAME_IS_COMPLETED
+            };
 
-            while (cursor.moveToNext()) {
-                uploadJobs.add(cursorToUploadJob(cursor));
+            String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+            String[] selectionArgs = { "0" };
+
+            String sortOrder =
+                    UploadJobEntry.COLUMN_NAME_TIMESTAMP + " ASC";
+
+            Cursor cursor = db.query(
+                    UploadJobEntry.TABLE_NAME,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null,
+                    null,
+                    sortOrder
+            );
+
+            Set<ReceiptUploader.UploadJob> uploadJobs = new LinkedHashSet<>();
+
+            try {
+
+                while (cursor.moveToNext()) {
+                    uploadJobs.add(cursorToUploadJob(cursor));
+                }
+                return uploadJobs;
+            } finally {
+                cursor.close();
             }
-            return uploadJobs;
         } finally {
-            cursor.close();
+            lock.unlock();
         }
     }
 
-    public long getCompletedCount() {
-        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "1" };
-        return DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, selection, selectionArgs);
-    }
-
-    public long getPendingCount() {
-        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "0" };
-        return DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+    public Count getCount() {
+        lock.lock();
+        try {
+            return new Count(
+                    DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?", new String[] { "1" }),
+                    DatabaseUtils.queryNumEntries(db, UploadJobEntry.TABLE_NAME, UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?", new String[] { "0" })
+            );
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void removeCompleted() {
+        lock.lock();
+        try {
+            String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+            String[] selectionArgs = { "1" };
 
-        String selection = UploadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "1" };
-
-        db.delete(UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+            db.delete(UploadJobEntry.TABLE_NAME, selection, selectionArgs);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void markAsCompleted(UUID jobId) {
+        lock.lock();
+        try {
+            ContentValues values = new ContentValues();
+            values.put(UploadJobEntry.COLUMN_NAME_IS_COMPLETED, "1");
 
-        ContentValues values = new ContentValues();
-        values.put(UploadJobEntry.COLUMN_NAME_IS_COMPLETED, "1");
+            String selection = UploadJobEntry.COLUMN_NAME_UPLOAD_JOB_ID + " = ?";
+            String[] selectionArgs = { jobId.toString() };
 
-        String selection = UploadJobEntry.COLUMN_NAME_UPLOAD_JOB_ID + " = ?";
-        String[] selectionArgs = { jobId.toString() };
-
-        int count = db.update(
-                UploadJobEntry.TABLE_NAME,
-                values,
-                selection,
-                selectionArgs);
-
-        if (count == 0) {
-            throw new RuntimeException("Upload job with id '" + jobId + "' wasn't updated");
+            db.update(
+                    UploadJobEntry.TABLE_NAME,
+                    values,
+                    selection,
+                    selectionArgs);
+        } finally {
+            lock.unlock();
         }
     }
 

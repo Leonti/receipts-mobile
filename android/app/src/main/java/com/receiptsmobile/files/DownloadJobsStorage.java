@@ -12,106 +12,154 @@ import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.receiptsmobile.db.DownloadJobEntryContract.*;
 
 public class DownloadJobsStorage implements Closeable {
+
+    public static class Count {
+        public final long completed;
+        public final long pending;
+        public final long total;
+
+        public Count(long completed, long pending) {
+            this.completed = completed;
+            this.pending = pending;
+            this.total = completed + pending;
+        }
+    }
+
+    public static class Jobs {
+        final Set<DownloadJob> completed;
+        final Set<DownloadJob> pending;
+
+        public Jobs(Set<DownloadJob> completed, Set<DownloadJob> pending) {
+            this.completed = completed;
+            this.pending = pending;
+        }
+    }
+
     private static String TAG = "DownloadJobsStorage";
 
     private final SQLiteDatabase db;
+    private final Lock lock = new ReentrantLock();
 
     public DownloadJobsStorage(Context context) {
         db = new DownloadJobEntryDbHelper(context).getWritableDatabase();
     }
 
     public void submitUploads(Set<DownloadJob> jobs) {
+        lock.lock();
+        try {
+            long start = System.currentTimeMillis();
+            db.beginTransaction();
+            for (DownloadJob job : jobs) {
+                Log.i(TAG, "Submitting: " + job.id);
+                db.insert(DownloadJobEntry.TABLE_NAME, null, toContentValues(job));
+            }
+            db.setTransactionSuccessful();
+            db.endTransaction();
 
-        long start = System.currentTimeMillis();
-        db.beginTransaction();
-        for (DownloadJob job : jobs) {
-            Log.i(TAG, "Submitting: " + job.id);
-            db.insert(DownloadJobEntry.TABLE_NAME, null, toContentValues(job));
+            long end = System.currentTimeMillis();
+
+            Log.i(TAG, "Time taken to submit jobs: " + ((end - start)/1000) + "s");
+        } finally {
+            lock.unlock();
         }
-        db.setTransactionSuccessful();
-        db.endTransaction();
-
-        long end = System.currentTimeMillis();
-
-        Log.i("UploadJobsStorage", "Time taken to submit jobs: " + ((end - start)/1000) + "s");
-
     }
 
-    public Set<DownloadJob> getUploadJobs() {
-
-        String[] projection = {
-                DownloadJobEntry.COLUMN_NAME_JOB,
-                DownloadJobEntry.COLUMN_NAME_IS_COMPLETED
-        };
-
-        String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "0" };
-
-        String sortOrder =
-                DownloadJobEntry.COLUMN_NAME_TIMESTAMP + " ASC";
-
-        Cursor cursor = db.query(
-                DownloadJobEntry.TABLE_NAME,
-                projection,
-                selection,
-                selectionArgs,
-                null,
-                null,
-                sortOrder
-        );
-
-        Set<DownloadJob> jobs = new LinkedHashSet<>();
-
+    public Jobs getJobs() {
+        lock.lock();
         try {
 
-            while (cursor.moveToNext()) {
-                jobs.add(cursorToJob(cursor));
+            String[] projection = {
+                    DownloadJobEntry.COLUMN_NAME_JOB,
+                    DownloadJobEntry.COLUMN_NAME_IS_COMPLETED
+            };
+
+       //     String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+      //      String[] selectionArgs = { "0" };
+
+            String sortOrder =
+                    DownloadJobEntry.COLUMN_NAME_TIMESTAMP + " ASC";
+
+            Cursor cursor = db.query(
+                    DownloadJobEntry.TABLE_NAME,
+                    projection,
+                    null,
+                    null,
+                    null,
+                    null,
+                    sortOrder
+            );
+
+            Set<DownloadJob> completed = new HashSet<>();
+            Set<DownloadJob> pending = new HashSet<>();
+
+            try {
+
+                while (cursor.moveToNext()) {
+
+                    DownloadJob job = cursorToJob(cursor);
+                    int isCompleted = cursor.getInt(cursor.getColumnIndexOrThrow(DownloadJobEntry.COLUMN_NAME_IS_COMPLETED));
+
+                    if (isCompleted == 1) {
+                        completed.add(job);
+                    } else {
+                        pending.add(job);
+                    }
+                }
+                return new Jobs(completed, pending);
+            } finally {
+                cursor.close();
             }
-            return jobs;
         } finally {
-            cursor.close();
+            lock.unlock();
         }
     }
 
-    public long getCompletedCount() {
-        String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "1" };
-        return DatabaseUtils.queryNumEntries(db, DownloadJobEntry.TABLE_NAME, selection, selectionArgs);
-    }
-
-    public long getPendingCount() {
-        String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "0" };
-        return DatabaseUtils.queryNumEntries(db, DownloadJobEntry.TABLE_NAME, selection, selectionArgs);
+    public Count getCount() {
+        lock.lock();
+        try {
+            return new Count(
+                    DatabaseUtils.queryNumEntries(db, DownloadJobEntry.TABLE_NAME, DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?", new String[] { "1" }),
+                    DatabaseUtils.queryNumEntries(db, DownloadJobEntry.TABLE_NAME, DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?", new String[] { "0" })
+            );
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void removeCompleted() {
+        lock.lock();
+        try {
+            String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
+            String[] selectionArgs = { "1" };
 
-        String selection = DownloadJobEntry.COLUMN_NAME_IS_COMPLETED + " = ?";
-        String[] selectionArgs = { "1" };
-
-        db.delete(DownloadJobEntry.TABLE_NAME, selection, selectionArgs);
+            db.delete(DownloadJobEntry.TABLE_NAME, selection, selectionArgs);
+        } finally {
+            lock.unlock();
+        }
     }
 
     public void markAsCompleted(UUID jobId) {
+        lock.lock();
+        try {
+            ContentValues values = new ContentValues();
+            values.put(DownloadJobEntry.COLUMN_NAME_IS_COMPLETED, "1");
 
-        ContentValues values = new ContentValues();
-        values.put(DownloadJobEntry.COLUMN_NAME_IS_COMPLETED, "1");
+            String selection = DownloadJobEntry.COLUMN_NAME_JOB_ID + " = ?";
+            String[] selectionArgs = { jobId.toString() };
 
-        String selection = DownloadJobEntry.COLUMN_NAME_JOB_ID + " = ?";
-        String[] selectionArgs = { jobId.toString() };
-
-        int count = db.update(
-                DownloadJobEntry.TABLE_NAME,
-                values,
-                selection,
-                selectionArgs);
-
-        if (count == 0) {
-            throw new RuntimeException("Download job with id '" + jobId + "' wasn't updated");
+            db.update(
+                    DownloadJobEntry.TABLE_NAME,
+                    values,
+                    selection,
+                    selectionArgs);
+        } finally {
+            lock.unlock();
         }
     }
 

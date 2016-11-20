@@ -42,6 +42,7 @@ public class FileDownloader implements Runnable {
                     BufferedSink sink = Okio.buffer(Okio.sink(tmpDst));
                     sink.writeAll(response.body().source());
                     sink.close();
+                    response.body().close();
 
                     tmpDst.renameTo(params.dst);
                     Log.i(TAG, "File downloaded and saved to '" + params.dst.getAbsolutePath() + "'");

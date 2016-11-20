@@ -1,5 +1,6 @@
 package com.receiptsmobile.files;
 
+import android.util.Log;
 import com.receiptsmobile.uploader.ReceiptUploader;
 
 import java.util.Map;
@@ -28,6 +29,7 @@ public class DownloadJob {
 
         if (!src.equals(job.src)) return false;
         if (!dst.equals(job.dst)) return false;
+
         return headers.equals(job.headers);
     }
 
