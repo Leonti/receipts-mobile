@@ -138,11 +138,15 @@ class HomePage extends React.Component {
 
     _renderHome() {
 
+        const receiptCount = this.props.receipts.length;
+        const headerTitle = "Your Receipts" + (receiptCount > 0 ?
+        " (" + receiptCount + ")" : "")
+
         return (
             <View style={{ flex:1, backgroundColor: '#f3f3f3' }}>
             <Icon.ToolbarAndroid
                 style={styles.toolbar}
-                title="Your Receipts"
+                title={headerTitle}
                 navIconName="menu"
                 onIconClicked={() => this.props.openDrawer()}
                 />
