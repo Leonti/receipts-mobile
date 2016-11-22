@@ -69,21 +69,22 @@ class ReceiptForm extends React.Component {
                     value={this.props.total} />
 
                 <Text style={styles.formLabel}>Transaction time:</Text>
-                <TouchableWithoutFeedback
-                    onPress={this.showDatePicker.bind(this)}
-                >
-                    <View>
-                        <Text>{moment(this.props.transactionTime).format('ll')}</Text>
-                    </View>
-                </TouchableWithoutFeedback>
-                <TouchableWithoutFeedback
-                    onPress={this.showTimePicker.bind(this)}
-                >
-                    <View>
-                        <Text>{moment(this.props.transactionTime).format('LT')}</Text>
-                    </View>
-                </TouchableWithoutFeedback>
-
+                <View style={styles.timeContainer}>
+                    <TouchableWithoutFeedback
+                        onPress={this.showDatePicker.bind(this)}
+                    >
+                        <View style={styles.timeTouchable}>
+                            <Text style={styles.timeLabel}>{moment(this.props.transactionTime).format('ll')}</Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+                    <TouchableWithoutFeedback
+                        onPress={this.showTimePicker.bind(this)}
+                    >
+                        <View>
+                            <Text style={styles.timeLabel}>{moment(this.props.transactionTime).format('LT')}</Text>
+                        </View>
+                    </TouchableWithoutFeedback>
+                </View>
                 <Text style={styles.formLabel}>Notes:</Text>
                 <TextInput
                     style={styles.description}
@@ -112,6 +113,22 @@ const styles = StyleSheet.create({
         fontSize: 18,
         height: 100,
         textAlignVertical: 'top',
+    },
+
+    timeContainer: {
+        flexWrap: 'wrap',
+        alignItems: 'flex-start',
+        flexDirection:'row',
+        marginTop: 10,
+        marginBottom: 10,
+    },
+
+    timeLabel: {
+        fontSize: 18,
+    },
+
+    timeTouchable: {
+        paddingRight: 25,
     }
 });
 
