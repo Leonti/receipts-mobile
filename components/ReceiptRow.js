@@ -32,7 +32,7 @@ class ReceiptRow extends Component {
             <View style={styles.container}>
                 <View style={styles.rowHeader}>
                     {mainText(this.props.receipt.total)}
-                    <Text style={styles.timestamp}>{moment(this.props.receipt.timestamp).format('lll')}</Text>
+                    <Text style={styles.timestamp}>{moment(this.props.receipt.transactionTime).format('lll')}</Text>
                 </View>
                 <Text style={styles.description} numberOfLines={1}>{formatDescription(this.props.receipt.description)}</Text>
             </View>

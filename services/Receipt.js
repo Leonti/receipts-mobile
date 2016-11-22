@@ -36,6 +36,8 @@ class Receipt {
     }
 
     static receiptToImageDimensions(receipt) {
+        console.log('RECEIPT')
+        console.log(receipt)
         let file = receipt.files.filter(file => file.parentId !== null)[0];
 
         return {

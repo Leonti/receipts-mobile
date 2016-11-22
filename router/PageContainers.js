@@ -225,6 +225,7 @@ export const ReceiptEditPageContainer = connect(
             thumbnail: state.receipt.openedReceipt.thumbnail,
             description: state.receipt.openedReceipt.receipt.description,
             total: state.receipt.openedReceipt.receipt.total,
+            transactionTime: state.receipt.openedReceipt.receipt.transactionTime,
             title: 'Edit Receipt',
         }
     },
@@ -235,6 +236,8 @@ export const ReceiptEditPageContainer = connect(
                     receiptId,
                     receiptData.total,
                     receiptData.description,
+                    receiptData.transactionTime,
+                    receiptData.tags,
                     (receipt) => {
                         dispatch(openReceipt(receipt))
                         dispatch(navigateTo('RECEIPT_VIEW'))

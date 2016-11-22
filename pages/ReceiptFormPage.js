@@ -18,10 +18,13 @@ const MAX_HEIGHT = 200;
 class ReceiptFormPage extends React.Component {
 
     constructor(props) {
+        console.log(props)
         super(props);
         this.state = {
             description: props.description,
             total: props.total !== null && props.total !== undefined ? props.total.toString(): null,
+            transactionTime: props.transactionTime ? props.transactionTime : new Date().getTime(),
+            tags: props.tags ? props.tags : [],
         };
     }
 
@@ -29,7 +32,9 @@ class ReceiptFormPage extends React.Component {
         if (position === 0) {
             this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
                 total: this.state.total,
-                description: this.state.description
+                description: this.state.description,
+                transactionTime: this.state.transactionTime,
+                tags: this.state.tags,
             })
         } else if (position == 1) {
             Alert.alert('Delete Receipt',
@@ -86,6 +91,8 @@ class ReceiptFormPage extends React.Component {
                             onTotalChange={(text) => this.setState({total: text})}
                             description={this.state.description}
                             onDescriptionChange={(text) => this.setState({description: text})}
+                            transactionTime={this.state.transactionTime}
+                            onTransactionTimeChange={transactionTime => this.setState({transactionTime})}
                         />
                     </ScrollView>
                     <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
@@ -141,6 +148,8 @@ ReceiptFormPage.propTypes = {
     image: PropTypes.object.isRequired,
     description: PropTypes.string.isRequired,
     total: PropTypes.any,
+    transactionTime: PropTypes.number,
+    tags: PropTypes.array,
     title: PropTypes.string.isRequired,
 
     onSave: PropTypes.func.isRequired,

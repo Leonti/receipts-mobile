@@ -74,7 +74,13 @@ export function batchCreateReceipts(imageUris) {
     }
 }
 
-export function saveReceipt(receiptId, total, description, postSaveAction) {
+export function saveReceipt(
+    receiptId,
+    total,
+    description,
+    transactionTime,
+    tags,
+    postSaveAction) {
 
     return function(dispatch) {
         dispatch({
@@ -82,8 +88,10 @@ export function saveReceipt(receiptId, total, description, postSaveAction) {
         });
 
         return Api.updateReceipt(receiptId, {
-                total: total,
-                description: description
+                total,
+                description,
+                transactionTime,
+                tags,
             }).then(result => {
                 dispatch({
                     type: SAVE_RECEIPT_RESULT,

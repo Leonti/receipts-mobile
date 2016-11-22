@@ -171,7 +171,18 @@ class Api {
                 op: 'replace',
                 path: '/total',
                 value: toTotalValue(fields.total)
-            }])
+            },
+            {
+                op: 'replace',
+                path: '/tags',
+                value: fields.tags
+            },
+            {
+                op: 'replace',
+                path: '/transactionTime',
+                value: fields.transactionTime
+            },
+        ])
         })).json()
     }
 
