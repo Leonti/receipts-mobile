@@ -158,7 +158,9 @@ class HomePage extends React.Component {
                     renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
                     refreshControl={ <RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} /> }
                 />
-                <ActionButton buttonColor="#F44336">
+                <ActionButton
+                    offsetY={4}
+                    buttonColor="#F44336">
                     <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera.bind(this)}>
                         <Icon name="camera" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
