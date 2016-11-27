@@ -9,54 +9,9 @@ import {
     TimePickerAndroid,
 } from 'react-native';
 
-var moment = require('moment');
+import DateTimeSelector from './DateTimeSelector';
 
 class ReceiptForm extends React.Component {
-
-    showDatePicker = async () => {
-        try {
-            const {action, year, month, day} = await DatePickerAndroid.open({
-                date: this.props.transactionTime,
-                maxDate: new Date(),
-            });
-
-            if (action !== DatePickerAndroid.dismissedAction) {
-                const oldDate = new Date(this.props.transactionTime);
-
-                const newTimestamp = new Date(year, month, day, oldDate.getHours(), oldDate.getMinutes()).getTime();
-                this.props.onTransactionTimeChange(newTimestamp)
-            }
-
-        } catch ({code, message}) {
-            console.warn(`Error displaying date picker`, message);
-        }
-    }
-
-    showTimePicker = async () => {
-
-        try {
-
-            const oldDateTime = new Date(this.props.transactionTime);
-
-            const {action, hour, minute} = await TimePickerAndroid.open({
-                hour: oldDateTime.getHours(),
-                minute: oldDateTime.getMinutes()
-            });
-
-            if (action !== TimePickerAndroid.dismissedAction) {
-                const newTimestamp = new Date(
-                    oldDateTime.getFullYear(),
-                    oldDateTime.getMonth(),
-                    oldDateTime.getDate(),
-                    hour,
-                    minute).getTime();
-                this.props.onTransactionTimeChange(newTimestamp)
-            }
-
-        } catch ({code, message}) {
-            console.warn(`Error displaying time picker`, message);
-        }
-    }
 
     render() {
         return (
@@ -69,22 +24,10 @@ class ReceiptForm extends React.Component {
                     value={this.props.total} />
 
                 <Text style={styles.formLabel}>Transaction time:</Text>
-                <View style={styles.timeContainer}>
-                    <TouchableWithoutFeedback
-                        onPress={this.showDatePicker.bind(this)}
-                    >
-                        <View style={styles.timeTouchable}>
-                            <Text style={styles.timeLabel}>{moment(this.props.transactionTime).format('ll')}</Text>
-                        </View>
-                    </TouchableWithoutFeedback>
-                    <TouchableWithoutFeedback
-                        onPress={this.showTimePicker.bind(this)}
-                    >
-                        <View>
-                            <Text style={styles.timeLabel}>{moment(this.props.transactionTime).format('LT')}</Text>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </View>
+                <DateTimeSelector
+                    timestamp={this.props.transactionTime}
+                    onChange={this.props.onTransactionTimeChange}
+                />
                 <Text style={styles.formLabel}>Notes:</Text>
                 <TextInput
                     style={styles.description}
@@ -139,6 +82,6 @@ ReceiptForm.propTypes = {
     transactionTime: PropTypes.number.isRequired,
     onDescriptionChange: PropTypes.func.isRequired,
     onTransactionTimeChange: PropTypes.func.isRequired,
-    onTagsChange: PropTypes.func.isRequired, 
+    onTagsChange: PropTypes.func.isRequired,
 };
 export default ReceiptForm
