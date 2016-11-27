@@ -51,7 +51,7 @@ class ZoomableImage extends Component {
             isMoving: false,
             initialDistance: null,
             initialX: null,
-            initalY: null,
+            initialY: null,
             offsetTop: 0,
             offsetLeft: 0,
             initialTop: 0,
@@ -95,8 +95,8 @@ class ZoomableImage extends Component {
 
             this.setState({
                 zoom: zoom,
-                left: 0,
-                top: 0,
+        //        left: 0,
+        //        top: 0,
                 left: left > 0 ? 0 : maxOffset(left, this.state.width, this.props.imageWidth * zoom),
                 top: top > 0 ? 0 : maxOffset(top, this.state.height, this.props.imageHeight * zoom),
             });
@@ -144,6 +144,9 @@ class ZoomableImage extends Component {
             height: layout.height,
             zoom: zoom,
             offsetTop: offsetTop,
+            offsetLeft: 0,
+            top: 0,
+            left: 0,
             minZoom: zoom
         });
     }

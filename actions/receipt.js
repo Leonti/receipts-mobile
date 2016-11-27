@@ -30,6 +30,9 @@ export const SET_OPENED_RECEIPT = 'SET_OPENED_RECEIPT';
 export const SET_OPENED_RECEIPT_URI = 'SET_OPENED_RECEIPT_URI';
 export const SET_OPENED_RECEIPT_URI_FAILURE = 'SET_OPENED_RECEIPT_URI_FAILED';
 
+export const START_EDITING_RECEIPT = 'START_EDITING_RECEIPT';
+export const STOP_EDITING_RECEIPT = 'STOP_EDITING_RECEIPT';
+
 export const UPDATE_OPENED_RECEIPT = 'UPDATE_OPENED_RECEIPT';
 export const UPDATE_NEW_RECEIPT = 'UPDATE_NEW_RECEIPT';
 
@@ -90,6 +93,18 @@ export function updateNewReceipt(updatedFields) {
     return {
         type: UPDATE_NEW_RECEIPT,
         data: updatedFields,
+    }
+}
+
+export function startEditingReceipt() {
+    return {
+        type: START_EDITING_RECEIPT,
+    }
+}
+
+export function stopEditingReceipt() {
+    return {
+        type: STOP_EDITING_RECEIPT,
     }
 }
 

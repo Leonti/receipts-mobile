@@ -32,6 +32,9 @@ import {
     SET_OPENED_RECEIPT_URI,
     SET_OPENED_RECEIPT_URI_FAILURE,
 
+    START_EDITING_RECEIPT,
+    STOP_EDITING_RECEIPT,
+
     UPDATE_OPENED_RECEIPT,
     UPDATE_NEW_RECEIPT,
 
@@ -209,6 +212,7 @@ function newReceipt(state = {
 function openedReceipt(state = {
         receipt: null,
         updatedReceipt: null,
+        isBeingEdited: false,
         image: {
             source: null,
             width: null,
@@ -250,6 +254,14 @@ function openedReceipt(state = {
         case UPDATE_OPENED_RECEIPT:
             return Object.assign({}, state, {
                 updatedReceipt: Object.assign({}, state.updatedReceipt, action.data),
+            });
+        case START_EDITING_RECEIPT:
+            return Object.assign({}, state, {
+                isBeingEdited: true,
+            });
+        case STOP_EDITING_RECEIPT:
+            return Object.assign({}, state, {
+                isBeingEdited: false,
             });
         default:
           return state

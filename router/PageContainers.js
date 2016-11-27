@@ -14,6 +14,8 @@ import {
     deleteReceipt,
     setNewReceipt,
     updateNewReceipt,
+    startEditingReceipt,
+    stopEditingReceipt,
     saveReceipt,
     createReceipt,
     batchCreateReceipts,
@@ -127,12 +129,15 @@ export const HomePageContainer = connect(
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt));
                 if (needToEdit(receipt)) {
+                    dispatch(startEditingReceipt())
                     dispatch(navigateTo('RECEIPT_EDIT'))
                 } else {
+                    dispatch(stopEditingReceipt())
                     dispatch(navigateTo('RECEIPT_VIEW'));
                 }
             },
             onFileSelected: (image) => {
+                dispatch(stopEditingReceipt())
                 dispatch(setNewReceipt(image, '', ''))
                 dispatch(navigateTo('RECEIPT_CREATE'))
             },
@@ -196,6 +201,7 @@ export const ReceiptViewPageContainer = connect(
                 }))
             },
             onEdit: () => {
+                dispatch(startEditingReceipt())
                 dispatch(navigateTo('RECEIPT_EDIT'))
             },
             onClose: () => {
@@ -204,6 +210,7 @@ export const ReceiptViewPageContainer = connect(
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
                 if (needToEdit(receipt)) {
+                    dispatch(startEditingReceipt())
                     dispatch(navigateTo('RECEIPT_EDIT'))
                 }
             },
@@ -247,6 +254,7 @@ export const ReceiptEditPageContainer = connect(
                     receiptData.tags,
                     (receipt) => {
                         dispatch(openReceipt(receipt))
+                        dispatch(stopEditingReceipt())
                         dispatch(navigateTo('RECEIPT_VIEW'))
                     }
                 ))
@@ -255,6 +263,7 @@ export const ReceiptEditPageContainer = connect(
                 dispatch(updateOpenedReceipt(updatedFields))
             },
             onClose: () => {
+                dispatch(stopEditingReceipt())
                 dispatch(navigateBack())
             },
             onDelete: (receiptId) => {
@@ -265,6 +274,7 @@ export const ReceiptEditPageContainer = connect(
             toReceipt: (receipt) => {
                 dispatch(openReceipt(receipt))
                 if (!needToEdit(receipt)) {
+                    dispatch(stopEditingReceipt())
                     dispatch(navigateTo('RECEIPT_VIEW'))
                 }
             },
@@ -325,12 +335,18 @@ export const ImageViewerContainer = connect(
             source: state.receipt.openedReceiptImage.source,
             imageWidth: state.receipt.openedReceiptImage.width,
             imageHeight: state.receipt.openedReceiptImage.height,
+            isBeingEdited: state.receipt.openedReceipt.isBeingEdited,
+            total: state.receipt.openedReceipt.updatedReceipt.total,
+            transactionTime: state.receipt.openedReceipt.updatedReceipt.transactionTime,
         }
     },
     (dispatch) => {
         return {
             onClose: () => {
                 dispatch(navigateBack())
+            },
+            onModifiedReceipt: updatedFields => {
+                dispatch(updateOpenedReceipt(updatedFields))
             },
         }
     }

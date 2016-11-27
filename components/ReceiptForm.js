@@ -57,22 +57,6 @@ const styles = StyleSheet.create({
         height: 100,
         textAlignVertical: 'top',
     },
-
-    timeContainer: {
-        flexWrap: 'wrap',
-        alignItems: 'flex-start',
-        flexDirection:'row',
-        marginTop: 10,
-        marginBottom: 10,
-    },
-
-    timeLabel: {
-        fontSize: 18,
-    },
-
-    timeTouchable: {
-        paddingRight: 25,
-    }
 });
 
 ReceiptForm.propTypes = {
