@@ -32,6 +32,9 @@ import {
     SET_OPENED_RECEIPT_URI,
     SET_OPENED_RECEIPT_URI_FAILURE,
 
+    UPDATE_OPENED_RECEIPT,
+    UPDATE_NEW_RECEIPT,
+
     SET_IMAGE_VIEWER_IMAGE,
 } from '../actions/receipt'
 
@@ -189,10 +192,14 @@ function newReceipt(state = {
         thumbnail: null,
         total: null,
         description: null,
+        transactionTime: null,
+        tags: null,
     }, action) {
 
         switch (action.type) {
             case SET_NEW_RECEIPT:
+                return Object.assign({}, state, action.data);
+            case UPDATE_NEW_RECEIPT:
                 return Object.assign({}, state, action.data);
             default:
               return state
@@ -201,6 +208,7 @@ function newReceipt(state = {
 
 function openedReceipt(state = {
         receipt: null,
+        updatedReceipt: null,
         image: {
             source: null,
             width: null,
@@ -217,6 +225,7 @@ function openedReceipt(state = {
         case SET_OPENED_RECEIPT:
             return Object.assign({}, state, {
                 receipt: action.receipt,
+                updatedReceipt: action.receipt,
                 image: {
                     width: action.imageDimensions.width,
                     height: action.imageDimensions.height,
@@ -237,6 +246,10 @@ function openedReceipt(state = {
         case SET_OPENED_RECEIPT_URI_FAILURE:
             return Object.assign({}, state, {
                 error: action.error,
+            });
+        case UPDATE_OPENED_RECEIPT:
+            return Object.assign({}, state, {
+                updatedReceipt: Object.assign({}, state.updatedReceipt, action.data),
             });
         default:
           return state

@@ -30,21 +30,26 @@ export const SET_OPENED_RECEIPT = 'SET_OPENED_RECEIPT';
 export const SET_OPENED_RECEIPT_URI = 'SET_OPENED_RECEIPT_URI';
 export const SET_OPENED_RECEIPT_URI_FAILURE = 'SET_OPENED_RECEIPT_URI_FAILED';
 
+export const UPDATE_OPENED_RECEIPT = 'UPDATE_OPENED_RECEIPT';
+export const UPDATE_NEW_RECEIPT = 'UPDATE_NEW_RECEIPT';
+
 export const SET_IMAGE_VIEWER_IMAGE = 'SET_IMAGE_VIEWER_IMAGE';
 
-export function createReceipt(imageUri, total, description) {
+export function createReceipt(imageUri, total, description, transactionTime, tags) {
 
     return function(dispatch) {
         dispatch({
             type: CREATE_RECEIPT_REQUEST,
         });
 
-        return Api.uploadFile(imageUri, total, description).then(result => {
+        return Api.uploadFile(imageUri, total, description, transactionTime, tags).then(result => {
             dispatch({
                 type: CREATE_RECEIPT_RESULT,
                 result,
             });
         }, error => {
+
+            console.log('ERROR UPLOADING', error)
             dispatch({
                 type: CREATE_RECEIPT_REQUEST_FAILURE,
                 error,
@@ -71,6 +76,20 @@ export function batchCreateReceipts(imageUris) {
                 error,
             });
         });
+    }
+}
+
+export function updateOpenedReceipt(updatedFields) {
+    return {
+        type: UPDATE_OPENED_RECEIPT,
+        data: updatedFields,
+    }
+}
+
+export function updateNewReceipt(updatedFields) {
+    return {
+        type: UPDATE_NEW_RECEIPT,
+        data: updatedFields,
     }
 }
 

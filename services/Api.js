@@ -111,7 +111,7 @@ class Api {
         return 'file://' + result.file;
     }
 
-    static async uploadFile(fileUri, total, description) {
+    static async uploadFile(fileUri, total, description, transactionTime, tags) {
         let token = await Api._getAccessToken();
         let userId = await Api._getUserId();
 
@@ -124,6 +124,8 @@ class Api {
                     fields: {
                         total: total === null ? '' : total,
                         description: description === null ? '' : description,
+                        transactionTime: transactionTime.toString(),
+                        tags: tags.reduce((acc, tag) => acc + ',' + tag, '')
                     },
                 },
             ]
@@ -145,6 +147,8 @@ class Api {
                     fields: {
                         total: '',
                         description: '',
+                        transactionTime: new Date().getTime().toString(),
+                        tags: '',
                     }
                 }
             }),

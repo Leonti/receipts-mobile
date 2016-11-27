@@ -139,5 +139,6 @@ ReceiptForm.propTypes = {
     transactionTime: PropTypes.number.isRequired,
     onDescriptionChange: PropTypes.func.isRequired,
     onTransactionTimeChange: PropTypes.func.isRequired,
+    onTagsChange: PropTypes.func.isRequired, 
 };
 export default ReceiptForm

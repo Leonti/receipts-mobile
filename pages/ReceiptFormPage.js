@@ -15,26 +15,27 @@ var Icon = require('react-native-vector-icons/MaterialIcons');
 
 const MAX_HEIGHT = 200;
 
-class ReceiptFormPage extends React.Component {
+function formatTotal(total) {
+    return total !== null && total !== undefined ? total.toString(): null;
+}
 
-    constructor(props) {
-        console.log(props)
-        super(props);
-        this.state = {
-            description: props.description,
-            total: props.total !== null && props.total !== undefined ? props.total.toString(): null,
-            transactionTime: props.transactionTime ? props.transactionTime : new Date().getTime(),
-            tags: props.tags ? props.tags : [],
-        };
-    }
+function formatTags(tags) {
+    return tags ? tags : [];
+}
+
+function formatTransactionTime(transactionTime) {
+    return transactionTime ? transactionTime : new Date().getTime()
+}
+
+class ReceiptFormPage extends React.Component {
 
     _onActionSelected(position) {
         if (position === 0) {
             this.props.onSave(this.props.receiptId, this.props.image.source.uri, {
-                total: this.state.total,
-                description: this.state.description,
-                transactionTime: this.state.transactionTime,
-                tags: this.state.tags,
+                total: this.props.total,
+                description: this.props.description,
+                transactionTime: this.props.transactionTime,
+                tags: this.props.tags,
             })
         } else if (position == 1) {
             Alert.alert('Delete Receipt',
@@ -87,12 +88,28 @@ class ReceiptFormPage extends React.Component {
                     <ScrollView>
                         {thumbnail}
                         <ReceiptForm
-                            total={this.state.total}
-                            onTotalChange={(text) => this.setState({total: text})}
-                            description={this.state.description}
-                            onDescriptionChange={(text) => this.setState({description: text})}
-                            transactionTime={this.state.transactionTime}
-                            onTransactionTimeChange={transactionTime => this.setState({transactionTime})}
+                            total={formatTotal(this.props.total)}
+                            onTotalChange={(text) => {
+                                this.props.onModifiedReceipt({
+                                    total: text
+                                });
+                            }}
+                            description={this.props.description}
+                            onDescriptionChange={(text) => {
+                                this.props.onModifiedReceipt({
+                                    description: text
+                                });
+                            }}
+                            transactionTime={formatTransactionTime(this.props.transactionTime)}
+                            onTransactionTimeChange={transactionTime => {
+                                this.props.onModifiedReceipt({transactionTime});
+                            }}
+                            tags={formatTags(this.props.tags)}
+                            onTagsChange={tags => {
+                                this.props.onModifiedReceipt({
+                                    tags: tags
+                                });
+                            }}
                         />
                     </ScrollView>
                     <Spinner message='Saving receipt ...' visible={this.props.isFetching} />
@@ -153,6 +170,7 @@ ReceiptFormPage.propTypes = {
     title: PropTypes.string.isRequired,
 
     onSave: PropTypes.func.isRequired,
+    onModifiedReceipt: PropTypes.func.isRequired,
     onClose: PropTypes.func.isRequired,
     toReceipt: PropTypes.func,
     toImageViewer: PropTypes.func.isRequired,

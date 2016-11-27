@@ -10,8 +10,10 @@ import {
     closeDrawer,
     loadReceipts,
     openReceipt,
+    updateOpenedReceipt,
     deleteReceipt,
     setNewReceipt,
+    updateNewReceipt,
     saveReceipt,
     createReceipt,
     batchCreateReceipts,
@@ -214,6 +216,10 @@ export const ReceiptViewPageContainer = connect(
 
 export const ReceiptEditPageContainer = connect(
     (state) => {
+
+        const existingTags = state.receipt.openedReceipt.updatedReceipt.tags
+        const tags = existingTags ? existingTags : []
+
         return {
             receiptId: state.receipt.openedReceipt.receipt.id,
             nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
@@ -223,9 +229,10 @@ export const ReceiptEditPageContainer = connect(
             isSwipable: true,
             image: state.receipt.openedReceipt.image,
             thumbnail: state.receipt.openedReceipt.thumbnail,
-            description: state.receipt.openedReceipt.receipt.description,
-            total: state.receipt.openedReceipt.receipt.total,
-            transactionTime: state.receipt.openedReceipt.receipt.transactionTime,
+            description: state.receipt.openedReceipt.updatedReceipt.description,
+            total: state.receipt.openedReceipt.updatedReceipt.total,
+            transactionTime: state.receipt.openedReceipt.updatedReceipt.transactionTime,
+            tags: tags,
             title: 'Edit Receipt',
         }
     },
@@ -243,6 +250,9 @@ export const ReceiptEditPageContainer = connect(
                         dispatch(navigateTo('RECEIPT_VIEW'))
                     }
                 ))
+            },
+            onModifiedReceipt: updatedFields => {
+                dispatch(updateOpenedReceipt(updatedFields))
             },
             onClose: () => {
                 dispatch(navigateBack())
@@ -267,6 +277,12 @@ export const ReceiptEditPageContainer = connect(
 
 export const ReceiptCreatePageContainer = connect(
     (state) => {
+
+        const existingTags = state.receipt.newReceipt.tags
+        const tags = existingTags ? existingTags : []
+        const existingTransactionTime = state.receipt.newReceipt.transactionTime;
+        const transactionTime = existingTransactionTime ? existingTransactionTime : new Date().getTime();
+
         return {
             image: state.receipt.newReceipt.image,
             thumbnail: state.receipt.newReceipt.thumbnail,
@@ -274,6 +290,8 @@ export const ReceiptCreatePageContainer = connect(
             isDeleting: false,
             description: state.receipt.newReceipt.description,
             total: state.receipt.newReceipt.total,
+            transactionTime: transactionTime,
+            tags: tags,
             title: 'New Receipt'
         }
     },
@@ -283,8 +301,13 @@ export const ReceiptCreatePageContainer = connect(
                 dispatch(createReceipt(imageUri,
                     receiptData.total,
                     receiptData.description,
+                    receiptData.transactionTime,
+                    receiptData.tags,
                 ))
                 dispatch(navigateTo('RECEIPT_LIST'))
+            },
+            onModifiedReceipt: updatedFields => {
+                dispatch(updateNewReceipt(updatedFields))
             },
             onClose: () => {
                 dispatch(navigateTo('RECEIPT_LIST'))
