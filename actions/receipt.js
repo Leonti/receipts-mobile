@@ -1,6 +1,7 @@
 import Api from '../services/Api';
 import Receipt from '../services/Receipt';
 import ReceiptsUploader from '../services/ReceiptsUploader';
+import ReceiptCache from '../services/ReceiptCache';
 
 export const CREATE_RECEIPT_REQUEST = 'CREATE_RECEIPT_REQUEST';
 export const CREATE_RECEIPT_RESULT = 'CREATE_RECEIPT_RESULT';
@@ -131,6 +132,9 @@ export function saveReceipt(
                     type: SAVE_RECEIPT_RESULT,
                     result,
                 })
+
+                ReceiptCache.updateCachedReceipt(result)
+
                 postSaveAction(result)
         }, error => {
             dispatch({
