@@ -146,15 +146,16 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             return;
         }
 
-        final int takeFlags = data.getFlags()
-                & (Intent.FLAG_GRANT_READ_URI_PERMISSION
-                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-
         if (requestCode == PICKER_CODE) {
 
             ClipData clipData = data.getClipData();
 
             if (clipData != null) {
+
+                final int takeFlags = data.getFlags()
+                        & (Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
                 processImagesAsync(currentPromise, clipData, activity, takeFlags);
             } else {
                 Uri photoUri = data.getData();

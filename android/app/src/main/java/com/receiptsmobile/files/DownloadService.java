@@ -20,6 +20,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.receiptsmobile.files.DownloadJobsStorage.Count;
 import com.receiptsmobile.files.DownloadJobsStorage.Jobs;
 
@@ -33,6 +36,9 @@ public class DownloadService extends Service {
     private ScheduledExecutorService delayedJobsExecutor = Executors.newSingleThreadScheduledExecutor();
     private DownloadJobsStorage downloadJobsStorage;
     private boolean isCreated = false;
+
+    private Lock lock = new ReentrantLock();
+
     private static int MAX_RETRIES = 3;
 
     private static int NOTIFICATION_ID = 43;
@@ -58,6 +64,16 @@ public class DownloadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
 
+        lock.lock();
+
+        try {
+            return initialize();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private int initialize() {
         if (isCreated) {
             Log.i(TAG, "SERVICE IS ALREADY STARTED NOT RESTARTING");
             return Service.START_STICKY;
@@ -113,6 +129,8 @@ public class DownloadService extends Service {
         submitJobsExecutor.submit(new Runnable() {
             @Override
             public void run() {
+
+                lock.lock();
                 try {
                     Set<DownloadJob> newJobs = new HashSet<>();
                     Jobs jobs = downloadJobsStorage.getJobs();
@@ -143,6 +161,8 @@ public class DownloadService extends Service {
                     showProgressOrFinish();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception submitting a job " + e, e);
+                } finally {
+                    lock.unlock();
                 }
             }
         });

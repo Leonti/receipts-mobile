@@ -158,6 +158,9 @@ export function deleteReceipt(receiptId, postDeleteAction) {
                     type: DELETE_RECEIPT_RESULT,
                     result,
                 })
+
+                ReceiptCache.removeReceipt(receiptId)
+
                 postDeleteAction()
         }, error => {
             dispatch({

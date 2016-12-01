@@ -27,6 +27,14 @@ class ReceiptCache {
         return (await ReceiptCache.cacheReceipts(updatedReceipts));
     }
 
+    static async removeReceipt(receiptId) {
+        const cachedReceipts = await ReceiptCache.getCachedReceipts();
+
+        const updatedReceipts = cachedReceipts.filter(receipt => receipt.id !== receiptId);
+
+        return (await ReceiptCache.cacheReceipts(updatedReceipts));
+    }
+
 }
 
 export default ReceiptCache;

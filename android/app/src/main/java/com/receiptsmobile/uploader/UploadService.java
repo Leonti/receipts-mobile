@@ -18,6 +18,8 @@ import com.receiptsmobile.R;
 import java.io.File;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import com.receiptsmobile.files.DownloadJob;
 import com.receiptsmobile.uploader.UploadJobsStorage.Count;
@@ -34,6 +36,9 @@ public class UploadService extends Service {
     private ScheduledExecutorService delayedJobsExecutor = Executors.newSingleThreadScheduledExecutor();
     private UploadJobsStorage uploadJobsStorage;
     private boolean isCreated = false;
+
+    private Lock lock = new ReentrantLock();
+
     private static int MAX_RETRIES = 3;
     public static String RECEIPT_UPLOADED = "ReceiptUploadedEvent";
     public static String UPLOAD_JOB_ID = "uploadJobId";
@@ -55,6 +60,16 @@ public class UploadService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(TAG, "ON START COMMAND");
 
+        lock.lock();
+
+        try {
+            return initialize();
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    private int initialize() {
         if (isCreated) {
             Log.i(TAG, "SERVICE IS ALREADY STARTED NOT RESTARTING");
             return Service.START_STICKY;
@@ -105,6 +120,7 @@ public class UploadService extends Service {
         submitJobsExecutor.submit(new Runnable() {
             @Override
             public void run() {
+                lock.lock();
                 try {
                     Set<UploadJob> newJobs = new HashSet<>();
                     Set<UploadJob> existingJobs = uploadJobsStorage.getUploadJobs();
@@ -124,6 +140,8 @@ public class UploadService extends Service {
                     showProgressOrFinish();
                 } catch (Exception e) {
                     Log.e(TAG, "Exception submitting a job " + e, e);
+                } finally {
+                    lock.unlock();
                 }
             }
         });
