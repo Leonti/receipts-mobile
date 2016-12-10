@@ -331,13 +331,17 @@ export const ReceiptCreatePageContainer = connect(
 
 export const ImageViewerContainer = connect(
     (state) => {
+
+        const isBeingEdited = state.receipt.openedReceipt.isBeingEdited;
+
+
         return {
             source: state.receipt.openedReceiptImage.source,
             imageWidth: state.receipt.openedReceiptImage.width,
             imageHeight: state.receipt.openedReceiptImage.height,
             isBeingEdited: state.receipt.openedReceipt.isBeingEdited,
-            total: state.receipt.openedReceipt.updatedReceipt.total,
-            transactionTime: state.receipt.openedReceipt.updatedReceipt.transactionTime,
+            total: isBeingEdited ? state.receipt.openedReceipt.updatedReceipt.total : null,
+            transactionTime: isBeingEdited ? state.receipt.openedReceipt.updatedReceipt.transactionTime : null,
         }
     },
     (dispatch) => {
