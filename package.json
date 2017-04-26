@@ -8,8 +8,8 @@
   "dependencies": {
     "buffer": "^4.5.1",
     "moment": "^2.12.0",
-    "react": "^15.3.1",
-    "react-native": "^0.37.0",
+    "react": "16.0.0-alpha.6",
+    "react-native": "^0.43.4",
     "react-native-action-button": "^2.0.8",
     "react-native-google-signin": "^0.8.0",
     "react-native-material-design-styles": "^0.2.6",

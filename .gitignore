@@ -41,6 +41,7 @@ buck-out/
 
 android/app/libs
 android/keystores/debug.keystore
+android/keystores/debug.keystore.properties
 
 android/app/google-services.json
 android/app/src/debug/google-services.json
