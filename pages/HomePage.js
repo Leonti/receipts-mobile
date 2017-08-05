@@ -158,12 +158,18 @@ class HomePage extends React.Component {
                     refreshControl={ <RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} /> }
                 />
                 <ActionButton
-                    offsetY={4}
+                    offsetY={24}
                     buttonColor="#F44336">
-                    <ActionButton.Item buttonColor='#03a9f4' title="Take a photo" onPress={this._showCamera.bind(this)}>
+                    <ActionButton.Item buttonColor='#03a9f4'
+                        textContainerStyle={styles.actionButtonTextContainerStyle}
+                        textStyle={styles.actionButtonTextStyle}
+                        title="Take a photo" onPress={this._showCamera.bind(this)}>
                         <Icon name="camera" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
-                    <ActionButton.Item buttonColor='#ff9800' title="Choose from library" onPress={this._showImageLibrary.bind(this)}>
+                    <ActionButton.Item buttonColor='#ff9800'
+                        textContainerStyle={styles.actionButtonTextContainerStyle}
+                        textStyle={styles.actionButtonTextStyle}
+                        title="Choose from library" onPress={this._showImageLibrary.bind(this)}>
                         <Icon name="collections" style={styles.actionButtonIcon} />
                     </ActionButton.Item>
                 </ActionButton>
@@ -185,6 +191,13 @@ const styles = StyleSheet.create({
         fontSize: 20,
         height: 22,
         color: 'white',
+    },
+    actionButtonTextStyle: {
+        fontSize: 16
+    },
+    actionButtonTextContainerStyle: {
+        top: 11,
+        height: 28
     },
     row: {
         flexDirection: 'row',
