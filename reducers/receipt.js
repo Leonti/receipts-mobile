@@ -41,6 +41,8 @@ import {
     SET_IMAGE_VIEWER_IMAGE,
 } from '../actions/receipt'
 
+import Receipt from '../services/Receipt'
+
 function doneReceipts(allReceipts, pendingFiles) {
     const pendingReceiptsIds = pendingFiles.map(pendingFile => pendingFile.receiptId);
     return allReceipts.filter(receipt => !pendingReceiptsIds.includes(receipt.id));
@@ -81,7 +83,8 @@ function receiptList(state = {
             });
         case SAVE_RECEIPT_RESULT:
             return Object.assign({}, state, {
-                receipts: updateReceipt(state.receipts, action.result),
+                receipts: Receipt.updateReceipt(state.receipts,
+                  action.result.receiptId, action.result.delta),
             });
         case DELETE_RECEIPT_REQUEST:
             console.log('DELETE_RECEIPT_REQUEST in RECEIPT LIST');
@@ -99,15 +102,6 @@ function receiptList(state = {
         default:
           return state
     }
-}
-
-function updateReceipt(receipts, receipt) {
-    return receipts.map(r => {
-        if (r.id == receipt.id) {
-            return receipt;
-        }
-        return r;
-    });
 }
 
 function createReceipt(state = {

@@ -2,6 +2,8 @@ import Api from '../services/Api';
 import Receipt from '../services/Receipt';
 import ReceiptsUploader from '../services/ReceiptsUploader';
 import ReceiptCache from '../services/ReceiptCache';
+import ReceiptPending from '../services/ReceiptPending';
+import ReceiptSync from '../services/ReceiptSync';
 
 export const CREATE_RECEIPT_REQUEST = 'CREATE_RECEIPT_REQUEST';
 export const CREATE_RECEIPT_RESULT = 'CREATE_RECEIPT_RESULT';
@@ -122,6 +124,52 @@ export function saveReceipt(
             type: SAVE_RECEIPT_REQUEST,
         });
 
+        const delta = {
+                total,
+                description,
+                transactionTime,
+                tags,
+            }
+
+        console.log(delta)
+
+        async function performUpdate() {
+          await ReceiptPending.add(receiptId, delta)
+          const cachedReceipts = await ReceiptCache.getCachedReceipts()
+          const updatedCached = Receipt.updateReceipt(cachedReceipts, receiptId, delta)
+          await ReceiptCache.cacheReceipts(updatedCached)
+
+          return updatedCached.find(r => r.id === receiptId)
+        }
+
+        return performUpdate().then(updatedReceipt => {
+            dispatch({
+                type: SAVE_RECEIPT_RESULT,
+                result: {
+                  receiptId,
+                  delta,
+                }
+            })
+
+            postSaveAction(updatedReceipt)
+          }, error => {
+            console.log('Failed to save receipt', error)
+            dispatch({
+                type: SAVE_RECEIPT_REQUEST_FAILURE,
+                error,
+            });
+        })
+
+        return ReceiptPending.add(receiptId, delta).then(result => {
+          return ReceiptCache.getCachedReceipts().then(cachedReceipts => {
+            const updatedCachedReceipts = Receipt.updateReceipt(cachedReceipts, receiptId, delta)
+
+            return ReceiptCache.cacheReceipts(updatedCachedReceipts).then(updateResult => {
+              return
+            })
+          })
+        })
+/*
         return Api.updateReceipt(receiptId, {
                 total,
                 description,
@@ -142,6 +190,8 @@ export function saveReceipt(
                 error,
             });
         });
+
+        */
     }
 }
 
@@ -208,7 +258,7 @@ function refreshReceiptList(onStartActionType) {
             console.log(uploads);
         }, (e) => console.log(e));
 
-        return Receipt.combinedReceipts().then(result => {
+        return ReceiptSync.sync().then(result => {
 
             dispatch({
                 type: RECEIPT_LIST_RESULT,

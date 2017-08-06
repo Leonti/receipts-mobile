@@ -24,12 +24,12 @@ public class Connectivity {
     public static ConnectionStatus getStatus(Context context) {
         NetworkInfo info = Connectivity.getNetworkInfo(context);
 
-   //     return new ConnectionStatus(true, true);
-
+        return new ConnectionStatus(true, true);
+/*
         return new ConnectionStatus(
                 info != null && info.isConnected(),
                 info != null && info.isConnected() && info.getType() == ConnectivityManager.TYPE_WIFI
         );
-
+*/
     }
 }

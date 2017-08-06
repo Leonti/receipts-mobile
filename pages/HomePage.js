@@ -34,7 +34,6 @@ class HomePage extends React.Component {
     }
 
     componentWillMount() {
-
         if (this.props.receipts.length > 0) {
             this.setState({
               dataSource: this.state.dataSource.cloneWithRows(this.props.receipts)
