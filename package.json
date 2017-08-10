@@ -3,7 +3,11 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node node_modules/react-native/local-cli/cli.js start"
+    "start": "node node_modules/react-native/local-cli/cli.js start",
+    "tsc": "tsc",
+    "clean": "rimraf artifacts",
+    "build": "npm run clean && npm run tsc --",
+    "lint": "tslint src/**/*.ts"
   },
   "dependencies": {
     "buffer": "^4.5.1",
@@ -20,6 +24,13 @@
     "redux-thunk": "^2.1.0"
   },
   "devDependencies": {
-    "remote-redux-devtools": "^0.3.3"
+    "@types/jest": "^20.0.6",
+    "@types/react": "^16.0.1",
+    "@types/react-native": "^0.47.1",
+    "concurrently": "^3.5.0",
+    "remote-redux-devtools": "^0.3.3",
+    "rimraf": "^2.6.1",
+    "tslint": "^5.6.0",
+    "typescript": "^2.4.2"
   }
 }

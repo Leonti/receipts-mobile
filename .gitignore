@@ -47,3 +47,5 @@ android/app/google-services.json
 android/app/src/debug/google-services.json
 android/app/src/release/google-services.json
 android/app/my-release-key.keystore
+
+artifacts
