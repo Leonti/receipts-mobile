@@ -179,6 +179,7 @@ class NetworkFilesModule extends ReactContextBaseJavaModule {
 
             downloadService.download(downloadJob);
         } catch (Exception e) {
+            Log.e(TAG, "Error submitting a job", e);
             promise.reject(e);
         }
 

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es2015",
-    "module": "es2015",
+    "target": "esnext",
+    "module": "esnext",
     "moduleResolution": "node",
     "jsx": "react",
     "outDir": "artifacts",
@@ -9,11 +9,12 @@
     "allowSyntheticDefaultImports": true,
     "noImplicitAny": false,
     "preserveConstEnums": true,
-    "allowJs": false,
-    "sourceMap": true,
+    "allowJs": true,
+    "sourceMap": false,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
-    "noUnusedLocals": true
+    "noUnusedLocals": true,
+    "skipLibCheck": true
   },
   "filesGlob": [
     "typings/index.d.ts",
@@ -31,5 +32,5 @@
     "build",
     "node_modules"
   ],
-  "compileOnSave": false
+  "compileOnSave": true
 }
