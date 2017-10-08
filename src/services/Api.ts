@@ -93,7 +93,7 @@ transactionTime: 1502005277674 }
 
 class Api {
 
-  private static _uploadCallbacks = []
+  public static _uploadCallbacks = []
 
   static async createUser(username: string, password: string): Promise<any> {
     let result = await (await fetch(baseUrl() + '/user/create', {
@@ -349,7 +349,7 @@ class Api {
 
 DeviceEventEmitter.addListener('receiptUploaded', function(event) {  // handle event.
   console.log('RECEIPT UPLOADED EVENT JS', event)
-  this._uploadCallbacks.forEach(callback => callback(event))
+  Api._uploadCallbacks.forEach(callback => callback(event))
 
   /*
       ReceiptsUploader.currentUploads().then((uploads) => {
