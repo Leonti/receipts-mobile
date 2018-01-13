@@ -1,24 +1,25 @@
-import Api from '../services/Api'
-import Receipt from '../services/Receipt'
-import { ReceiptsUploader } from '../services/ReceiptsUploader'
+import Api, { Receipt, PendingFile } from '../services/Api'
+import { default as ReceiptService } from '../services/Receipt'
+import { SubmitUploadResult, ReceiptsUploader } from '../services/ReceiptsUploader'
 import ReceiptCache from '../services/ReceiptCache'
 import ReceiptPending from '../services/ReceiptPending'
 import ReceiptSync from '../services/ReceiptSync'
+import { ReceiptImageSource } from '../types'
 
 export type Action = {
   type: 'CREATE_RECEIPT_REQUEST'
 } | {
     type: 'CREATE_RECEIPT_RESULT',
-    result: any
+    result: SubmitUploadResult
   } | {
     type: 'CREATE_RECEIPT_REQUEST_FAILURE',
-    error: any
+    error: string
   } | {
     type: 'UPDATE_OPENED_RECEIPT',
-    data: any
+    data: Receipt
   } | {
     type: 'UPDATE_NEW_RECEIPT',
-    data: any
+    data: Receipt
   } | {
     type: 'START_EDITING_RECEIPT'
   } | {
@@ -46,8 +47,8 @@ export type Action = {
   } | {
     type: 'RECEIPT_LIST_RESULT',
     result: {
-      receipts: any[],
-      pendingFiles: any[]
+      receipts: Receipt[],
+      pendingFiles: PendingFile[]
     }
   } | {
     type: 'RECEIPT_LIST_MANUAL_REFRESH'
@@ -72,18 +73,18 @@ export type Action = {
     data: any
   } | {
     type: 'SET_OPENED_RECEIPT',
-    receipt: any,
+    receipt: Receipt,
     imageDimensions: any,
     thumbnailDimensions: any
   } | {
     type: 'SET_OPENED_RECEIPT_URI',
-    source: any
+    source: ReceiptImageSource
   } | {
     type: 'SET_OPENED_RECEIPT_URI_FAILURE',
     error: string
   } | {
     type: 'SET_IMAGE_VIEWER_IMAGE',
-    data: any
+    data: ReceiptImageSource
   }
 
 export const createReceipt = (imageUri, total, description, transactionTime, tags) =>
@@ -179,7 +180,7 @@ export const saveReceipt = (
     async function performUpdate() {
       await ReceiptPending.add(receiptId, delta)
       const cachedReceipts = await ReceiptCache.getCachedReceipts()
-      const updatedCached = Receipt.updateReceipt(cachedReceipts, receiptId, delta)
+      const updatedCached = ReceiptService.updateReceipt(cachedReceipts, receiptId, delta)
       await ReceiptCache.cacheReceipts(updatedCached)
 
       return updatedCached.find(r => r.id === receiptId)
@@ -232,7 +233,7 @@ export const deleteReceipt = (receiptId, postDeleteAction) =>
 export const loadCachedReceipts = () =>
   (dispatch: (_: Action) => void): Promise<void> => {
 
-    return Receipt.cachedReceipts()
+    return ReceiptService.cachedReceipts()
       .then(receipts => {
         dispatch({
           type: 'RECEIPT_LIST_RESULT',
@@ -307,7 +308,7 @@ export const setNewReceipt = (image, total, description): Action => {
       image,
       total,
       description,
-      thumbnail: Receipt.imageToThumbnailDimensions(image)
+      thumbnail: ReceiptService.imageToThumbnailDimensions(image)
     }
   }
 }
@@ -318,11 +319,11 @@ export const openReceipt = (receipt) =>
     dispatch({
       type: 'SET_OPENED_RECEIPT',
       receipt: receipt,
-      imageDimensions: Receipt.receiptToImageDimensions(receipt),
-      thumbnailDimensions: Receipt.receiptToThumbnailDimensions(receipt)
+      imageDimensions: ReceiptService.receiptToImageDimensions(receipt),
+      thumbnailDimensions: ReceiptService.receiptToThumbnailDimensions(receipt)
     })
 
-    return Receipt.receiptToImage(receipt).then(receiptImageSource => {
+    return ReceiptService.receiptToImage(receipt).then(receiptImageSource => {
       dispatch({
         type: 'SET_OPENED_RECEIPT_URI',
         source: receiptImageSource

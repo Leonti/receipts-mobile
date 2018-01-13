@@ -69,6 +69,11 @@ export type OauthAccessToken = {
   expires_in: string
 }
 
+export type GetReceiptsResult = {
+  receipts: Receipt[],
+  pendingFiles: PendingFile[]
+}
+
 /*
 { timestamp: 1502005295581,
 lastModified: 1502005316110,
@@ -291,7 +296,7 @@ class Api {
     await Storage.remove(USER_INFO_KEY)
   }
 
-  static async getReceipts(lastModified: number): Promise<any> {
+  static async getReceipts(lastModified: number): Promise<GetReceiptsResult> {
     const token = await Api._getAccessToken()
     const userId = await Api._getUserId()
 
