@@ -1,6 +1,5 @@
 import React, { StatelessComponent } from 'react'
 import {
-  Navigator,
   View,
   StatusBar
 } from 'react-native'
@@ -29,14 +28,12 @@ const reduxRouter: StatelessComponent<Props> = (props) => {
       )
     }
   }
+
   // '#2196f3'
   return (
     <View style={{ flex: 1 }}>
       <StatusBar backgroundColor='#2196f3' />
-      <Navigator
-        initialRoute={{ name: 'My First Scene', index: 0 }}
-        renderScene={renderScene}
-      />
+      {renderScene()}
     </View>
   )
 

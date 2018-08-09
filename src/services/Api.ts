@@ -101,12 +101,13 @@ class Api {
   public static _uploadCallbacks = []
 
   static async createUser(username: string, password: string): Promise<any> {
+    const headers: any = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
     let result = await (await fetch(baseUrl() + '/user/create', {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify({
         userName: username,
         password: password
@@ -121,13 +122,14 @@ class Api {
   }
 
   static async login(username: string, password: string): Promise<any> {
-    let result = await (await fetch(baseUrl() + '/token/create', {
+    const headers: any = {
+      'Authorization': 'Basic ' + new Buffer(username + ':' + password).toString('base64'),
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+    const result = await (await fetch(baseUrl() + '/token/create', {
       method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + new Buffer(username + ':' + password).toString('base64'),
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      headers
     })).json()
 
     if (!result.access_token) {
@@ -141,12 +143,13 @@ class Api {
   }
 
   static async loginWithGoogle(idToken: string): Promise<any> {
-    let result = await (await fetch(baseUrl() + '/oauth/google-id-token', {
+    const headers: any = {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+    const result = await (await fetch(baseUrl() + '/oauth/google-id-token', {
       method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
+      headers: headers,
       body: JSON.stringify({
         token: idToken
       })
@@ -233,16 +236,18 @@ class Api {
     tags: string,
     transactionTime: string
   }): Promise<any> {
-    let token = await Api._getAccessToken()
-    let userId = await Api._getUserId()
+    const token = await Api._getAccessToken()
+    const userId = await Api._getUserId()
+
+    const headers: any = {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
 
     return await (await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
       method: 'PATCH',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify([{
         op: 'replace',
         path: '/description',
@@ -268,16 +273,18 @@ class Api {
   }
 
   static async deleteReceipt(receiptId: string): Promise<any> {
-    let token = await Api._getAccessToken()
-    let userId = await Api._getUserId()
+    const token = await Api._getAccessToken()
+    const userId = await Api._getUserId()
+
+    const headers: any = {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
 
     return await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
       method: 'DELETE',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      headers
     })
   }
 
@@ -299,24 +306,21 @@ class Api {
   static async getReceipts(lastModified: number): Promise<GetReceiptsResult> {
     const token = await Api._getAccessToken()
     const userId = await Api._getUserId()
+    const headers: any = {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
 
     const receipts = await (await fetch(
       baseUrl() + '/user/' + userId + '/receipt?last-modified=' + lastModified, {
         method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+        headers
       })).json()
 
     const pendingFiles = await (await fetch(baseUrl() + '/user/' + userId + '/pending-file', {
       method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      headers
     })).json()
 
     return {
@@ -333,13 +337,14 @@ class Api {
   }
 
   private static async _fetchUserInfo(token) {
+    const headers: any = {
+      'Authorization': 'Bearer ' + token.access_token,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
     return await (await fetch(baseUrl() + '/user/info', {
       method: 'GET',
-      headers: {
-        'Authorization': 'Bearer ' + token.access_token,
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+      headers
     })).json()
   }
 
