@@ -25,7 +25,6 @@ import {
 
 import {
   login,
-  loginWithGoogle,
   logout,
   createUser,
   clearLogin,
@@ -39,17 +38,10 @@ import ReceiptViewPage from '../pages/ReceiptViewPage'
 import ReceiptFormPage from '../pages/ReceiptFormPage'
 import ImageViewer from '../components/ImageViewer'
 
-import { GoogleSignin } from 'react-native-google-signin'
-
 import { Store } from '../store'
 
-function googleWebClientId() {
-  return __DEV__ ? '9856662561-r9mlfauvsevltvkonm88lmsoii4ope45.apps.googleusercontent.com' :
-    '891724629535-lstp1kbo82l831dai475ignir9phcgog.apps.googleusercontent.com'
-}
-
 export const loginPageContainer = connect(
-  (state) => {
+  (state: any) => {
     return {
       isFetching: state.user.login.isFetching,
       isFetchingGoogle: state.user.login.isFetchingGoogle,
@@ -67,7 +59,8 @@ export const loginPageContainer = connect(
           dispatch(loadReceipts())
           dispatch(navigateTo('RECEIPT_LIST'))
         }))
-      },
+      }
+      /*
       onGoogleLogin: () => {
         GoogleSignin.hasPlayServices({ autoResolve: true }).then(() => {
           GoogleSignin.configure({
@@ -85,12 +78,13 @@ export const loginPageContainer = connect(
           })
         }, err => console.log('Play services error', err.code, err.message))
       }
+      */
     }
   }
 )(LoginPage)
 
 export const signupPageContainer = connect(
-  (state) => {
+  (state: any) => {
     return {
       isFetching: state.user.signup.isFetching,
       error: state.user.signup.error
@@ -183,7 +177,7 @@ function needToEdit(receipt) {
 }
 
 export const receiptViewPageContainer = connect(
-  (state) => {
+  (state: any) => {
     return {
       receipt: state.receipt.openedReceipt.receipt,
       nextReceipt: findNextReceipt(state.receipt.receiptList.receipts, state.receipt.openedReceipt.receipt),
@@ -223,7 +217,7 @@ export const receiptViewPageContainer = connect(
 )(ReceiptViewPage)
 
 export const receiptEditPageContainer = connect(
-  (state) => {
+  (state: any) => {
 
     const existingTags = state.receipt.openedReceipt.updatedReceipt.tags
     const tags = existingTags ? existingTags : []
@@ -287,7 +281,7 @@ export const receiptEditPageContainer = connect(
 )(ReceiptFormPage)
 
 export const receiptCreatePageContainer = connect(
-  (state) => {
+  (state: any) => {
 
     const existingTags = state.receipt.newReceipt.tags
     const tags = existingTags ? existingTags : []
@@ -331,7 +325,7 @@ export const receiptCreatePageContainer = connect(
 )(ReceiptFormPage)
 
 export const imageViewerContainer = connect(
-  (state) => {
+  (state: any) => {
 
     const isBeingEdited = state.receipt.openedReceipt.isBeingEdited
 

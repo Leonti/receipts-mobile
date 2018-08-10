@@ -139,7 +139,7 @@ class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
     return (
       <DrawerLayoutAndroid
         drawerWidth={250}
-        drawerPosition={DrawerLayoutAndroid.positions.Left}
+        drawerPosition={this.drawer.positions.Left}
         ref={(d: any) => { this.drawer = d }}
         onDrawerClose={() => this.props.closeDrawer()}
         renderNavigationView={() => navigationView}>

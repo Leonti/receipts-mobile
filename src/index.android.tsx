@@ -45,14 +45,14 @@ async function setup() {
     const storeState = store.getState()
     const pendingFiles = storeState.receipt.receiptList.pendingFiles
 
-    if (pendingFiles.length === 0) {
-      timeoutId = undefined
-    } else if (pendingFiles.length > 0 && timeoutId === null) {
+    if (pendingFiles.length > 0 && timeoutId === undefined) {
       console.log('refreshing receipts on timeout')
       timeoutId = setTimeout(() => {
         store.dispatch(loadReceipts())
         timeoutId = undefined
       }, 30 * 1000)
+    } else {
+      timeoutId = undefined
     }
   })
 }

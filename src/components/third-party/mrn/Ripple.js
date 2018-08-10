@@ -66,7 +66,7 @@ export default class Ripple extends Component {
             backgroundOpacity,
             children,
             style,
-            ...other,
+            ...other
             } = this.props;
         const {
             rippling,

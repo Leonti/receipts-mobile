@@ -7,7 +7,6 @@ import {
 } from 'react-native'
 
 import CredentialsForm from '../components/CredentialsForm'
-import GoogleLogin from '../components/GoogleLogin'
 
 export type LoginPageProps = {
   isFetching: boolean,
@@ -35,10 +34,6 @@ const loginPage: StatelessComponent<LoginPageProps> = (props) => {
           onSubmit={props.onLogin}
           isFetching={props.isFetching}
           error={props.error}
-        />
-        <GoogleLogin
-          isFetching={props.isFetchingGoogle}
-          onLogin={props.onGoogleLogin}
         />
       </ScrollView>
     </View>

@@ -82,9 +82,6 @@ export type Action = {
   } | {
     type: 'SET_OPENED_RECEIPT_URI_FAILURE',
     error: string
-  } | {
-    type: 'SET_IMAGE_VIEWER_IMAGE',
-    data: ReceiptImageSource
   }
 
 export const createReceipt = (imageUri, total, description, transactionTime, tags) =>
@@ -335,14 +332,3 @@ export const openReceipt = (receipt) =>
       })
     })
   }
-
-export const setImageViewerImage = (source, width, height): Action => {
-  return {
-    type: 'SET_IMAGE_VIEWER_IMAGE',
-    data: {
-      source: source,
-      width: width,
-      height: height
-    }
-  }
-}
