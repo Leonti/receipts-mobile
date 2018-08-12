@@ -1,4 +1,5 @@
 import Api from '../services/Api'
+import TokenService from '../auth/TokenService'
 
 export type Action = {
   type: 'SET_LOGGED_IN_USER',
@@ -35,20 +36,21 @@ export const setLoggedInUser = (user: any): Action => ({
 })
 
 /* LOGIN */
-export const login = (username: string, password: string, postLoginAction: () => void) =>
+export const login = (postLoginAction: () => void) =>
   (dispatch: (_: Action) => void): Promise<void> => {
 
     dispatch({
       type: 'LOGIN_REQUEST'
     })
 
-    return Api.login(username, password).then(Api.getUserInfo).then(result => {
+    return TokenService.login().then(result => {
       dispatch({
         type: 'LOGIN_RESULT',
         result
       })
       postLoginAction()
     }, error => {
+      console.log('Error logging in:', error)
       dispatch({
         type: 'LOGIN_REQUEST_FAILURE',
         error: error.message

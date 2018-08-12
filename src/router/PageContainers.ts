@@ -24,7 +24,6 @@ import {
 } from '../actions/receipt'
 
 import {
-  login,
   logout,
   createUser,
   clearLogin,
@@ -54,11 +53,14 @@ export const loginPageContainer = connect(
         dispatch(clearCreateUser())
         dispatch(navigateTo('SIGNUP'))
       },
-      onLogin: (username, password) => {
+      onLogin: () => {
+        dispatch(loadReceipts())
+        /*
         dispatch(login(username, password, () => {
           dispatch(loadReceipts())
           dispatch(navigateTo('RECEIPT_LIST'))
         }))
+        */
       }
       /*
       onGoogleLogin: () => {

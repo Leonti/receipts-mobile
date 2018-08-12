@@ -8,14 +8,15 @@ import ReduxRouter from './router/ReduxRouter'
 import thunkMiddleware from 'redux-thunk'
 import * as redux from 'redux'
 import { navigateTo } from './actions/navigation'
-import { setLoggedInUser } from './actions/user'
+import { setLoggedInUser, login } from './actions/user'
 import { loadReceipts, loadCachedReceipts } from './actions/receipt'
+import TokenService from './auth/TokenService'
 
-import Api from './services/Api'
 import {
   Store,
   reducers
 } from './reducers'
+import Api from './services/Api'
 
 const store: redux.Store<Store.All> = redux.createStore(
   reducers,
@@ -26,13 +27,13 @@ const store: redux.Store<Store.All> = redux.createStore(
 
 async function setup() {
 
-  if ((await Api.isLoggedIn())) {
+  if ((await TokenService.isLoggedIn())) {
     let userInfo = await Api.getUserInfo()
     store.dispatch(setLoggedInUser(userInfo))
     store.dispatch(loadCachedReceipts())
     store.dispatch(navigateTo('RECEIPT_LIST'))
   } else {
-    store.dispatch(navigateTo('LOGIN'))
+    store.dispatch(login(() => navigateTo('RECEIPT_LIST')))
   }
 
   Api.onReceiptUploaded(() => {

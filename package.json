@@ -19,7 +19,6 @@
     "react-native-auth0": "^1.2.2",
     "react-native-material-design-styles": "^0.2.6",
     "react-native-vector-icons": "^4.5.0",
-    "react-navigation": "^2.11.2",
     "react-redux": "^5.0.4",
     "redux": "^3.5.2",
     "redux-logger": "^2.6.1",
