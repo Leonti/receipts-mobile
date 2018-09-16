@@ -7,9 +7,13 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Environment;
+import android.os.StrictMode;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 import com.facebook.react.bridge.*;
+import com.receiptsmobile.R;
 
 import java.io.*;
 import java.util.UUID;
@@ -58,8 +62,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
     public void takePhoto(Promise promise) {
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-        File path = getCurrentActivity().getExternalCacheDir();
-        File dst = new File(path, "image-" + UUID.randomUUID().toString() + ".jpg");
+        final File path = new File(reactContext.getFilesDir(), "shared");
+        final File dst = new File(path, "image-" + UUID.randomUUID().toString() + ".jpg");
+
         try {
             path.mkdirs();
             dst.createNewFile();
@@ -69,7 +74,9 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
             throw new RuntimeException();
         }
 
-        dstUri = Uri.fromFile(dst);
+        dstUri = FileProvider.getUriForFile(reactContext,
+                reactContext.getString(R.string.file_provider_authority),
+                dst);
         takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, dstUri);
 
         if (takePictureIntent.resolveActivity(getCurrentActivity().getPackageManager()) != null) {
@@ -127,11 +134,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
         }
     }
 
-    // ,make sure permissions persist after restart
-    private void persistUriPermissions(Context context, Uri uri, int takeFlags) {
-        context.getContentResolver().takePersistableUriPermission(uri, takeFlags);
-    }
-
     @Override
     public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
         if (requestCode != PICKER_CODE && requestCode != PHOTO_CODE) {
@@ -159,8 +161,6 @@ public class ImagePickerModule extends ReactContextBaseJavaModule implements Act
                 processImagesAsync(currentPromise, clipData, activity, takeFlags);
             } else {
                 Uri photoUri = data.getData();
-
-              //  persistUriPermissions(activity, photoUri, takeFlags);
 
                 WritableMap result = Arguments.createMap();
                 result.putMap("single", toImageInfo(photoUri));

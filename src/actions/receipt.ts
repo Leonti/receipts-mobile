@@ -5,6 +5,7 @@ import ReceiptCache from '../services/ReceiptCache'
 import ReceiptPending from '../services/ReceiptPending'
 import ReceiptSync from '../services/ReceiptSync'
 import { ReceiptImageSource } from '../types'
+import TokenService from '../auth/TokenService'
 
 export type Action = {
   type: 'CREATE_RECEIPT_REQUEST'
@@ -91,7 +92,7 @@ export const createReceipt = (imageUri, total, description, transactionTime, tag
       type: 'CREATE_RECEIPT_REQUEST'
     })
 
-    return Api.uploadFile(imageUri, total, description, transactionTime, tags).then(result => {
+    return TokenService.getAccessToken().then(token => Api.uploadFile(token, imageUri, total, description, transactionTime, tags)).then(result => {
       dispatch({
         type: 'CREATE_RECEIPT_RESULT',
         result
@@ -113,7 +114,7 @@ export const batchCreateReceipts = (imageUris) =>
       type: 'CREATE_RECEIPT_REQUEST'
     })
 
-    return Api.batchUpload(imageUris).then(result => {
+    return TokenService.getAccessToken().then(token => Api.batchUpload(token, imageUris)).then(result => {
       dispatch({
         type: 'CREATE_RECEIPT_RESULT',
         result
@@ -210,7 +211,7 @@ export const deleteReceipt = (receiptId, postDeleteAction) =>
       receiptId: receiptId
     })
 
-    return Api.deleteReceipt(receiptId).then(result => {
+    return TokenService.getAccessToken().then(token => Api.deleteReceipt(token, receiptId)).then(result => {
       dispatch({
         type: 'DELETE_RECEIPT_RESULT',
         result

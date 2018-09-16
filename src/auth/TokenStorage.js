@@ -29,4 +29,10 @@ export default class TokenStorage {
     await AsyncStorage.setItem(ACCESS_TOKEN_EXPIRY_TIME_KEY, JSON.stringify(expiryTime + expiresIn))
   }
 
+  static async removeTokens() {
+    await AsyncStorage.removeItem(ACCESS_TOKEN_KEY)
+    await AsyncStorage.removeItem(REFRESH_TOKEN_KEY)
+    await AsyncStorage.removeItem(ACCESS_TOKEN_EXPIRY_TIME_KEY)
+  }
+
 }

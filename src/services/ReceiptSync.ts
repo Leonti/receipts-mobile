@@ -2,6 +2,7 @@ import Api from './Api'
 import ReceiptCache from '../services/ReceiptCache'
 import ReceiptPending from '../services/ReceiptPending'
 import Receipt from '../services/Receipt'
+import TokenService from '../auth/TokenService'
 
 const updateInList = (receipts, updatedReceipts) => receipts.map(r => {
 
@@ -35,7 +36,8 @@ class ReceiptSync {
 
   static async sendPending() {
     const pending = await ReceiptPending.getPending()
-    const updated = await Promise.all(pending.map(async p => await Api.updateReceipt(p.id, p.delta)))
+    const token = await TokenService.getAccessToken()
+    const updated = await Promise.all(pending.map(async p => await Api.updateReceipt(token, p.id, p.delta)))
     const cached = await ReceiptCache.getCachedReceipts()
     const updatedCached = updateInList(cached, updated)
 
@@ -49,7 +51,8 @@ class ReceiptSync {
 
     console.log('last modified is', lastModified)
 
-    const serverResult = await Api.getReceipts(lastModified)
+    const token = await TokenService.getAccessToken()
+    const serverResult = await Api.getReceipts(token, lastModified)
 
     console.log('server result', serverResult)
 

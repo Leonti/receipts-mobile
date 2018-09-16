@@ -10,7 +10,6 @@
     "lint": "tslint src/**/*.ts"
   },
   "dependencies": {
-    "buffer": "^4.5.1",
     "moment": "^2.22.2",
     "npm": "^6.3.0",
     "react": "^16.4.1",

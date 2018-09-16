@@ -3,8 +3,6 @@ import { NetworkFiles } from './NetworkFiles'
 import { SubmitUploadResult, ReceiptsUploader } from './ReceiptsUploader'
 import { DeviceEventEmitter } from 'react-native'
 
-import { Buffer } from 'buffer/'
-
 const baseUrl = () => (__DEV__ ? 'http://10.0.2.2:9000' : 'https://api.receipts.leonti.me')
 
 const TOKEN_STORAGE_KEY = 'TOKEN'
@@ -100,67 +98,23 @@ class Api {
 
   public static _uploadCallbacks = []
 
-  static async createUser(username: string, password: string): Promise<any> {
+  static async ensureUserExists(accessToken: string): Promise<any> {
     const headers: any = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     }
-    let result = await (await fetch(baseUrl() + '/user/create', {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        userName: username,
-        password: password
-      })
-    })).json()
 
-    if (result.error) {
-      throw new Error(result.error)
-    }
-
-    return result
-  }
-
-  static async login(username: string, password: string): Promise<any> {
-    const headers: any = {
-      'Authorization': 'Basic ' + new Buffer(username + ':' + password).toString('base64'),
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-    const result = await (await fetch(baseUrl() + '/token/create', {
-      method: 'GET',
-      headers
-    })).json()
-
-    if (!result.access_token) {
-      throw new Error('Invalid credentials')
-    }
-
-    await Storage.set(TOKEN_STORAGE_KEY, result)
-    let userInfo = await Api._fetchUserInfo(result)
-    await Storage.set(USER_INFO_KEY, userInfo)
-    return userInfo
-  }
-
-  static async loginWithGoogle(idToken: string): Promise<any> {
-    const headers: any = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-    const result = await (await fetch(baseUrl() + '/oauth/google-id-token', {
+    console.log('Ensuring user exists')
+    const userInfo = await (await fetch(baseUrl() + '/oauth/openid', {
       method: 'POST',
       headers: headers,
       body: JSON.stringify({
-        token: idToken
+        token: accessToken
       })
     })).json()
 
-    if (!result.access_token) {
-      throw new Error('Invalid credentials')
-    }
+    console.log('User exists response ' + userInfo)
 
-    await Storage.set(TOKEN_STORAGE_KEY, result)
-    let userInfo = await Api._fetchUserInfo(result)
     await Storage.set(USER_INFO_KEY, userInfo)
     return userInfo
   }
@@ -169,12 +123,10 @@ class Api {
     return await Storage.get(USER_INFO_KEY)
   }
 
-  static async downloadReceiptFile(receiptId: string, fileId: string, fileExt: string): Promise<any> {
-    let token = await Api._getAccessToken()
-    let userId = await Api._getUserId()
+  static async downloadReceiptFile(token: string, receiptId: string, fileId: string, fileExt: string): Promise<any> {
 
     let result = await NetworkFiles.download({
-      url: baseUrl() + '/user/' + userId + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt,
+      url: baseUrl() + '/receipt/' + receiptId + '/file/' + fileId + '.' + fileExt,
       headers: { 'Authorization': 'Bearer ' + token },
       force: false
     })
@@ -183,17 +135,16 @@ class Api {
   }
 
   static async uploadFile(
+    token: string,
     fileUri: string,
     total: string,
     description: string,
     transactionTime: number,
     tags: string[]): Promise<SubmitUploadResult> {
-    let token = await Api._getAccessToken()
-    let userId = await Api._getUserId()
 
     return (await ReceiptsUploader.submit({
       token: token,
-      uploadUrl: baseUrl() + '/user/' + userId + '/receipt',
+      uploadUrl: baseUrl() + '/receipt',
       receipts: [
         {
           uri: fileUri,
@@ -208,14 +159,12 @@ class Api {
     }))
   }
 
-  static async batchUpload(files: string[]): Promise<SubmitUploadResult> {
+  static async batchUpload(token: string, files: string[]): Promise<SubmitUploadResult> {
     console.log('BATCH UPLOADING', files)
-    let token = await Api._getAccessToken()
-    let userId = await Api._getUserId()
 
     return (await ReceiptsUploader.submit({
       token: token,
-      uploadUrl: baseUrl() + '/user/' + userId + '/receipt',
+      uploadUrl: baseUrl() + '/receipt',
       receipts: files.map(file => {
         return {
           uri: file,
@@ -230,14 +179,12 @@ class Api {
     }))
   }
 
-  static async updateReceipt(receiptId: string, fields: {
+  static async updateReceipt(token: string, receiptId: string, fields: {
     description: string,
     total: string,
     tags: string,
     transactionTime: string
   }): Promise<any> {
-    const token = await Api._getAccessToken()
-    const userId = await Api._getUserId()
 
     const headers: any = {
       'Authorization': 'Bearer ' + token,
@@ -245,7 +192,7 @@ class Api {
       'Content-Type': 'application/json'
     }
 
-    return await (await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
+    return await (await fetch(baseUrl() + '/receipt/' + receiptId, {
       method: 'PATCH',
       headers,
       body: JSON.stringify([{
@@ -272,9 +219,7 @@ class Api {
     })).json()
   }
 
-  static async deleteReceipt(receiptId: string): Promise<any> {
-    const token = await Api._getAccessToken()
-    const userId = await Api._getUserId()
+  static async deleteReceipt(token: string, receiptId: string): Promise<any> {
 
     const headers: any = {
       'Authorization': 'Bearer ' + token,
@@ -282,7 +227,7 @@ class Api {
       'Content-Type': 'application/json'
     }
 
-    return await fetch(baseUrl() + '/user/' + userId + '/receipt/' + receiptId, {
+    return await fetch(baseUrl() + '/receipt/' + receiptId, {
       method: 'DELETE',
       headers
     })
@@ -303,9 +248,8 @@ class Api {
     await Storage.remove(USER_INFO_KEY)
   }
 
-  static async getReceipts(lastModified: number): Promise<GetReceiptsResult> {
-    const token = await Api._getAccessToken()
-    const userId = await Api._getUserId()
+  static async getReceipts(token: string, lastModified: number): Promise<GetReceiptsResult> {
+
     const headers: any = {
       'Authorization': 'Bearer ' + token,
       'Accept': 'application/json',
@@ -313,12 +257,12 @@ class Api {
     }
 
     const receipts = await (await fetch(
-      baseUrl() + '/user/' + userId + '/receipt?last-modified=' + lastModified, {
+      baseUrl() + '/receipt?last-modified=' + lastModified, {
         method: 'GET',
         headers
       })).json()
 
-    const pendingFiles = await (await fetch(baseUrl() + '/user/' + userId + '/pending-file', {
+    const pendingFiles = await (await fetch(baseUrl() + '/pending-file', {
       method: 'GET',
       headers
     })).json()
@@ -334,26 +278,6 @@ class Api {
     console.log('Current callbacks size ' + Api._uploadCallbacks.length)
 
     Api._uploadCallbacks.push(callback)
-  }
-
-  private static async _fetchUserInfo(token) {
-    const headers: any = {
-      'Authorization': 'Bearer ' + token.access_token,
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    }
-    return await (await fetch(baseUrl() + '/user/info', {
-      method: 'GET',
-      headers
-    })).json()
-  }
-
-  private static async _getAccessToken(): Promise<string> {
-    return (await Storage.get(TOKEN_STORAGE_KEY)).access_token
-  }
-
-  private static async _getUserId(): Promise<string> {
-    return (await Storage.get(USER_INFO_KEY)).id
   }
 }
 

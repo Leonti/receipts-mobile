@@ -1,13 +1,14 @@
 import Api from './Api'
 import ReceiptCache from '../services/ReceiptCache'
 import { ReceiptImageSource } from '../types'
+import TokenService from '../auth/TokenService'
 
 const MAX_HEIGHT = 200
 
 class Receipt {
 
   static async receiptToImage(receipt): Promise<ReceiptImageSource> {
-    let file = receipt.files.filter(f => f.parentId !== null)[0]
+    const file = receipt.files.filter(f => f.parentId !== null)[0]
 
     if (!file) {
       return {
@@ -15,13 +16,14 @@ class Receipt {
       }
     }
 
+    const token = await TokenService.getAccessToken()
     return {
-      uri: (await Api.downloadReceiptFile(receipt.id, file.id, file.ext))
+      uri: (await Api.downloadReceiptFile(token, receipt.id, file.id, file.ext))
     }
   }
 
   static receiptToImageDimensions(receipt) {
-    let file = receipt.files.filter(f => f.parentId !== null)[0]
+    const file = receipt.files.filter(f => f.parentId !== null)[0]
 
     return {
       width: file.metaData.width,

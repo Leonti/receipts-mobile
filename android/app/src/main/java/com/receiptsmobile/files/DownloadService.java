@@ -1,6 +1,7 @@
 package com.receiptsmobile.files;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -315,8 +316,16 @@ public class DownloadService extends Service {
         return (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    private static Notification createProgressNotification(Context context, long progressPercent, long total, long done) {
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+    private Notification createProgressNotification(Context context, long progressPercent, long total, long done) {
+        String NOTIFICATION_CHANNEL_ID = "download_progress_notification";
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_ID, NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription("Receipt download progress");
+            getNotificationManager().createNotificationChannel(channel);
+        }
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setContentTitle("Receipts download")
@@ -328,11 +337,18 @@ public class DownloadService extends Service {
         return builder.build();
     }
 
-    private static Notification createPausedNotification(Context context, boolean isWiFi) {
+    private Notification createPausedNotification(Context context, boolean isWiFi) {
+        String NOTIFICATION_CHANNEL_ID = "download_paused_notification";
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, NOTIFICATION_CHANNEL_ID, NotificationManager.IMPORTANCE_LOW);
+            channel.setDescription("Receipt download paused");
+            getNotificationManager().createNotificationChannel(channel);
+        }
 
         String message = isWiFi ? "waiting for WiFi connection" : "waiting for internet connection";
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
                 .setAutoCancel(false)
                 .setOngoing(true)
                 .setContentTitle("Receipts download")

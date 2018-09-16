@@ -33,7 +33,10 @@ async function setup() {
     store.dispatch(loadCachedReceipts())
     store.dispatch(navigateTo('RECEIPT_LIST'))
   } else {
-    store.dispatch(login(() => navigateTo('RECEIPT_LIST')))
+    store.dispatch(login(() => {
+      store.dispatch(loadReceipts())
+      store.dispatch(navigateTo('RECEIPT_LIST'))
+    }))
   }
 
   Api.onReceiptUploaded(() => {

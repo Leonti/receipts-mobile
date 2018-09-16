@@ -7,7 +7,6 @@ import {
 import {
   openDrawer,
   closeDrawer,
-  loadReceipts,
   openReceipt,
   updateOpenedReceipt,
   deleteReceipt,
@@ -24,88 +23,15 @@ import {
 } from '../actions/receipt'
 
 import {
-  logout,
-  createUser,
-  clearLogin,
-  clearCreateUser
+  logout
 } from '../actions/user'
 
-import LoginPage from '../pages/LoginPage'
-import SignupPage from '../pages/SignupPage'
 import HomePage, { HomePageProps, HomePageDispatch } from '../pages/HomePage'
 import ReceiptViewPage from '../pages/ReceiptViewPage'
 import ReceiptFormPage from '../pages/ReceiptFormPage'
 import ImageViewer from '../components/ImageViewer'
 
 import { Store } from '../store'
-
-export const loginPageContainer = connect(
-  (state: any) => {
-    return {
-      isFetching: state.user.login.isFetching,
-      isFetchingGoogle: state.user.login.isFetchingGoogle,
-      error: state.user.login.error
-    }
-  },
-  (dispatch) => {
-    return {
-      toSignup: () => {
-        dispatch(clearCreateUser())
-        dispatch(navigateTo('SIGNUP'))
-      },
-      onLogin: () => {
-        dispatch(loadReceipts())
-        /*
-        dispatch(login(username, password, () => {
-          dispatch(loadReceipts())
-          dispatch(navigateTo('RECEIPT_LIST'))
-        }))
-        */
-      }
-      /*
-      onGoogleLogin: () => {
-        GoogleSignin.hasPlayServices({ autoResolve: true }).then(() => {
-          GoogleSignin.configure({
-            webClientId: googleWebClientId()
-          }).then(() => {
-            GoogleSignin.signIn().then((user) => {
-              console.log('USER', user)
-              dispatch(loginWithGoogle(user.idToken, () => {
-                dispatch(loadReceipts())
-                dispatch(navigateTo('RECEIPT_LIST'))
-              }))
-            }, error => {
-              console.log('WRONG SIGN IN', error)
-            })
-          })
-        }, err => console.log('Play services error', err.code, err.message))
-      }
-      */
-    }
-  }
-)(LoginPage)
-
-export const signupPageContainer = connect(
-  (state: any) => {
-    return {
-      isFetching: state.user.signup.isFetching,
-      error: state.user.signup.error
-    }
-  },
-  (dispatch) => {
-    return {
-      toLogin: () => {
-        dispatch(clearLogin())
-        dispatch(navigateTo('LOGIN'))
-      },
-      onSignup: (username, password) => {
-        dispatch(createUser(username, password, () => {
-          dispatch(navigateTo('LOGIN'))
-        }))
-      }
-    }
-  }
-)(SignupPage)
 
 export const homePageContainer = connect(
   (state: Store.All): HomePageProps => {
@@ -353,8 +279,6 @@ export const imageViewerContainer = connect(
 )(ImageViewer)
 
 const routing = {
-  LOGIN: loginPageContainer,
-  SIGNUP: signupPageContainer,
   RECEIPT_LIST: homePageContainer,
   RECEIPT_VIEW: receiptViewPageContainer,
   RECEIPT_CREATE: receiptCreatePageContainer,

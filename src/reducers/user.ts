@@ -19,22 +19,16 @@ function login(state: Store.LoginState = {
         isFetching: true,
         error: undefined
       })
-    case 'LOGIN_WITH_GOOGLE_REQUEST':
-      return Object.assign({}, state, {
-        user: {},
-        isFetchingGoogle: true,
-        error: undefined
-      })
     case 'LOGIN_RESULT':
+      console.log('Login success: ' + JSON.stringify(action))
       return Object.assign({}, state, {
         isFetching: false,
-        isFetchingGoogle: false,
         user: action.result
       })
     case 'LOGIN_REQUEST_FAILURE':
+      console.log('Login error: ' + action)
       return Object.assign({}, state, {
         isFetching: false,
-        isFetchingGoogle: false,
         error: action.error
       })
     case 'LOGOUT':
@@ -53,42 +47,8 @@ function login(state: Store.LoginState = {
   }
 }
 
-function createUser(state: Store.SignupState = {
-  isFetching: false,
-  user: undefined,
-  error: undefined
-}, action: Action) {
-  switch (action.type) {
-    case 'CREATE_USER_REQUEST':
-      return Object.assign({}, state, {
-        user: {},
-        isFetching: true,
-        error: undefined
-      })
-    case 'CREATE_USER_RESULT':
-      return Object.assign({}, state, {
-        isFetching: false,
-        user: action.result
-      })
-    case 'CREATE_USER_REQUEST_FAILURE':
-      return Object.assign({}, state, {
-        isFetching: false,
-        error: action.error
-      })
-    case 'CREATE_USER_CLEAR':
-      return Object.assign({}, state, {
-        user: {},
-        isFetching: false,
-        error: undefined
-      })
-    default:
-      return state
-  }
-}
-
 const rootReducer = combineReducers<Store.UserState>({
-  login,
-  signup: createUser
+  login
 })
 
 export default rootReducer

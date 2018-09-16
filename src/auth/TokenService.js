@@ -43,4 +43,8 @@ export default class TokenService {
     return credentials.accessToken
   }
 
+  static async logout() {
+    await TokenStorage.removeTokens()
+  }
+
 }

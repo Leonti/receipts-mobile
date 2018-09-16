@@ -10,7 +10,7 @@ class ReceiptCache {
 
   static async getCachedReceipts() {
     const cachedReceipts = await Storage.get(RECEIPT_CACHE_KEY)
-
+    console.log('Cached receipts ' + JSON.stringify(cachedReceipts))
     return cachedReceipts || []
   }
 

@@ -8,6 +8,7 @@ const initialState: Store.Navigation = {
 }
 
 function navigate(state: Store.Navigation = initialState, action: Action): Store.Navigation {
+  console.log('ACTION:' + JSON.stringify(action))
 
   switch (action.type) {
     case 'NAVIGATE_TO':
