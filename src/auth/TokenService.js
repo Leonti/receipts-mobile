@@ -26,6 +26,7 @@ export default class TokenService {
 
     if (accessToken) {
       console.log('Returning access token from cache')
+      console.log(accessToken)
       return accessToken
     }
 
