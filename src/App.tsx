@@ -13,12 +13,12 @@ import { loadReceipts, loadCachedReceipts } from './actions/receipt'
 import TokenService from './auth/TokenService'
 
 import {
-  Store,
   reducers
 } from './reducers'
+import { All } from './reducers/store'
 import Api from './services/Api'
 
-const store: redux.Store<Store.All> = redux.createStore(
+const store: redux.Store<All> = redux.createStore(
   reducers,
   redux.compose(
     redux.applyMiddleware(thunkMiddleware)
@@ -64,7 +64,7 @@ async function setup() {
 setup()
 
 // The Router wrapper
-class ReceiptsMobile extends Component {
+export default class App extends Component {
 
   render() {
     return (
@@ -74,5 +74,3 @@ class ReceiptsMobile extends Component {
     )
   }
 }
-
-AppRegistry.registerComponent('ReceiptsMobile', () => ReceiptsMobile)

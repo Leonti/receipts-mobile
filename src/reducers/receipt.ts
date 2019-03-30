@@ -1,6 +1,14 @@
 import { combineReducers } from 'redux'
 import { Action } from '../actions/receipt'
-import { Store } from '../store'
+import { 
+  ReceiptListState, 
+  CreateReceiptState, 
+  SaveReceiptState, 
+  DeleteReceiptState,
+  NewReceiptState,
+  OpenedReceiptState,
+  OpenedReceiptImageState,
+  ReceiptState } from '../store'
 
 import Receipt from '../services/Receipt'
 
@@ -9,7 +17,7 @@ function doneReceipts(allReceipts, pendingFiles) {
   return allReceipts.filter(receipt => !pendingReceiptsIds.includes(receipt.id))
 }
 
-function receiptList(state: Store.ReceiptListState = {
+function receiptList(state: ReceiptListState = {
   isFetching: false,
   receipts: [],
   pendingFiles: [],
@@ -65,7 +73,7 @@ function receiptList(state: Store.ReceiptListState = {
   }
 }
 
-function createReceipt(state: Store.CreateReceiptState = {
+function createReceipt(state: CreateReceiptState = {
   isFetching: false,
   uploadIds: [],
   error: undefined
@@ -91,7 +99,7 @@ function createReceipt(state: Store.CreateReceiptState = {
   }
 }
 
-function saveReceipt(state: Store.SaveReceiptState = {
+function saveReceipt(state: SaveReceiptState = {
   isFetching: false,
   savedReceipt: undefined,
   error: undefined
@@ -117,7 +125,7 @@ function saveReceipt(state: Store.SaveReceiptState = {
   }
 }
 
-function deleteReceipt(state: Store.DeleteReceiptState = {
+function deleteReceipt(state: DeleteReceiptState = {
   isFetching: false,
   deletionResult: false,
   isAskingConfirmation: false,
@@ -145,7 +153,7 @@ function deleteReceipt(state: Store.DeleteReceiptState = {
   }
 }
 
-function newReceipt(state: Store.NewReceiptState = {
+function newReceipt(state: NewReceiptState = {
   image: undefined,
   thumbnail: undefined,
   total: undefined,
@@ -164,7 +172,7 @@ function newReceipt(state: Store.NewReceiptState = {
   }
 }
 
-function openedReceipt(state: Store.OpenedReceiptState = {
+function openedReceipt(state: OpenedReceiptState = {
   receipt: undefined,
   updatedReceipt: undefined,
   isBeingEdited: false,
@@ -216,7 +224,7 @@ function openedReceipt(state: Store.OpenedReceiptState = {
   }
 }
 
-function openedReceiptImage(state: Store.OpenedReceiptImageState = {
+function openedReceiptImage(state: OpenedReceiptImageState = {
   source: undefined,
   width: undefined,
   height: undefined
@@ -239,7 +247,7 @@ function openedReceiptImage(state: Store.OpenedReceiptImageState = {
   }
 }
 
-const rootReducer = combineReducers<Store.ReceiptState>({
+const rootReducer = combineReducers<ReceiptState>({
   receiptList,
   createReceipt,
   saveReceipt,

@@ -31,10 +31,10 @@ import ReceiptViewPage from '../pages/ReceiptViewPage'
 import ReceiptFormPage from '../pages/ReceiptFormPage'
 import ImageViewer from '../components/ImageViewer'
 
-import { Store } from '../store'
+import { All } from '../store'
 
 export const homePageContainer = connect(
-  (state: Store.All): HomePageProps => {
+  (state: All): HomePageProps => {
     return {
       receipts: state.receipt.receiptList.receipts,
       pendingCount: state.receipt.receiptList.pendingFiles.length,

@@ -3,12 +3,10 @@ import { combineReducers } from 'redux'
 import navigation from './navigation'
 import user from './user'
 import receipt from './receipt'
-import { Store } from './store'
+import { All } from './store'
 
-export const reducers = combineReducers<Store.All>({
+export const reducers = combineReducers<All>({
   navigation,
   user,
   receipt
 })
-
-export { Store } from './store'

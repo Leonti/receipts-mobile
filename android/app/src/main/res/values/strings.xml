@@ -1,5 +1,4 @@
 <resources>
-
     <string name="app_name">Receipts</string>
     <string name="file_provider_authority" translatable="false">com.receiptsmobile.fileprovider</string>
 </resources>

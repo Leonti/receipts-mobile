@@ -1,24 +1,21 @@
-export namespace Store {
+export type Navigation = {
+  page: string,
+  history: string[]
+}
 
-  export type Navigation = {
-    page: string,
-    history: string[]
-  }
+type PendingFile = {
 
-  type PendingFile = {
+}
 
-  }
+type ReceiptList = {
+  pendingFiles: [PendingFile]
+}
 
-  type ReceiptList = {
-    pendingFiles: [PendingFile]
-  }
+type Receipt = {
+  receiptList: ReceiptList
+}
 
-  type Receipt = {
-    receiptList: ReceiptList
-  }
-
-  export type All = {
-    receipt: Receipt,
-    navigation: Navigation
-  }
+export type All = {
+  receipt: Receipt,
+  navigation: Navigation
 }

@@ -1,15 +1,14 @@
 package com.receiptsmobile;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.facebook.react.ReactApplication;
+import com.oblador.vectoricons.VectorIconsPackage;
 import com.auth0.react.A0Auth0Package;
-import com.facebook.react.ReactInstanceManager;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
-import com.oblador.vectoricons.VectorIconsPackage;
+import com.facebook.soloader.SoLoader;
 import com.receiptsmobile.files.NetworkFilesPackage;
 import com.receiptsmobile.picker.ImagePickerPackage;
 import com.receiptsmobile.uploader.UploaderPackage;
@@ -20,41 +19,37 @@ import java.util.List;
 public class MainApplication extends Application implements ReactApplication {
 
   private final ReactNativeHost mReactNativeHost = new ReactNativeHost(this) {
-
-    /**
-     * Returns whether dev mode should be enabled.
-     * This enables e.g. the dev menu.
-     */
     @Override
     public boolean getUseDeveloperSupport() {
       return BuildConfig.DEBUG;
     }
 
-    /**
-     * A list of packages used by the app. If the app uses additional views
-     * or modules besides the default ones, add more packages here.
-     */
     @Override
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
-            new MainReactPackage(),
-            new A0Auth0Package(),
-            new VectorIconsPackage(),
-            new ImagePickerPackage(),
-            new NetworkFilesPackage(),
-            new UploaderPackage()
+        new MainReactPackage(),
+        new VectorIconsPackage(),
+        new A0Auth0Package(),
+        new ImagePickerPackage(),
+        new NetworkFilesPackage(),
+        new UploaderPackage()
       );
     }
 
     @Override
     protected String getJSMainModuleName() {
-      return "artifacts/index.android";
+      return "index";
     }
-
   };
 
   @Override
   public ReactNativeHost getReactNativeHost() {
-      return mReactNativeHost;
+    return mReactNativeHost;
+  }
+
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    SoLoader.init(this, /* native exopackage */ false);
   }
 }

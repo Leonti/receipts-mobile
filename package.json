@@ -1,41 +1,42 @@
 {
-  "name": "ReceiptsMobile",
+  "name": "receiptsmobile",
   "version": "0.0.1",
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
-    "run-android": "node node_modules/react-native/local-cli/cli.js run-android",
-    "tsc": "tsc",
-    "clean": "rimraf artifacts",
-    "build": "npm run clean && npm run tsc --",
-    "lint": "tslint src/**/*.ts"
+    "test": "jest",
+    "lint": "eslint ."
   },
   "dependencies": {
-    "moment": "^2.22.2",
-    "npm": "^6.3.0",
-    "react": "^16.4.1",
-    "react-native": "^0.56.0",
-    "react-native-action-button": "^2.6.9",
-    "react-native-auth0": "^1.2.2",
-    "react-native-material-design-styles": "^0.2.6",
-    "react-native-vector-icons": "^4.5.0",
-    "react-redux": "^5.0.4",
-    "redux": "^3.5.2",
-    "redux-logger": "^2.6.1",
-    "redux-thunk": "^2.1.0",
-    "to": "^0.2.9",
-    "update": "^0.7.4"
+    "moment": "^2.24.0",
+    "react": "16.8.3",
+    "react-native": "0.59.2",
+    "react-native-action-button": "^2.8.5",
+    "react-native-auth0": "^1.4.0",
+    "react-native-material-design-styles": "^0.2.7",
+    "react-native-vector-icons": "^6.4.2",
+    "react-redux": "^6.0.1",
+    "redux": "^4.0.1",
+    "redux-logger": "^3.0.6",
+    "redux-thunk": "^2.3.0"
   },
   "devDependencies": {
-    "@types/jest": "^20.0.6",
-    "@types/react": "^16.4.1",
-    "@types/react-dom": "^15.5.2",
-    "@types/react-native": "0.56.6",
-    "@types/react-redux": "^5.0.7",
-    "concurrently": "^3.5.0",
-    "remote-redux-devtools": "^0.3.3",
-    "rimraf": "^2.6.1",
-    "tslint": "^5.11.0",
-    "typescript": "^3.0.1"
+    "@babel/core": "7.4.0",
+    "@babel/runtime": "7.4.2",
+    "@react-native-community/eslint-config": "0.0.3",
+    "@types/jest": "24.0.11",
+    "@types/react": "16.8.10",
+    "@types/react-native": "0.57.42",
+    "@types/react-redux": "^7.0.6",
+    "@types/react-test-renderer": "16.8.1",
+    "babel-jest": "24.5.0",
+    "eslint": "5.15.3",
+    "jest": "24.5.0",
+    "metro-react-native-babel-preset": "0.53.1",
+    "react-test-renderer": "16.8.3",
+    "typescript": "3.3.4000"
+  },
+  "jest": {
+    "preset": "react-native"
   }
 }

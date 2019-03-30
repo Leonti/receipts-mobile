@@ -1,13 +1,13 @@
 import { Action } from '../actions/navigation'
 
-import { Store } from './store'
+import { Navigation } from './store'
 
-const initialState: Store.Navigation = {
+const initialState: Navigation = {
   page: '',
   history: []
 }
 
-function navigate(state: Store.Navigation = initialState, action: Action): Store.Navigation {
+function navigate(state: Navigation = initialState, action: Action): Navigation {
   console.log('ACTION:' + JSON.stringify(action))
 
   switch (action.type) {

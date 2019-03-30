@@ -1,8 +1,8 @@
 import { combineReducers } from 'redux'
 import { Action } from '../actions/user'
-import { Store } from '../store'
+import { LoginState, UserState } from '../store'
 
-function login(state: Store.LoginState = {
+function login(state: LoginState = {
   isFetching: false,
   isFetchingGoogle: false,
   user: undefined,
@@ -47,7 +47,7 @@ function login(state: Store.LoginState = {
   }
 }
 
-const rootReducer = combineReducers<Store.UserState>({
+const rootReducer = combineReducers<UserState>({
   login
 })
 
