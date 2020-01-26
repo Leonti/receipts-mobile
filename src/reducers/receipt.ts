@@ -22,6 +22,8 @@ function receiptList(state: ReceiptListState = {
   receipts: [],
   pendingFiles: [],
   drawerOpened: false,
+  isSearching: false,
+  query: '',
   error: undefined,
   isRefreshInterval: false
 }, action: Action) {
@@ -50,6 +52,22 @@ function receiptList(state: ReceiptListState = {
         isFetching: false,
         error: action.error
       })
+    case 'RECEIPT_SEARCH_REQUEST': {
+      return Object.assign({}, state, {
+        isFetching: true,
+        query: action.query
+      })      
+    }       
+    case 'RECEIPT_SEARCH_RESULT':
+      return Object.assign({}, state, {
+        isFetching: false,
+        receipts: action.result
+      })
+    case 'RECEIPT_SEARCH_REQUEST_FAILURE':
+      return Object.assign({}, state, {
+        isFetching: false,
+        error: action.error
+      })  
     case 'SAVE_RECEIPT_RESULT':
       return Object.assign({}, state, {
         receipts: Receipt.updateReceipt(state.receipts,
@@ -68,6 +86,26 @@ function receiptList(state: ReceiptListState = {
       return Object.assign({}, state, {
         drawerOpened: false
       })
+    case 'START_SEARCH':
+      return Object.assign({}, state, {
+        isSearching: true,
+        receipts: [],
+        query: ''
+      })
+    case 'FINISH_SEARCH':
+      return Object.assign({}, state, {
+        isSearching: false
+      })
+    case 'GET_CACHED_RECEIPTS_RESULT':
+      return Object.assign({}, state, {
+        isFetching: false,
+        receipts: action.receipts
+      })
+    case 'GET_CACHED_RECEIPTS_FAILURE':
+      return Object.assign({}, state, {
+        isFetching: false,
+        error: action.error
+      })             
     default:
       return state
   }

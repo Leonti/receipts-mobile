@@ -3,11 +3,11 @@ import {
   StyleSheet,
   View,
   Text,
-  ListView,
-  ScrollView,
+  FlatList,
+  ListRenderItemInfo,
   ToastAndroid,
   DrawerLayoutAndroid,
-  RefreshControl
+  TextInput
 } from 'react-native'
 
 import ActionButton from 'react-native-action-button'
@@ -26,7 +26,9 @@ export type HomePageProps = {
   isFetching: boolean,
   userName?: string,
   error?: string,
-  drawerOpened: boolean
+  drawerOpened: boolean,
+  isSearching: boolean,
+  query: string
 }
 
 export type HomePageDispatch = {
@@ -35,6 +37,9 @@ export type HomePageDispatch = {
   toReceipt: (receipt: Receipt) => void,
   onFileSelected: (image: ReceiptImage) => void,
   onFilesSelected: (fileList: any) => void,
+  onSearchStarted: () => void,
+  onSearchFinished: () => void,
+  onSearch: (query: string) => void,
   onLogout: () => void,
   onRefresh: () => void,
   onMount: () => void,
@@ -42,7 +47,7 @@ export type HomePageDispatch = {
 }
 
 type State = {
-  dataSource: any
+  receipts: Receipt[]
 }
 
 class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
@@ -53,7 +58,7 @@ class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
     super(props)
 
     this.state = {
-      dataSource: new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 })
+      receipts: []
     }
   }
 
@@ -61,25 +66,11 @@ class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
     this.props.onMount()
   }
 
-  componentWillMount() {
-    if (this.props.receipts.length > 0) {
-      this.setState({
-        dataSource: this.state.dataSource.cloneWithRows(this.props.receipts)
-      })
-    }
-  }
-
   componentWillUnmount() {
     this.props.onUnmount()
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.receipts !== this.props.receipts) {
-      this.setState({
-        dataSource: this.state.dataSource.cloneWithRows(nextProps.receipts)
-      })
-    }
-
+  componentWillReceiveProps(nextProps: HomePageProps & HomePageDispatch) {
     if (nextProps.drawerOpened !== this.props.drawerOpened) {
 
       if (nextProps.drawerOpened) {
@@ -148,19 +139,34 @@ class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
     )
   }
 
-  _renderRow(receipt) {
+  _renderRow(info: ListRenderItemInfo<Receipt>) {
 
     return (<ReceiptRow
-      onPress={() => this.props.toReceipt(receipt)}
-      receipt={receipt} />)
+      onPress={() => this.props.toReceipt(info.item)}
+      receipt={info.item} />)
   }
 
-  _pendingReceiptsView(pendingCount) {
+  _pendingReceiptsView(pendingCount: Number) {
     return pendingCount ?
       <Text
         style={styles.pendingFiles}
       >Receipts are being processed</Text>
       : undefined
+  }
+
+  onActionSelected(position: Number) {
+    if (this.props.isSearching) {
+      this.props.onSearchFinished()
+    } else {
+      this.props.onSearchStarted()
+    }
+    console.log('Selected search')
+  }
+
+  private onSearchChange(value: string) {
+    if (value !== '') {
+      this.props.onSearch(value)
+    }
   }
 
   _renderHome() {
@@ -169,21 +175,39 @@ class HomePage extends Component<HomePageProps & HomePageDispatch, State> {
     const headerTitle = 'Your Receipts' + (receiptCount > 0 ?
       ' (' + receiptCount + ')' : '')
 
+    const keyExtractor = (item: Receipt, index: Number) => item.id;
+
+    const actions = this.props.isSearching ? [{ iconName: 'close', title: 'Close', show: 'always' }]
+      : [{ iconName: 'search', title: 'Find', show: 'always' }]
+
+    const searchBox = this.props.isSearching ? <TextInput
+      style={styles.searchInput}
+      value={this.props.query}
+      placeholder="Search ..."
+      onChangeText={this.onSearchChange.bind(this)}
+    /> : null 
+
     return (
       <View style={{ flex: 1, backgroundColor: '#f3f3f3' }}>
         <Icon.ToolbarAndroid
           style={styles.toolbar}
           title={headerTitle}
+          actions={actions}
           navIconName='menu'
-          onIconClicked={() => this.props.openDrawer()}
+          onActionSelected={this.onActionSelected.bind(this)}
+          onIconClicked={this.props.openDrawer}
         />
         {this._pendingReceiptsView(this.props.pendingCount)}
-        <ListView
-          dataSource={this.state.dataSource}
-          renderRow={this._renderRow.bind(this)}
-          renderScrollComponent={props => <ScrollView {...props} />}
-          renderSeparator={(sectionID, rowID) => <View key={`${sectionID}-${rowID}`} style={styles.separator} />}
-          refreshControl={<RefreshControl refreshing={this.props.isFetching} onRefresh={this.props.onRefresh} />}
+        {searchBox}
+        <FlatList
+          data={this.props.receipts}
+          renderItem={this._renderRow.bind(this)}
+          refreshing={this.props.isFetching}
+          keyExtractor={keyExtractor}
+          onRefresh={this.props.onRefresh}
+          ItemSeparatorComponent={() => (
+            <View style={styles.separator} />
+          )}
         />
         <ActionButton
           offsetY={24}
@@ -244,7 +268,11 @@ const styles = StyleSheet.create({
   rowText: {
     flex: 1,
     fontSize: 20
-  }
+  },
+  searchInput: {
+    fontSize: 20,
+    padding: 15
+  },
 })
 
 export default HomePage

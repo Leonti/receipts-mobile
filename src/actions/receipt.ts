@@ -62,6 +62,15 @@ export type Action = {
     type: 'RECEIPT_LIST_REQUEST_FAILURE',
     error
   } | {
+    type: 'RECEIPT_SEARCH_REQUEST',
+    query: string
+  } | {
+    type: 'RECEIPT_SEARCH_RESULT',
+    result
+  } | {
+    type: 'RECEIPT_SEARCH_REQUEST_FAILURE',
+    error
+  }| {
     type: 'RECEIPT_INTERVAL_REFRESH_START'
   } | {
     type: 'RECEIPT_INTERVAL_REFRESH_STOP'
@@ -69,6 +78,16 @@ export type Action = {
     type: 'OPEN_DRAWER'
   } | {
     type: 'CLOSE_DRAWER'
+  } | {
+    type: 'START_SEARCH'
+  } | {
+    type: 'FINISH_SEARCH'
+  } | {
+    type :'GET_CACHED_RECEIPTS_RESULT',
+    receipts: Receipt[]
+  } | {
+    type :'GET_CACHED_RECEIPTS_FAILURE',
+    error
   } | {
     type: 'SET_NEW_RECEIPT',
     data: any
@@ -275,6 +294,32 @@ const refreshReceiptList = (onStartActionType) =>
     })
   }
 
+export const startReceiptSearch = (query: String) =>
+  (dispatch: (_: Action) => void): Promise<void> => {
+
+    dispatch({
+      type: 'RECEIPT_SEARCH_REQUEST',
+      query
+    })
+
+    return TokenService.getAccessToken().then(token => Api.findReceipts(token, query)).then(result => {
+
+      const sorted = result.sort((a, b) => b.transactionTime - a.transactionTime)
+
+      dispatch({
+        type: 'RECEIPT_SEARCH_RESULT',
+        result: sorted
+      })
+
+    }, error => {
+      console.log('error searching for receipts', error)
+      dispatch({
+        type: 'RECEIPT_SEARCH_REQUEST_FAILURE',
+        error
+      })
+    })
+  }
+
 export const receiptIntervalRefreshStart = (): Action => {
   return {
     type: 'RECEIPT_INTERVAL_REFRESH_START'
@@ -297,6 +342,32 @@ export const closeDrawer = (): Action => {
   return {
     type: 'CLOSE_DRAWER'
   }
+}
+
+export const startSearch = (): Action => {
+  return {
+    type: 'START_SEARCH'
+  }
+}
+
+export const finishSearch = () =>
+  (dispatch: (_: Action) => void): Promise<void> => {
+
+  dispatch({
+    type: 'FINISH_SEARCH'
+  })
+
+  return ReceiptCache.getCachedReceipts().then(receipts => {
+    dispatch({
+      type: 'GET_CACHED_RECEIPTS_RESULT',
+      receipts: receipts
+    })
+  }, error => {
+    dispatch({
+      type: 'GET_CACHED_RECEIPTS_FAILURE',
+      error
+    })
+  })
 }
 
 export const setNewReceipt = (image, total, description): Action => {

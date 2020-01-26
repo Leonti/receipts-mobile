@@ -61,7 +61,7 @@ type Props = {
 
 const receiptFormPage: StatelessComponent<Props> = (props) => {
 
-  const onActionSelected = (position) => {
+  const onActionSelected = (position: Number) => {
     if (position === 0) {
       props.onSave(props.receiptId, props.image.source.uri, {
         total: props.total,
@@ -169,7 +169,7 @@ const receiptFormPage: StatelessComponent<Props> = (props) => {
           { title: 'Delete', show: 'never' }
         ]}
         onIconClicked={props.onClose}
-        onActionSelected={(position) => onActionSelected(position)} />
+        onActionSelected={onActionSelected} />
       {form}
     </View>
   )

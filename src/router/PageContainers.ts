@@ -19,7 +19,10 @@ import {
   batchCreateReceipts,
   refeshReceiptListManually,
   receiptIntervalRefreshStart,
-  receiptIntervalRefreshStop
+  receiptIntervalRefreshStop,
+  startSearch,
+  finishSearch,
+  startReceiptSearch
 } from '../actions/receipt'
 
 import {
@@ -41,6 +44,8 @@ export const homePageContainer = connect(
       isFetching: state.receipt.receiptList.isFetching,
       drawerOpened: state.receipt.receiptList.drawerOpened,
       error: state.receipt.receiptList.error,
+      isSearching: state.receipt.receiptList.isSearching,
+      query: state.receipt.receiptList.query,
       userName: state.user.login.user.userName
     }
   },
@@ -58,6 +63,15 @@ export const homePageContainer = connect(
           dispatch(stopEditingReceipt())
           dispatch(navigateTo('RECEIPT_VIEW'))
         }
+      },
+      onSearch: (query: string) => {
+        dispatch(startReceiptSearch(query))
+      },
+      onSearchStarted: () => {
+        dispatch(startSearch())
+      },
+      onSearchFinished: () => {
+        dispatch(finishSearch())
       },
       onFileSelected: (image) => {
         dispatch(stopEditingReceipt())

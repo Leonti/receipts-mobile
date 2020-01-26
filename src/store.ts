@@ -5,6 +5,8 @@ export type ReceiptListState = {
   receipts: Receipt[],
   pendingFiles: PendingFile[],
   isFetching: boolean,
+  isSearching: boolean,
+  query: string,
   drawerOpened: boolean,
   error: string,
   isRefreshInterval: boolean

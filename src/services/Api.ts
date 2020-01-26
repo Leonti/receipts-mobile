@@ -273,6 +273,23 @@ class Api {
     }
   }
 
+  static async findReceipts(token: string, query: String): Promise<Receipt[]> {
+
+    const headers: any = {
+      'Authorization': 'Bearer ' + token,
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    }
+
+    const receipts = await (await fetch(
+      baseUrl() + '/receipt?q=' + query, {
+        method: 'GET',
+        headers
+      })).json()
+
+    return receipts
+  }  
+
   static onReceiptUploaded(callback) {
 
     console.log('Current callbacks size ' + Api._uploadCallbacks.length)
