@@ -10,7 +10,7 @@
   "dependencies": {
     "moment": "^2.24.0",
     "react": "16.8.3",
-    "react-native": "0.59.2",
+    "react-native": "0.62.3",
     "react-native-action-button": "^2.8.5",
     "react-native-auth0": "^1.4.0",
     "react-native-material-design-styles": "^0.2.7",
